@@ -35,7 +35,7 @@ jobs:
                       frontend-application/*/node_modules
                   key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
 
-    # ── 2. Lint ──────────────────────────────────────────────────────────────────
+    # ── 2. Lint (zero warnings, ADR-14) ─────────────────────────────────────────
     lint:
         name: Lint
         needs: install
@@ -60,8 +60,8 @@ jobs:
 
             - run: npm ci --legacy-peer-deps
 
-            - name: Lint
-              run: npm run lint
+            - name: Lint (zero warnings)
+              run: npm run lint -- --max-warnings 0
 
             - name: Format check
               run: npm run format:check
@@ -94,10 +94,38 @@ jobs:
             - name: Typecheck all workspaces
               run: npm run typecheck
 
-    # ── 4. Unit tests ────────────────────────────────────────────────────────────
+    # ── 4. Build SDK (@cinema/internal-sdk) ──────────────────────────────────────
+    build-sdk:
+        name: Build SDK
+        needs: [lint, typecheck]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Build @cinema/internal-sdk
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
+    # ── 5. Unit tests ────────────────────────────────────────────────────────────
     unit:
         name: Unit Tests
-        needs: install
+        needs: build-sdk
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -120,7 +148,7 @@ jobs:
             - run: npm ci --legacy-peer-deps
 
             - name: Run unit tests
-              run: npm run test --workspaces --if-present
+              run: npm run test:unit --workspaces --if-present
 
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
@@ -132,10 +160,10 @@ jobs:
                       frontend-application/*/coverage
                   retention-days: 7
 
-    # ── 5. Integration tests (Postgres service) ──────────────────────────────────
+    # ── 6. Integration tests — DAO layer (Postgres service) ──────────────────────
     integration:
-        name: Integration Tests
-        needs: install
+        name: Integration Tests (DAO)
+        needs: build-sdk
         runs-on: ubuntu-latest
 
         services:
@@ -180,7 +208,7 @@ jobs:
 
             - run: npm ci --legacy-peer-deps
 
-            - name: Run integration tests
+            - name: Run integration tests (DAO layer)
               run: npm run test:integration --workspaces --if-present
 
             - name: Upload coverage reports
@@ -191,11 +219,34 @@ jobs:
                   path: backend-services/*/coverage
                   retention-days: 7
 
-    # ── 6. E2E / page tests ──────────────────────────────────────────────────────
-    e2e:
-        name: E2E Tests (Playwright)
-        needs: install
+    # ── 7. API tests — controller layer (Postgres service) ───────────────────────
+    api:
+        name: API Tests (Controllers)
+        needs: build-sdk
         runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_USER: cinema_user
+                    POSTGRES_PASSWORD: cinema_pass
+                    POSTGRES_DB: cinema_db
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U cinema_user"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        env:
+            TEST_DB_HOST: localhost
+            TEST_DB_PORT: 5432
+            TEST_DB_USERNAME: cinema_user
+            TEST_DB_PASSWORD: cinema_pass
+            TEST_DB_NAME: cinema_db
+
         steps:
             - uses: actions/checkout@v4
 
@@ -216,19 +267,21 @@ jobs:
 
             - run: npm ci --legacy-peer-deps
 
-            - name: Install Playwright browsers
-              run: npx playwright install --with-deps chromium
-              working-directory: frontend-application/cinema-app
-              continue-on-error: true
+            - name: Run API tests (controller layer + concurrency)
+              run: npm run test:api --workspaces --if-present
 
-            - name: Run Playwright page tests
-              run: npm run test:e2e --workspaces --if-present
-              continue-on-error: true
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: coverage-api
+                  path: backend-services/*/coverage
+                  retention-days: 7
 
-    # ── 7. Coverage gate ─────────────────────────────────────────────────────────
+    # ── 8. Coverage gate ─────────────────────────────────────────────────────────
     coverage-gate:
         name: Coverage Gate
-        needs: [unit, integration]
+        needs: [unit, integration, api]
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
@@ -264,14 +317,55 @@ jobs:
                   path: coverage-integration
               continue-on-error: true
 
+            - name: Download API coverage
+              uses: actions/download-artifact@v4
+              with:
+                  name: coverage-api
+                  path: coverage-api
+              continue-on-error: true
+
             - name: Check coverage thresholds
               run: npm run test:coverage --workspaces --if-present
               continue-on-error: true
 
-    # ── 8. Docker build ──────────────────────────────────────────────────────────
+    # ── 9. E2E / Playwright page tests (frontend unit + page tests) ───────────────
+    e2e:
+        name: E2E Tests (Playwright)
+        needs: build-sdk
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Install Playwright browsers
+              run: npx playwright install --with-deps chromium
+              working-directory: frontend-application/cinema-app
+              continue-on-error: true
+
+            - name: Run Playwright page tests (mocked responses)
+              run: npm run test:e2e --workspaces --if-present
+              continue-on-error: true
+
+    # ── 10. Docker build ──────────────────────────────────────────────────────────
     docker-build:
         name: Docker Build
-        needs: [lint, typecheck, unit]
+        needs: [unit, integration, api]
         runs-on: ubuntu-latest
         steps:
             - uses: actions/checkout@v4
