@@ -157,7 +157,7 @@ jobs:
                     grep -qE "No workspaces found|Workspace not found" /tmp/unit_out.txt
 
             - name: Upload coverage reports
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               if: always()
               with:
                   name: coverage-unit
@@ -220,7 +220,7 @@ jobs:
                     grep -qE "No workspaces found|Workspace not found" /tmp/int_out.txt
 
             - name: Upload coverage reports
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               if: always()
               with:
                   name: coverage-integration
@@ -281,7 +281,7 @@ jobs:
                     grep -qE "No workspaces found|Workspace not found" /tmp/api_out.txt
 
             - name: Upload coverage reports
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               if: always()
               with:
                   name: coverage-api
