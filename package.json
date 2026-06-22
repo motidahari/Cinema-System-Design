@@ -1,0 +1,21 @@
+{
+  "name": "cinema-reservation-system",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend-services/identity-service",
+    "backend-services/cinema-service",
+    "backend-services/libs/core/sdk",
+    "frontend-application/cinema-app"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
