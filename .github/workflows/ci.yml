@@ -17,7 +17,7 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: npm
@@ -26,7 +26,7 @@ jobs:
               run: npm ci --legacy-peer-deps
 
             - name: Cache node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -43,13 +43,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -74,13 +74,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -93,6 +93,7 @@ jobs:
 
             - name: Typecheck all workspaces
               run: |
+                  set -o pipefail
                   npm run typecheck 2>&1 | tee /tmp/tc_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/tc_out.txt
 
@@ -104,13 +105,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -123,6 +124,7 @@ jobs:
 
             - name: Build @cinema/internal-sdk
               run: |
+                  set -o pipefail
                   npm run build --workspace backend-services/libs/core/sdk --if-present 2>&1 | tee /tmp/sdk_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/sdk_out.txt
 
@@ -134,13 +136,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -153,11 +155,12 @@ jobs:
 
             - name: Run unit tests
               run: |
+                  set -o pipefail
                   npm run test:unit --workspaces --if-present 2>&1 | tee /tmp/unit_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/unit_out.txt
 
             - name: Upload coverage reports
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               if: always()
               with:
                   name: coverage-unit
@@ -197,13 +200,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -216,11 +219,12 @@ jobs:
 
             - name: Run integration tests (DAO layer)
               run: |
+                  set -o pipefail
                   npm run test:integration --workspaces --if-present 2>&1 | tee /tmp/int_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/int_out.txt
 
             - name: Upload coverage reports
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               if: always()
               with:
                   name: coverage-integration
@@ -258,13 +262,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -277,11 +281,12 @@ jobs:
 
             - name: Run API tests (controller layer + concurrency)
               run: |
+                  set -o pipefail
                   npm run test:api --workspaces --if-present 2>&1 | tee /tmp/api_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/api_out.txt
 
             - name: Upload coverage reports
-              uses: actions/upload-artifact@v4
+              uses: actions/upload-artifact@v7
               if: always()
               with:
                   name: coverage-api
@@ -296,13 +301,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -314,21 +319,21 @@ jobs:
             - run: npm ci --legacy-peer-deps
 
             - name: Download unit coverage
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: coverage-unit
                   path: coverage-unit
               continue-on-error: true
 
             - name: Download integration coverage
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: coverage-integration
                   path: coverage-integration
               continue-on-error: true
 
             - name: Download API coverage
-              uses: actions/download-artifact@v4
+              uses: actions/download-artifact@v8
               with:
                   name: coverage-api
                   path: coverage-api
@@ -346,13 +351,13 @@ jobs:
         steps:
             - uses: actions/checkout@v4
 
-            - uses: actions/setup-node@v4
+            - uses: actions/setup-node@v6
               with:
                   node-version: ${{ env.NODE_VERSION }}
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -384,7 +389,7 @@ jobs:
               uses: docker/setup-buildx-action@v3
 
             - name: Build identity-service image
-              uses: docker/build-push-action@v6
+              uses: docker/build-push-action@v7
               if: hashFiles('backend-services/identity-service/Dockerfile') != ''
               with:
                   context: .
@@ -394,7 +399,7 @@ jobs:
                   cache-to: type=gha,mode=max
 
             - name: Build cinema-service image
-              uses: docker/build-push-action@v6
+              uses: docker/build-push-action@v7
               if: hashFiles('backend-services/cinema-service/Dockerfile') != ''
               with:
                   context: .
@@ -404,7 +409,7 @@ jobs:
                   cache-to: type=gha,mode=max
 
             - name: Build cinema-app image
-              uses: docker/build-push-action@v6
+              uses: docker/build-push-action@v7
               if: hashFiles('frontend-application/cinema-app/Dockerfile') != ''
               with:
                   context: .
