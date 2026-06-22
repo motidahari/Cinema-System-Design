@@ -93,6 +93,7 @@ jobs:
 
             - name: Typecheck all workspaces
               run: |
+                  set -o pipefail
                   npm run typecheck 2>&1 | tee /tmp/tc_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/tc_out.txt
 
@@ -123,6 +124,7 @@ jobs:
 
             - name: Build @cinema/internal-sdk
               run: |
+                  set -o pipefail
                   npm run build --workspace backend-services/libs/core/sdk --if-present 2>&1 | tee /tmp/sdk_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/sdk_out.txt
 
@@ -153,6 +155,7 @@ jobs:
 
             - name: Run unit tests
               run: |
+                  set -o pipefail
                   npm run test:unit --workspaces --if-present 2>&1 | tee /tmp/unit_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/unit_out.txt
 
@@ -216,6 +219,7 @@ jobs:
 
             - name: Run integration tests (DAO layer)
               run: |
+                  set -o pipefail
                   npm run test:integration --workspaces --if-present 2>&1 | tee /tmp/int_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/int_out.txt
 
@@ -277,6 +281,7 @@ jobs:
 
             - name: Run API tests (controller layer + concurrency)
               run: |
+                  set -o pipefail
                   npm run test:api --workspaces --if-present 2>&1 | tee /tmp/api_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/api_out.txt
 
