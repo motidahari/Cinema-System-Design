@@ -384,7 +384,7 @@ jobs:
               uses: docker/setup-buildx-action@v3
 
             - name: Build identity-service image
-              uses: docker/build-push-action@v6
+              uses: docker/build-push-action@v7
               if: hashFiles('backend-services/identity-service/Dockerfile') != ''
               with:
                   context: .
@@ -394,7 +394,7 @@ jobs:
                   cache-to: type=gha,mode=max
 
             - name: Build cinema-service image
-              uses: docker/build-push-action@v6
+              uses: docker/build-push-action@v7
               if: hashFiles('backend-services/cinema-service/Dockerfile') != ''
               with:
                   context: .
@@ -404,7 +404,7 @@ jobs:
                   cache-to: type=gha,mode=max
 
             - name: Build cinema-app image
-              uses: docker/build-push-action@v6
+              uses: docker/build-push-action@v7
               if: hashFiles('frontend-application/cinema-app/Dockerfile') != ''
               with:
                   context: .
