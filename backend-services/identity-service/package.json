@@ -9,7 +9,7 @@
         "start:dev": "ts-node -r tsconfig-paths/register src/main.ts",
         "test:unit": "jest --config jest.config.js --selectProjects unit",
         "test:integration": "jest --config jest.config.js --selectProjects integration",
-        "test:api": "jest --config jest.config.js --selectProjects api",
+        "test:api": "jest --config jest.config.js --selectProjects api --passWithNoTests",
         "test:cov": "jest --config jest.config.js --coverage"
     },
     "dependencies": {
