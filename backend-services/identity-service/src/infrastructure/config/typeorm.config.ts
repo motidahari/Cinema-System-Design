@@ -1,5 +1,6 @@
 import { DataSourceOptions } from 'typeorm';
 import { DatabaseLogger } from '@cinema/internal-sdk';
+import { UserEntity } from '../../domain/entities/user.entity';
 import { AppConfig } from './app.config';
 
 export const createDataSourceOptions = (appConfig: AppConfig): DataSourceOptions => ({
@@ -10,8 +11,8 @@ export const createDataSourceOptions = (appConfig: AppConfig): DataSourceOptions
     password: appConfig.dbPassword,
     database: appConfig.dbName,
     schema: 'identity',
-    entities: [],
-    synchronize: false,
+    entities: [UserEntity],
+    synchronize: appConfig.isLocal,
     migrations: ['dist/migrations/*.js'],
     logger: new DatabaseLogger(),
     logging: ['query', 'error', 'warn', 'schema', 'migration'],
