@@ -1,9 +1,4 @@
-export enum ReservationStatus {
-    PENDING = 'PENDING',
-    CONFIRMED = 'CONFIRMED',
-    EXPIRED = 'EXPIRED',
-    CANCELLED = 'CANCELLED',
-}
+import { ReservationStatus } from '../enums/reservation-status.enum';
 
 export interface Reservation {
     id: string;

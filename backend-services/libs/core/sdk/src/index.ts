@@ -1,9 +1,10 @@
 export { IdentityClient } from './clients/identity.client';
 
 export type { UserProfile } from './types/user-profile.types';
-export { SeatStatus } from './types/seat.types';
+export { SeatStatus } from './enums/seat-status.enum';
+export { ReservationStatus } from './enums/reservation-status.enum';
+
 export type { Seat } from './types/seat.types';
-export { ReservationStatus } from './types/reservation.types';
 export type { Reservation } from './types/reservation.types';
 
 export { Logger } from './logger/logger';

@@ -1,8 +1,4 @@
-export enum SeatStatus {
-    AVAILABLE = 'AVAILABLE',
-    RESERVED = 'RESERVED',
-    BOOKED = 'BOOKED',
-}
+import { SeatStatus } from '../enums/seat-status.enum';
 
 export interface Seat {
     id: string;
