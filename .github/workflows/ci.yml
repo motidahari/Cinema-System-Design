@@ -93,8 +93,8 @@ jobs:
 
             - name: Typecheck all workspaces
               run: |
-                  out=$(npm run typecheck 2>&1); rc=$?; echo "$out"
-                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
+                  npm run typecheck 2>&1 | tee /tmp/tc_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/tc_out.txt
 
     # ── 4. Build SDK (@cinema/internal-sdk) ──────────────────────────────────────
     build-sdk:
@@ -123,8 +123,8 @@ jobs:
 
             - name: Build @cinema/internal-sdk
               run: |
-                  out=$(npm run build --workspace backend-services/libs/core/sdk --if-present 2>&1); rc=$?; echo "$out"
-                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
+                  npm run build --workspace backend-services/libs/core/sdk --if-present 2>&1 | tee /tmp/sdk_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/sdk_out.txt
 
     # ── 5. Unit tests ────────────────────────────────────────────────────────────
     unit:
@@ -153,8 +153,8 @@ jobs:
 
             - name: Run unit tests
               run: |
-                  out=$(npm run test:unit --workspaces --if-present 2>&1); rc=$?; echo "$out"
-                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
+                  npm run test:unit --workspaces --if-present 2>&1 | tee /tmp/unit_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/unit_out.txt
 
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
@@ -216,8 +216,8 @@ jobs:
 
             - name: Run integration tests (DAO layer)
               run: |
-                  out=$(npm run test:integration --workspaces --if-present 2>&1); rc=$?; echo "$out"
-                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
+                  npm run test:integration --workspaces --if-present 2>&1 | tee /tmp/int_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/int_out.txt
 
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
@@ -277,8 +277,8 @@ jobs:
 
             - name: Run API tests (controller layer + concurrency)
               run: |
-                  out=$(npm run test:api --workspaces --if-present 2>&1); rc=$?; echo "$out"
-                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
+                  npm run test:api --workspaces --if-present 2>&1 | tee /tmp/api_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/api_out.txt
 
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
