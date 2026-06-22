@@ -66,6 +66,9 @@ jobs:
             - name: Format check
               run: npm run format:check
 
+            - name: Dependency audit
+              run: npm audit --audit-level=high
+
     # ── 3. Typecheck ─────────────────────────────────────────────────────────────
     typecheck:
         name: Typecheck
@@ -177,7 +180,7 @@ jobs:
 
         services:
             postgres:
-                image: postgres:16-alpine
+                image: postgres:15-alpine
                 env:
                     POSTGRES_USER: cinema_user
                     POSTGRES_PASSWORD: cinema_pass
@@ -196,6 +199,7 @@ jobs:
             TEST_DB_USERNAME: cinema_user
             TEST_DB_PASSWORD: cinema_pass
             TEST_DB_NAME: cinema_db
+            JWT_SECRET: test-cinema-jwt-secret-minimum-32-chars!!
 
         steps:
             - uses: actions/checkout@v4
@@ -239,7 +243,7 @@ jobs:
 
         services:
             postgres:
-                image: postgres:16-alpine
+                image: postgres:15-alpine
                 env:
                     POSTGRES_USER: cinema_user
                     POSTGRES_PASSWORD: cinema_pass
@@ -258,6 +262,7 @@ jobs:
             TEST_DB_USERNAME: cinema_user
             TEST_DB_PASSWORD: cinema_pass
             TEST_DB_NAME: cinema_db
+            JWT_SECRET: test-cinema-jwt-secret-minimum-32-chars!!
 
         steps:
             - uses: actions/checkout@v4
@@ -340,8 +345,7 @@ jobs:
               continue-on-error: true
 
             - name: Check coverage thresholds
-              run: npm run test:coverage --workspaces --if-present
-              continue-on-error: true
+              run: npm run test:cov --workspaces --if-present
 
     # ── 9. E2E / Playwright page tests (frontend unit + page tests) ───────────────
     e2e:
