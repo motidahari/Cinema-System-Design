@@ -162,6 +162,9 @@ jobs:
 
             - run: npm ci --legacy-peer-deps
 
+            - name: Build SDK (required before tests)
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
             - name: Run unit tests
               run: |
                   set -o pipefail
@@ -227,6 +230,9 @@ jobs:
 
             - run: npm ci --legacy-peer-deps
 
+            - name: Build SDK (required before tests)
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
             - name: Run integration tests (DAO layer)
               run: |
                   set -o pipefail
@@ -289,6 +295,9 @@ jobs:
                   key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
 
             - run: npm ci --legacy-peer-deps
+
+            - name: Build SDK (required before tests)
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
 
             - name: Run API tests (controller layer + concurrency)
               run: |
