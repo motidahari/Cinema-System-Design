@@ -1,21 +1,38 @@
 {
-  "name": "cinema-reservation-system",
-  "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "backend-services/identity-service",
-    "backend-services/cinema-service",
-    "backend-services/libs/core/sdk",
-    "frontend-application/cinema-app"
-  ],
-  "scripts": {
-    "lint": "npm run lint --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present"
-  },
-  "engines": {
-    "node": ">=20.0.0",
-    "npm": ">=10.0.0"
-  }
+    "name": "cinema-reservation-system",
+    "version": "1.0.0",
+    "private": true,
+    "workspaces": [
+        "backend-services/identity-service",
+        "backend-services/cinema-service",
+        "backend-services/libs/core/sdk",
+        "frontend-application/cinema-app"
+    ],
+    "scripts": {
+        "prepare": "husky",
+        "lint": "eslint . --ext .ts,.tsx --no-error-on-unmatched-pattern",
+        "lint:fix": "eslint . --ext .ts,.tsx --fix --no-error-on-unmatched-pattern",
+        "format": "prettier --write .",
+        "format:check": "prettier --check .",
+        "typecheck": "npm run typecheck --workspaces --if-present",
+        "test": "npm run test --workspaces --if-present",
+        "build": "npm run build --workspaces --if-present"
+    },
+    "devDependencies": {
+        "@commitlint/cli": "^19.5.0",
+        "@commitlint/config-conventional": "^19.5.0",
+        "@typescript-eslint/eslint-plugin": "^7.18.0",
+        "@typescript-eslint/parser": "^7.18.0",
+        "eslint": "^8.57.1",
+        "eslint-config-prettier": "^9.1.0",
+        "eslint-plugin-react": "^7.37.2",
+        "eslint-plugin-react-hooks": "^4.6.2",
+        "husky": "^9.1.7",
+        "lint-staged": "^15.2.10",
+        "prettier": "^3.4.2"
+    },
+    "engines": {
+        "node": ">=20.0.0",
+        "npm": ">=10.0.0"
+    }
 }
