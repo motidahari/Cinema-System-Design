@@ -16,7 +16,10 @@
         "format:check": "prettier --check .",
         "typecheck": "npm run typecheck --workspaces --if-present",
         "test": "npm run test --workspaces --if-present",
-        "build": "npm run build --workspaces --if-present"
+        "build": "npm run build --workspaces --if-present",
+        "dev": "bash scripts/dev.sh",
+        "dev:stop": "bash scripts/dev.sh --stop",
+        "dev:logs": "bash scripts/dev.sh --logs"
     },
     "devDependencies": {
         "@commitlint/cli": "^19.5.0",

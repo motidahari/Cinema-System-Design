@@ -233,6 +233,9 @@ jobs:
             - name: Build SDK (required before tests)
               run: npm run build --workspace backend-services/libs/core/sdk --if-present
 
+            - name: Create DB schemas
+              run: PGPASSWORD=cinema_pass psql -h localhost -U cinema_user -d cinema_db -c "CREATE SCHEMA IF NOT EXISTS identity;"
+
             - name: Run integration tests (DAO layer)
               run: |
                   set -o pipefail
@@ -298,6 +301,9 @@ jobs:
 
             - name: Build SDK (required before tests)
               run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
+            - name: Create DB schemas
+              run: PGPASSWORD=cinema_pass psql -h localhost -U cinema_user -d cinema_db -c "CREATE SCHEMA IF NOT EXISTS identity;"
 
             - name: Run API tests (controller layer + concurrency)
               run: |
