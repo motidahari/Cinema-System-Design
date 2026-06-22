@@ -97,6 +97,9 @@ jobs:
 
             - run: npm ci --legacy-peer-deps
 
+            - name: Build SDK (required before typecheck)
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
             - name: Typecheck all workspaces
               run: |
                   set -o pipefail
