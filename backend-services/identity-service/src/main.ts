@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AppConfig } from './infrastructure/config/app.config';
+import { HttpExceptionFilter } from './infrastructure/filters/http-exception.filter';
+import { HttpLoggingInterceptor } from './infrastructure/interceptors/http-logging.interceptor';
 
 async function bootstrap(): Promise<void> {
     const app = await NestFactory.create(AppModule);
@@ -21,6 +23,8 @@ async function bootstrap(): Promise<void> {
     app.enableCors({ origin: corsOrigins, credentials: true });
 
     app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
+    app.useGlobalInterceptors(new HttpLoggingInterceptor());
+    app.useGlobalFilters(new HttpExceptionFilter());
 
     app.enableShutdownHooks();
     await app.listen(appConfig.port);
