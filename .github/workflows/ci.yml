@@ -26,7 +26,7 @@ jobs:
               run: npm ci --legacy-peer-deps
 
             - name: Cache node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -49,7 +49,7 @@ jobs:
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -80,7 +80,7 @@ jobs:
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -110,7 +110,7 @@ jobs:
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -140,7 +140,7 @@ jobs:
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -203,7 +203,7 @@ jobs:
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -264,7 +264,7 @@ jobs:
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -302,7 +302,7 @@ jobs:
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
@@ -352,7 +352,7 @@ jobs:
                   cache: npm
 
             - name: Restore node_modules
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       node_modules
