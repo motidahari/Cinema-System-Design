@@ -1,7 +1,10 @@
+import { requestContext } from './request-context';
+
 type Level = 'info' | 'warning' | 'error';
 
 function emit(level: Level, message: string, meta: Record<string, unknown> = {}): void {
-    process.stdout.write(JSON.stringify({ ts: new Date().toISOString(), level, message, ...meta }) + '\n');
+    const requestId = requestContext.getStore()?.requestId;
+    process.stdout.write(JSON.stringify({ ts: new Date().toISOString(), level, message, requestId, ...meta }) + '\n');
 }
 
 export const Logger = {
