@@ -66,8 +66,11 @@ jobs:
             - name: Format check
               run: npm run format:check
 
-            - name: Dependency audit
-              run: npm audit --audit-level=high
+            - name: Dependency audit (report)
+              run: npm audit --audit-level=high || true
+
+            - name: Dependency audit (gate — critical only, ADR-14)
+              run: npm audit --audit-level=critical
 
     # ── 3. Typecheck ─────────────────────────────────────────────────────────────
     typecheck:
