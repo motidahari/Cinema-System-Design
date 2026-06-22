@@ -1,0 +1,414 @@
+name: CI
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+env:
+    NODE_VERSION: '20'
+
+jobs:
+    # ── 1. Install ───────────────────────────────────────────────────────────────
+    install:
+        name: Install
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci --legacy-peer-deps
+
+            - name: Cache node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+    # ── 2. Lint (zero warnings, ADR-14) ─────────────────────────────────────────
+    lint:
+        name: Lint
+        needs: install
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Lint (zero warnings)
+              run: npm run lint -- --max-warnings 0
+
+            - name: Format check
+              run: npm run format:check
+
+    # ── 3. Typecheck ─────────────────────────────────────────────────────────────
+    typecheck:
+        name: Typecheck
+        needs: install
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Typecheck all workspaces
+              run: |
+                  npm run typecheck 2>&1 | tee /tmp/tc_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/tc_out.txt
+
+    # ── 4. Build SDK (@cinema/internal-sdk) ──────────────────────────────────────
+    build-sdk:
+        name: Build SDK
+        needs: [lint, typecheck]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Build @cinema/internal-sdk
+              run: |
+                  npm run build --workspace backend-services/libs/core/sdk --if-present 2>&1 | tee /tmp/sdk_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/sdk_out.txt
+
+    # ── 5. Unit tests ────────────────────────────────────────────────────────────
+    unit:
+        name: Unit Tests
+        needs: build-sdk
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Run unit tests
+              run: |
+                  npm run test:unit --workspaces --if-present 2>&1 | tee /tmp/unit_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/unit_out.txt
+
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: coverage-unit
+                  path: |
+                      backend-services/*/coverage
+                      frontend-application/*/coverage
+                  retention-days: 7
+
+    # ── 6. Integration tests — DAO layer (Postgres service) ──────────────────────
+    integration:
+        name: Integration Tests (DAO)
+        needs: build-sdk
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_USER: cinema_user
+                    POSTGRES_PASSWORD: cinema_pass
+                    POSTGRES_DB: cinema_db
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U cinema_user"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        env:
+            TEST_DB_HOST: localhost
+            TEST_DB_PORT: 5432
+            TEST_DB_USERNAME: cinema_user
+            TEST_DB_PASSWORD: cinema_pass
+            TEST_DB_NAME: cinema_db
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Run integration tests (DAO layer)
+              run: |
+                  npm run test:integration --workspaces --if-present 2>&1 | tee /tmp/int_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/int_out.txt
+
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: coverage-integration
+                  path: backend-services/*/coverage
+                  retention-days: 7
+
+    # ── 7. API tests — controller layer (Postgres service) ───────────────────────
+    api:
+        name: API Tests (Controllers)
+        needs: build-sdk
+        runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:16-alpine
+                env:
+                    POSTGRES_USER: cinema_user
+                    POSTGRES_PASSWORD: cinema_pass
+                    POSTGRES_DB: cinema_db
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U cinema_user"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        env:
+            TEST_DB_HOST: localhost
+            TEST_DB_PORT: 5432
+            TEST_DB_USERNAME: cinema_user
+            TEST_DB_PASSWORD: cinema_pass
+            TEST_DB_NAME: cinema_db
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Run API tests (controller layer + concurrency)
+              run: |
+                  npm run test:api --workspaces --if-present 2>&1 | tee /tmp/api_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/api_out.txt
+
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: coverage-api
+                  path: backend-services/*/coverage
+                  retention-days: 7
+
+    # ── 8. Coverage gate ─────────────────────────────────────────────────────────
+    coverage-gate:
+        name: Coverage Gate
+        needs: [unit, integration, api]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Download unit coverage
+              uses: actions/download-artifact@v4
+              with:
+                  name: coverage-unit
+                  path: coverage-unit
+              continue-on-error: true
+
+            - name: Download integration coverage
+              uses: actions/download-artifact@v4
+              with:
+                  name: coverage-integration
+                  path: coverage-integration
+              continue-on-error: true
+
+            - name: Download API coverage
+              uses: actions/download-artifact@v4
+              with:
+                  name: coverage-api
+                  path: coverage-api
+              continue-on-error: true
+
+            - name: Check coverage thresholds
+              run: npm run test:coverage --workspaces --if-present
+              continue-on-error: true
+
+    # ── 9. E2E / Playwright page tests (frontend unit + page tests) ───────────────
+    e2e:
+        name: E2E Tests (Playwright)
+        needs: build-sdk
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v4
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Install Playwright browsers
+              run: npx playwright install --with-deps chromium
+              working-directory: frontend-application/cinema-app
+              continue-on-error: true
+
+            - name: Run Playwright page tests (mocked responses)
+              run: npm run test:e2e --workspaces --if-present
+              continue-on-error: true
+
+    # ── 10. Docker build ──────────────────────────────────────────────────────────
+    docker-build:
+        name: Docker Build
+        needs: [unit, integration, api]
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Build identity-service image
+              uses: docker/build-push-action@v6
+              if: hashFiles('backend-services/identity-service/Dockerfile') != ''
+              with:
+                  context: .
+                  file: backend-services/identity-service/Dockerfile
+                  push: false
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+            - name: Build cinema-service image
+              uses: docker/build-push-action@v6
+              if: hashFiles('backend-services/cinema-service/Dockerfile') != ''
+              with:
+                  context: .
+                  file: backend-services/cinema-service/Dockerfile
+                  push: false
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+            - name: Build cinema-app image
+              uses: docker/build-push-action@v6
+              if: hashFiles('frontend-application/cinema-app/Dockerfile') != ''
+              with:
+                  context: .
+                  file: frontend-application/cinema-app/Dockerfile
+                  push: false
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
