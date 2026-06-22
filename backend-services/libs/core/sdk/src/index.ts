@@ -1,3 +1,12 @@
+export { IdentityClient } from './clients/identity.client';
+
+export type { UserProfile } from './types/user-profile.types';
+export { SeatStatus } from './enums/seat-status.enum';
+export { ReservationStatus } from './enums/reservation-status.enum';
+
+export type { Seat } from './types/seat.types';
+export type { Reservation } from './types/reservation.types';
+
 export { Logger } from './logger/logger';
 export { BaseCronJob } from './cron/base-cron-job';
 export { ValidationException } from './exceptions/validation.exception';
