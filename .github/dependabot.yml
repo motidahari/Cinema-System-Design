@@ -1,0 +1,63 @@
+version: 2
+
+updates:
+    # Root workspace + backend packages (npm)
+    - package-ecosystem: npm
+      directory: /
+      schedule:
+          interval: weekly
+          day: monday
+          time: '08:00'
+          timezone: Asia/Jerusalem
+      open-pull-requests-limit: 10
+      groups:
+          typescript-eslint:
+              patterns:
+                  - '@typescript-eslint/*'
+          nestjs:
+              patterns:
+                  - '@nestjs/*'
+          typeorm:
+              patterns:
+                  - typeorm
+                  - pg
+                  - '@types/pg'
+      ignore:
+          # Major version bumps require manual review
+          - dependency-name: '*'
+            update-types: ['version-update:semver-major']
+
+    # Frontend workspace (npm)
+    - package-ecosystem: npm
+      directory: /frontend-application/cinema-app
+      schedule:
+          interval: weekly
+          day: monday
+          time: '08:00'
+          timezone: Asia/Jerusalem
+      open-pull-requests-limit: 10
+      groups:
+          react:
+              patterns:
+                  - react
+                  - react-dom
+                  - '@types/react'
+                  - '@types/react-dom'
+          vite:
+              patterns:
+                  - vite
+                  - '@vitejs/*'
+                  - vitest
+      ignore:
+          - dependency-name: '*'
+            update-types: ['version-update:semver-major']
+
+    # GitHub Actions
+    - package-ecosystem: github-actions
+      directory: /
+      schedule:
+          interval: weekly
+          day: monday
+          time: '08:00'
+          timezone: Asia/Jerusalem
+      open-pull-requests-limit: 5
