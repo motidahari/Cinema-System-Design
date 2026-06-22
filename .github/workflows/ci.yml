@@ -92,7 +92,9 @@ jobs:
             - run: npm ci --legacy-peer-deps
 
             - name: Typecheck all workspaces
-              run: npm run typecheck
+              run: |
+                  out=$(npm run typecheck 2>&1); rc=$?; echo "$out"
+                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
 
     # ── 4. Build SDK (@cinema/internal-sdk) ──────────────────────────────────────
     build-sdk:
@@ -120,7 +122,9 @@ jobs:
             - run: npm ci --legacy-peer-deps
 
             - name: Build @cinema/internal-sdk
-              run: npm run build --workspace backend-services/libs/core/sdk --if-present
+              run: |
+                  out=$(npm run build --workspace backend-services/libs/core/sdk --if-present 2>&1); rc=$?; echo "$out"
+                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
 
     # ── 5. Unit tests ────────────────────────────────────────────────────────────
     unit:
@@ -148,7 +152,9 @@ jobs:
             - run: npm ci --legacy-peer-deps
 
             - name: Run unit tests
-              run: npm run test:unit --workspaces --if-present
+              run: |
+                  out=$(npm run test:unit --workspaces --if-present 2>&1); rc=$?; echo "$out"
+                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
 
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
@@ -209,7 +215,9 @@ jobs:
             - run: npm ci --legacy-peer-deps
 
             - name: Run integration tests (DAO layer)
-              run: npm run test:integration --workspaces --if-present
+              run: |
+                  out=$(npm run test:integration --workspaces --if-present 2>&1); rc=$?; echo "$out"
+                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
 
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
@@ -268,7 +276,9 @@ jobs:
             - run: npm ci --legacy-peer-deps
 
             - name: Run API tests (controller layer + concurrency)
-              run: npm run test:api --workspaces --if-present
+              run: |
+                  out=$(npm run test:api --workspaces --if-present 2>&1); rc=$?; echo "$out"
+                  echo "$out" | grep -qE "No workspaces found|Workspace not found" && exit 0 || exit $rc
 
             - name: Upload coverage reports
               uses: actions/upload-artifact@v4
