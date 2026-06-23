@@ -12,11 +12,12 @@ import { RefreshTokenModel } from '../../src/auth/domain-model/refresh-token';
 import { DuplicateEmailException } from '../../src/auth/exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../../src/auth/exception/invalid-credentials.exception';
 import { RecordNotFoundException } from '@cinema/internal-sdk';
+import { randomUUID } from 'crypto';
 import { Request } from 'express';
 
 const makeUser = (overrides: Partial<ConstructorParameters<typeof UserModel>[0]> = {}): UserModel =>
     new UserModel({
-        id: 'aaaaaaaa-0000-4000-8000-000000000001',
+        id: randomUUID(),
         email: 'alice@cinema.test',
         passwordHash: '$2b$10$hashedpassword',
         createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -28,9 +29,9 @@ const makeRefreshToken = (
     overrides: Partial<ConstructorParameters<typeof RefreshTokenModel>[0]> = {}
 ): RefreshTokenModel =>
     new RefreshTokenModel({
-        id: 'bbbbbbbb-0000-4000-8000-000000000001',
-        userId: 'aaaaaaaa-0000-4000-8000-000000000001',
-        familyId: 'cccccccc-0000-4000-8000-000000000001',
+        id: randomUUID(),
+        userId: randomUUID(),
+        familyId: randomUUID(),
         tokenHash: 'a'.repeat(64),
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
         revokedAt: null,
@@ -160,10 +161,7 @@ describe('AuthService', () => {
     describe('refresh, Given:Valid unused token, When:Refreshing', () => {
         it('should rotate the token and return new access + refresh tokens', async () => {
             const stored = makeRefreshToken();
-            const newStored = makeRefreshToken({
-                id: 'dddddddd-0000-4000-8000-000000000001',
-                tokenHash: 'b'.repeat(64),
-            });
+            const newStored = makeRefreshToken({ tokenHash: 'b'.repeat(64) });
             refreshTokenDao.findByTokenHash
                 .mockResolvedValueOnce(stored) // lookup of presented token
                 .mockResolvedValueOnce(newStored); // lookup of newly issued token
