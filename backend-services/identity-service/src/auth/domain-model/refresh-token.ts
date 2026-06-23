@@ -1,10 +1,4 @@
-import {
-    ValidationException,
-    assertDate,
-    assertNullableDate,
-    assertNullableString,
-    assertString,
-} from '@cinema/internal-sdk';
+import { ValidationException, isValidDate, isValidString } from '@cinema/internal-sdk';
 
 export class RefreshTokenModel {
     private _id!: string;
@@ -35,58 +29,65 @@ export class RefreshTokenModel {
         return this._id;
     }
     set id(value: string | undefined) {
-        const v = assertString(value, 'id', { optional: true });
-        if (v !== undefined) this._id = v;
+        if (!isValidString(value, { optional: true }))
+            throw new ValidationException(`id must be a non-empty string, received: "${value}"`);
+        if (value !== undefined) this._id = value;
     }
 
     get userId(): string {
         return this._userId;
     }
     set userId(value: string | undefined) {
-        const v = assertString(value, 'userId', { optional: true });
-        if (v !== undefined) this._userId = v;
+        if (!isValidString(value, { optional: true }))
+            throw new ValidationException(`userId must be a non-empty string, received: "${value}"`);
+        if (value !== undefined) this._userId = value;
     }
 
     get familyId(): string {
         return this._familyId;
     }
     set familyId(value: string | undefined) {
-        const v = assertString(value, 'familyId', { optional: true });
-        if (v !== undefined) this._familyId = v;
+        if (!isValidString(value, { optional: true }))
+            throw new ValidationException(`familyId must be a non-empty string, received: "${value}"`);
+        if (value !== undefined) this._familyId = value;
     }
 
     get tokenHash(): string {
         return this._tokenHash;
     }
     set tokenHash(value: string | undefined) {
-        if (value === undefined) return;
-        if (typeof value !== 'string' || value.length !== 64)
-            throw new ValidationException(`tokenHash must be a 64-char hex string, received length: ${value.length}`);
-        this._tokenHash = value;
+        if (!isValidString(value, { optional: true, min: 64, max: 64 }))
+            throw new ValidationException(
+                `tokenHash must be a 64-char hex string, received length: ${typeof value === 'string' ? value.length : value}`
+            );
+        if (value !== undefined) this._tokenHash = value;
     }
 
     get expiresAt(): Date {
         return this._expiresAt;
     }
     set expiresAt(value: Date | undefined) {
-        const v = assertDate(value, 'expiresAt', { optional: true });
-        if (v !== undefined) this._expiresAt = v;
+        if (!isValidDate(value, { optional: true }))
+            throw new ValidationException(`expiresAt must be a valid Date, received: ${String(value)}`);
+        if (value !== undefined) this._expiresAt = value;
     }
 
     get revokedAt(): Date | null {
         return this._revokedAt;
     }
     set revokedAt(value: Date | null | undefined) {
-        const v = assertNullableDate(value, 'revokedAt');
-        if (v !== undefined) this._revokedAt = v;
+        if (!isValidDate(value, { optional: true, nullable: true }))
+            throw new ValidationException(`revokedAt must be a valid Date or null, received: ${String(value)}`);
+        if (value !== undefined) this._revokedAt = value;
     }
 
     get replacedBy(): string | null {
         return this._replacedBy;
     }
     set replacedBy(value: string | null | undefined) {
-        const v = assertNullableString(value, 'replacedBy');
-        if (v !== undefined) this._replacedBy = v;
+        if (!isValidString(value, { optional: true, nullable: true }))
+            throw new ValidationException(`replacedBy must be a non-empty string or null, received: "${value}"`);
+        if (value !== undefined) this._replacedBy = value;
     }
 
     get userAgent(): string | null {
@@ -109,8 +110,9 @@ export class RefreshTokenModel {
         return this._createdAt;
     }
     set createdAt(value: Date | undefined) {
-        const v = assertDate(value, 'createdAt', { optional: true });
-        if (v !== undefined) this._createdAt = v;
+        if (!isValidDate(value, { optional: true }))
+            throw new ValidationException(`createdAt must be a valid Date, received: ${String(value)}`);
+        if (value !== undefined) this._createdAt = value;
     }
 
     isExpired(): boolean {

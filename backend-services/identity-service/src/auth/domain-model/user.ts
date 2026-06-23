@@ -1,6 +1,4 @@
-import { ValidationException, assertDate, assertString } from '@cinema/internal-sdk';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { EMAIL_PATTERN, ValidationException, isValidDate, isValidString } from '@cinema/internal-sdk';
 
 export class UserModel {
     private _id!: string;
@@ -21,8 +19,9 @@ export class UserModel {
         return this._id;
     }
     set id(value: string | undefined) {
-        const v = assertString(value, 'id', { optional: true });
-        if (v !== undefined) this._id = v;
+        if (!isValidString(value, { optional: true }))
+            throw new ValidationException(`id must be a non-empty string, received: "${value}"`);
+        if (value !== undefined) this._id = value;
     }
 
     get email(): string {
@@ -31,7 +30,7 @@ export class UserModel {
     set email(value: string | undefined) {
         if (value === undefined) return;
         const normalized = value.toLowerCase().trim();
-        if (!EMAIL_REGEX.test(normalized))
+        if (!isValidString(normalized, { pattern: EMAIL_PATTERN }))
             throw new ValidationException(`email must be a valid email address, received: "${value}"`);
         this._email = normalized;
     }
@@ -40,24 +39,27 @@ export class UserModel {
         return this._passwordHash;
     }
     set passwordHash(value: string | undefined) {
-        const v = assertString(value, 'passwordHash', { optional: true });
-        if (v !== undefined) this._passwordHash = v;
+        if (!isValidString(value, { optional: true }))
+            throw new ValidationException(`passwordHash must be a non-empty string, received: "${value}"`);
+        if (value !== undefined) this._passwordHash = value;
     }
 
     get createdAt(): Date {
         return this._createdAt;
     }
     set createdAt(value: Date | undefined) {
-        const v = assertDate(value, 'createdAt', { optional: true });
-        if (v !== undefined) this._createdAt = v;
+        if (!isValidDate(value, { optional: true }))
+            throw new ValidationException(`createdAt must be a valid Date, received: ${String(value)}`);
+        if (value !== undefined) this._createdAt = value;
     }
 
     get updatedAt(): Date {
         return this._updatedAt;
     }
     set updatedAt(value: Date | undefined) {
-        const v = assertDate(value, 'updatedAt', { optional: true });
-        if (v !== undefined) this._updatedAt = v;
+        if (!isValidDate(value, { optional: true }))
+            throw new ValidationException(`updatedAt must be a valid Date, received: ${String(value)}`);
+        if (value !== undefined) this._updatedAt = value;
     }
 
     toJSON() {
