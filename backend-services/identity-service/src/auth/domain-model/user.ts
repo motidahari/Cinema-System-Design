@@ -1,4 +1,12 @@
-import { EMAIL_PATTERN, ValidationException, isValidDate, isValidString } from '@cinema/internal-sdk';
+import { EMAIL_PATTERN, ValidationException, isValidDate, isValidString, isValidUuid } from '@cinema/internal-sdk';
+
+export interface UserModelAttrs {
+    id: string;
+    email: string;
+    passwordHash: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
 
 export class UserModel {
     private _id!: string;
@@ -7,7 +15,7 @@ export class UserModel {
     private _createdAt!: Date;
     private _updatedAt!: Date;
 
-    constructor(attrs: Partial<UserModel>) {
+    constructor(attrs: UserModelAttrs) {
         this.id = attrs.id;
         this.email = attrs.email;
         this.passwordHash = attrs.passwordHash;
@@ -18,18 +26,16 @@ export class UserModel {
     get id(): string {
         return this._id;
     }
-    set id(value: string | undefined) {
-        if (!isValidString(value)) throw new ValidationException(`id must be a non-empty string, received: "${value}"`);
-        this._id = value!;
+    set id(value: string) {
+        if (!isValidUuid(value)) throw new ValidationException(`id must be a valid UUID, received: "${value}"`);
+        this._id = value;
     }
 
     get email(): string {
         return this._email;
     }
-    set email(value: string | undefined) {
-        if (!isValidString(value))
-            throw new ValidationException(`email must be a non-empty string, received: "${value}"`);
-        const normalized = value!.toLowerCase().trim();
+    set email(value: string) {
+        const normalized = value.toLowerCase().trim();
         if (!isValidString(normalized, { pattern: EMAIL_PATTERN }))
             throw new ValidationException(`email must be a valid email address, received: "${value}"`);
         this._email = normalized;
@@ -38,28 +44,28 @@ export class UserModel {
     get passwordHash(): string {
         return this._passwordHash;
     }
-    set passwordHash(value: string | undefined) {
+    set passwordHash(value: string) {
         if (!isValidString(value))
             throw new ValidationException(`passwordHash must be a non-empty string, received: "${value}"`);
-        this._passwordHash = value!;
+        this._passwordHash = value;
     }
 
     get createdAt(): Date {
         return this._createdAt;
     }
-    set createdAt(value: Date | undefined) {
+    set createdAt(value: Date) {
         if (!isValidDate(value))
             throw new ValidationException(`createdAt must be a valid Date, received: ${String(value)}`);
-        this._createdAt = value!;
+        this._createdAt = value;
     }
 
     get updatedAt(): Date {
         return this._updatedAt;
     }
-    set updatedAt(value: Date | undefined) {
+    set updatedAt(value: Date) {
         if (!isValidDate(value))
             throw new ValidationException(`updatedAt must be a valid Date, received: ${String(value)}`);
-        this._updatedAt = value!;
+        this._updatedAt = value;
     }
 
     toJSON() {

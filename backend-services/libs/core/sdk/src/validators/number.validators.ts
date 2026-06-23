@@ -1,19 +1,6 @@
-export interface NumberValidationOptions {
-    /** Allow undefined as a valid value. Default: false */
-    optional?: boolean;
-    /** Allow null as a valid value. Default: false */
-    nullable?: boolean;
-    /** Value must be strictly greater than 0. Default: false */
-    positive?: boolean;
-    /** Minimum value (inclusive) */
-    min?: number;
-    /** Maximum value (inclusive) */
-    max?: number;
-    /** Value must be an integer. Default: false */
-    integer?: boolean;
-}
+import { ValidationOptions } from './validation-options';
 
-export function isValidNumber(value: unknown, options: NumberValidationOptions = {}): boolean {
+export function isValidNumber(value: unknown, options: ValidationOptions = {}): boolean {
     const { optional = false, nullable = false, positive = false, min, max, integer = false } = options;
 
     if (value === undefined) return optional;

@@ -1,8 +1,8 @@
 import { ValidationException } from '@cinema/internal-sdk';
 import { randomUUID } from 'crypto';
-import { UserModel } from '../../src/auth/domain-model/user';
+import { UserModel, UserModelAttrs } from '../../src/auth/domain-model/user';
 
-const validAttrs = {
+const validAttrs: UserModelAttrs = {
     id: randomUUID(),
     email: 'alice@cinema.test',
     passwordHash: '$2b$10$examplehashvalue',
@@ -27,9 +27,9 @@ describe('UserModel', () => {
         });
     });
 
-    describe('constructor, Given:Empty id, When:Constructing', () => {
+    describe('constructor, Given:Non-UUID id, When:Constructing', () => {
         it('should throw ValidationException', () => {
-            expect(() => new UserModel({ ...validAttrs, id: '' })).toThrow(ValidationException);
+            expect(() => new UserModel({ ...validAttrs, id: 'not-a-uuid' })).toThrow(ValidationException);
         });
     });
 

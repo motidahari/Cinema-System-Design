@@ -7,15 +7,15 @@ import { AuthService } from '../../src/auth/service/auth.service';
 jest.mock('bcrypt', () => ({ hash: jest.fn(), compare: jest.fn() }));
 import { UserDao } from '../../src/auth/dao/user.dao';
 import { RefreshTokenDao } from '../../src/auth/dao/refresh-token.dao';
-import { UserModel } from '../../src/auth/domain-model/user';
-import { RefreshTokenModel } from '../../src/auth/domain-model/refresh-token';
+import { UserModel, UserModelAttrs } from '../../src/auth/domain-model/user';
+import { RefreshTokenModel, RefreshTokenModelAttrs } from '../../src/auth/domain-model/refresh-token';
 import { DuplicateEmailException } from '../../src/auth/exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../../src/auth/exception/invalid-credentials.exception';
 import { RecordNotFoundException } from '@cinema/internal-sdk';
 import { randomUUID } from 'crypto';
 import { Request } from 'express';
 
-const makeUser = (overrides: Partial<UserModel> = {}): UserModel =>
+const makeUser = (overrides: Partial<UserModelAttrs> = {}): UserModel =>
     new UserModel({
         id: randomUUID(),
         email: 'alice@cinema.test',
@@ -25,7 +25,7 @@ const makeUser = (overrides: Partial<UserModel> = {}): UserModel =>
         ...overrides,
     });
 
-const makeRefreshToken = (overrides: Partial<RefreshTokenModel> = {}): RefreshTokenModel =>
+const makeRefreshToken = (overrides: Partial<RefreshTokenModelAttrs> = {}): RefreshTokenModel =>
     new RefreshTokenModel({
         id: randomUUID(),
         userId: randomUUID(),
