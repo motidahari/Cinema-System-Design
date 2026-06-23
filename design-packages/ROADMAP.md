@@ -542,7 +542,7 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B13a `test/identity-unit` | 4 | B12 | `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B13b `test/identity-integration` | 4 | B13a | `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B13c `test/identity-api` | 3 | B13b | `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
-| B14 `feat/cinema-scaffold` | 9 | B05 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B14 `feat/cinema-scaffold` | 9 | B05 | `backend-developer`, `backend-code-standards-reviewer` | 🔄 IN PROGRESS |
 | B15 `feat/cinema-platform` | 7 | B14 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
 | B16 `feat/cinema-seats` | 10 | B15 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
 | B17 `feat/cinema-reservations-domain` | 5 | B16 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
