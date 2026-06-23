@@ -1,16 +1,19 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
-import { UnauthorizedException } from '@nestjs/common';
+import { HttpStatus, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from '../../src/auth/service/auth.service';
 
 jest.mock('bcrypt', () => ({ hash: jest.fn(), compare: jest.fn() }));
 import { UserDao } from '../../src/auth/dao/user.dao';
 import { RefreshTokenDao } from '../../src/auth/dao/refresh-token.dao';
+import { LoginAttemptDao } from '../../src/auth/dao/login-attempt.dao';
 import { UserModel, UserModelAttrs } from '../../src/auth/domain-model/user';
 import { RefreshTokenModel, RefreshTokenModelAttrs } from '../../src/auth/domain-model/refresh-token';
 import { DuplicateEmailException } from '../../src/auth/exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../../src/auth/exception/invalid-credentials.exception';
+import { AccountLockedException } from '../../src/auth/exception/account-locked.exception';
+import { AppConfig } from '../../src/infrastructure/config/app.config';
 import { RecordNotFoundException } from '@cinema/shared';
 import { randomUUID } from 'crypto';
 import { Request } from 'express';
@@ -49,6 +52,7 @@ describe('AuthService', () => {
     let service: AuthService;
     let userDao: jest.Mocked<UserDao>;
     let refreshTokenDao: jest.Mocked<RefreshTokenDao>;
+    let loginAttemptDao: jest.Mocked<LoginAttemptDao>;
 
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
@@ -73,6 +77,18 @@ describe('AuthService', () => {
                     },
                 },
                 {
+                    provide: LoginAttemptDao,
+                    useValue: {
+                        isLocked: jest.fn().mockResolvedValue(false),
+                        recordFailure: jest.fn().mockResolvedValue(undefined),
+                        clear: jest.fn().mockResolvedValue(undefined),
+                    },
+                },
+                {
+                    provide: AppConfig,
+                    useValue: { loginLockThreshold: 5, loginLockWindowMin: 15 },
+                },
+                {
                     provide: JwtService,
                     useValue: { sign: jest.fn().mockReturnValue('signed.jwt.token') },
                 },
@@ -82,6 +98,7 @@ describe('AuthService', () => {
         service = module.get(AuthService);
         userDao = module.get(UserDao);
         refreshTokenDao = module.get(RefreshTokenDao);
+        loginAttemptDao = module.get(LoginAttemptDao);
     });
 
     afterEach(() => jest.clearAllMocks());
@@ -146,13 +163,58 @@ describe('AuthService', () => {
     });
 
     describe('login, Given:Wrong password, When:Logging in', () => {
-        it('should throw InvalidCredentialsException', async () => {
+        it('should throw InvalidCredentialsException and record the failure', async () => {
             userDao.findByEmail.mockResolvedValue(makeUser());
             (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
             await expect(service.login('alice@cinema.test', 'wrongpass', mockReq)).rejects.toThrow(
                 InvalidCredentialsException
             );
+            expect(loginAttemptDao.recordFailure).toHaveBeenCalledWith('alice@cinema.test', '127.0.0.1', 5, 15);
+        });
+    });
+
+    describe('login, Given:Account is locked, When:Logging in', () => {
+        it('should throw AccountLockedException without checking the password', async () => {
+            loginAttemptDao.isLocked.mockResolvedValue(true);
+
+            await expect(service.login('alice@cinema.test', 'anypass', mockReq)).rejects.toThrow(
+                AccountLockedException
+            );
+            expect(userDao.findByEmail).not.toHaveBeenCalled();
+            expect(bcrypt.compare).not.toHaveBeenCalled();
+        });
+
+        it('should respond 429', async () => {
+            loginAttemptDao.isLocked.mockResolvedValue(true);
+
+            const err = await service.login('alice@cinema.test', 'anypass', mockReq).catch((e) => e);
+            expect(err.getStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
+        });
+    });
+
+    describe('login, Given:Unknown email, When:Logging in', () => {
+        it('should record the failure before throwing InvalidCredentialsException', async () => {
+            userDao.findByEmail.mockResolvedValue(null);
+
+            await expect(service.login('ghost@cinema.test', 'pass', mockReq)).rejects.toThrow(
+                InvalidCredentialsException
+            );
+            expect(loginAttemptDao.recordFailure).toHaveBeenCalledWith('ghost@cinema.test', '127.0.0.1', 5, 15);
+        });
+    });
+
+    describe('login, Given:Valid credentials, When:Logging in after previous failures', () => {
+        it('should clear the lockout counter on success', async () => {
+            const user = makeUser();
+            userDao.findByEmail.mockResolvedValue(user);
+            (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+            refreshTokenDao.create.mockResolvedValue(makeRefreshToken());
+
+            await service.login('alice@cinema.test', 'correctpass', mockReq);
+
+            expect(loginAttemptDao.clear).toHaveBeenCalledWith('alice@cinema.test', '127.0.0.1');
+            expect(loginAttemptDao.recordFailure).not.toHaveBeenCalled();
         });
     });
 
