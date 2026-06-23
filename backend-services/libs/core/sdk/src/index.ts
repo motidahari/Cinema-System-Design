@@ -1,4 +1,5 @@
 export { IdentityClient } from './clients/identity.client';
+export { BaseDao } from './dao/base.dao';
 
 export type { UserProfile } from './types/user-profile.types';
 export { SeatStatus } from './enums/seat-status.enum';

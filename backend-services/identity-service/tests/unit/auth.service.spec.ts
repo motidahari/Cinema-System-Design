@@ -33,6 +33,7 @@ describe('AuthService', () => {
                     useValue: {
                         findByEmail: jest.fn(),
                         findById: jest.fn(),
+                        getById: jest.fn(),
                         create: jest.fn(),
                     },
                 },
@@ -109,9 +110,9 @@ describe('AuthService', () => {
     });
 
     describe('getMe, Given:Existing userId, When:Fetching profile', () => {
-        it('should return the user profile', async () => {
+        it('should return the user domain model', async () => {
             const user = makeUser();
-            userDao.findById.mockResolvedValue(user);
+            userDao.getById.mockResolvedValue(user);
 
             const profile = await service.getMe(user.id);
 
@@ -122,8 +123,8 @@ describe('AuthService', () => {
     });
 
     describe('getMe, Given:Non-existent userId, When:Fetching profile', () => {
-        it('should throw UserNotFoundException', async () => {
-            userDao.findById.mockResolvedValue(null);
+        it('should propagate UserNotFoundException from the DAO', async () => {
+            userDao.getById.mockRejectedValue(new UserNotFoundException('nonexistent-id'));
 
             await expect(service.getMe('nonexistent-id')).rejects.toThrow(UserNotFoundException);
         });

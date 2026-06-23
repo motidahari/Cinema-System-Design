@@ -6,7 +6,6 @@ import { UserDao } from '../dao/user.dao';
 import { UserModel } from '../domain-model/user';
 import { DuplicateEmailException } from '../exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../exception/invalid-credentials.exception';
-import { UserNotFoundException } from '../exception/user-not-found.exception';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -44,11 +43,7 @@ export class AuthService {
     }
 
     async getMe(userId: string): Promise<UserModel> {
-        const user = await this.userDao.findById(userId);
-        if (!user) {
-            throw new UserNotFoundException(userId);
-        }
-        return user;
+        return this.userDao.getById(userId);
     }
 
     private signToken(user: UserModel): string {
