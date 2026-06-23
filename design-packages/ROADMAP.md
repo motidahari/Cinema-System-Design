@@ -535,8 +535,8 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B08 `feat/identity-platform` | 6 | B07 | `be-dev`, `be-rev` | ✅ MERGED |
 | B09 `feat/identity-user-domain` | 10 | B07 | `be-dev`, `be-rev` | ✅ MERGED |
 | B10 `feat/identity-auth-access` | 6 | B09 | `be-dev`, `be-rev` | ✅ MERGED |
-| B11 `feat/identity-refresh-tokens` | 5 | B10 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B12 `feat/identity-csrf-lockout` | 5 | B11 | `be-dev`, `be-rev` | ⏳ PENDING |
+| B11 `feat/identity-refresh-tokens` | 5 | B10 | `be-dev`, `be-rev` | 🔄 IN PROGRESS |
+| B12 `feat/identity-csrf-lockout` | 5 | B11 | `be-dev`, `be-rev` | 🔄 IN PROGRESS |
 | B13a `test/identity-unit` | 4 | B12 | `be-qa`, `be-rev` | ⏳ PENDING |
 | B13b `test/identity-integration` | 4 | B13a | `be-qa`, `be-rev` | ⏳ PENDING |
 | B13c `test/identity-api` | 3 | B13b | `be-qa`, `be-rev` | ⏳ PENDING |

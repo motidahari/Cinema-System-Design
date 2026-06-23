@@ -11,7 +11,25 @@ import { HttpLoggingInterceptor } from './infrastructure/interceptors/http-loggi
 async function bootstrap(): Promise<void> {
     const app = await NestFactory.create(AppModule);
 
-    app.use(helmet());
+    app.use(
+        helmet({
+            contentSecurityPolicy: {
+                useDefaults: true,
+                directives: {
+                    defaultSrc: ["'self'"],
+                    scriptSrc: ["'self'"],
+                    styleSrc: ["'self'", "'unsafe-inline'"],
+                    imgSrc: ["'self'", 'data:'],
+                    connectSrc: ["'self'"],
+                    frameAncestors: ["'none'"],
+                    objectSrc: ["'none'"],
+                    baseUri: ["'self'"],
+                    formAction: ["'self'"],
+                },
+            },
+            crossOriginEmbedderPolicy: false,
+        })
+    );
     app.use(cookieParser());
     app.getHttpAdapter().getInstance().set('trust proxy', 1);
 

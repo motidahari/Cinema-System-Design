@@ -11,6 +11,7 @@ import { RequestIdMiddleware } from './infrastructure/middleware/request-id.midd
 import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { AuthModule } from './auth/auth.module';
+import { CsrfGuard } from './infrastructure/guards/csrf.guard';
 
 const envSchema = z.object({
     JWT_SECRET: z.string().min(32),
@@ -46,7 +47,10 @@ const envSchema = z.object({
         MetricsModule,
         AuthModule,
     ],
-    providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+    providers: [
+        { provide: APP_GUARD, useClass: ThrottlerGuard },
+        { provide: APP_GUARD, useClass: CsrfGuard },
+    ],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer): void {

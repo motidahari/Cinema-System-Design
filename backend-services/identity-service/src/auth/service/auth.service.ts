@@ -6,9 +6,12 @@ import { Request } from 'express';
 import { Logger } from '@cinema/internal-sdk';
 import { UserDao } from '../dao/user.dao';
 import { RefreshTokenDao } from '../dao/refresh-token.dao';
+import { LoginAttemptDao } from '../dao/login-attempt.dao';
 import { UserModel } from '../domain-model/user';
+import { AppConfig } from '../../infrastructure/config/app.config';
 import { DuplicateEmailException } from '../exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../exception/invalid-credentials.exception';
+import { AccountLockedException } from '../exception/account-locked.exception';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -23,7 +26,9 @@ export class AuthService {
     constructor(
         private readonly userDao: UserDao,
         private readonly refreshTokenDao: RefreshTokenDao,
-        private readonly jwtService: JwtService
+        private readonly loginAttemptDao: LoginAttemptDao,
+        private readonly jwtService: JwtService,
+        private readonly appConfig: AppConfig
     ) {}
 
     async register(email: string, password: string, req: Request): Promise<TokenPair> {
@@ -40,14 +45,36 @@ export class AuthService {
     }
 
     async login(email: string, password: string, req: Request): Promise<TokenPair> {
-        const user = await this.userDao.findByEmail(email);
+        const normalizedEmail = email.toLowerCase().trim();
+        const ip = req.ip ?? '';
+
+        if (await this.loginAttemptDao.isLocked(normalizedEmail, ip)) {
+            throw new AccountLockedException();
+        }
+
+        const user = await this.userDao.findByEmail(normalizedEmail);
         if (!user) {
+            await this.loginAttemptDao.recordFailure(
+                normalizedEmail,
+                ip,
+                this.appConfig.loginLockThreshold,
+                this.appConfig.loginLockWindowMin
+            );
             throw new InvalidCredentialsException();
         }
+
         const valid = await bcrypt.compare(password, user.passwordHash);
         if (!valid) {
+            await this.loginAttemptDao.recordFailure(
+                normalizedEmail,
+                ip,
+                this.appConfig.loginLockThreshold,
+                this.appConfig.loginLockWindowMin
+            );
             throw new InvalidCredentialsException();
         }
+
+        await this.loginAttemptDao.clear(normalizedEmail, ip);
         const accessToken = this.signAccessToken(user);
         const refreshToken = await this.issueRefreshToken(user.id, randomUUID(), req);
         Logger.info('User logged in', { userId: user.id });
