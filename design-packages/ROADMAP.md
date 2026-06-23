@@ -15,7 +15,11 @@
 | Tests | Tests ship **in the same branch** as the code, **always** — even when that pushes the branch past 10 files. Untested code is not done. The 10-file limit is never a reason to defer tests. When the feature code itself exceeds 10 files, split by layer first (entity → service → controller), then keep tests with the layer they cover. |
 | Definition of Done | Branch compiles (`tsc`), lints clean, its own tests pass, and it does **not** break previously-merged branches. |
 | Commit footer | `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>` |
+| Merge strategy | Always `--merge`. Never `--squash` or `--rebase`. |
+| Tests pass before push | **All tests pass before every `git push`** — unit, integration, API, page, e2e. Never push a branch with failing tests. |
+| CI green before merge | **Wait for CI to pass (green) before merging into `main`.** Never merge while CI is running or failing. |
 | **Pre-implementation read** | **Before touching a single file**, read the design docs listed under **"Design docs"** for that branch. Do not read the entire `design-packages/` directory — read only what is listed. Implementation decisions must be derived from the spec, not assumed. |
+| **Post-merge status update** | **Immediately after every merge into `main`**, update the branch's status in the §10 summary table from `🔄 IN PROGRESS` → `✅ MERGED`. Never leave the table stale. |
 
 **Split rule**: when a logical unit > 10 files, split by layer (entity/model/dao → service/controller → tests) or by sub-feature (access-token → refresh-token → csrf/lockout).
 
@@ -28,16 +32,16 @@
 
 ### 1.2 Agent legend
 
-Each branch lists the agents that should be invoked for that task. Load only the agents listed — they carry the skills and context relevant to that layer.
+Each branch lists the agents that should be invoked for that task. Load only the agents listed — they carry the skills and context relevant to that layer. Always refer to an agent by its **full name** (no codes/abbreviations).
 
-| Code | Agent | When to invoke |
-|---|---|---|
-| `be-dev` | `backend-developer` | Implementing NestJS entities, services, controllers, modules |
-| `fe-dev` | `frontend-developer` | Implementing React components, hooks, stores, services |
-| `be-qa` | `backend-qa-tester` | Writing/running unit, integration, or API tests for backend |
-| `fe-qa` | `frontend-qa-tester` | Writing/running Vitest unit tests or Playwright page tests |
-| `be-rev` | `backend-code-standards-reviewer` | Reviewing any backend code before PR is opened |
-| `fe-rev` | `frontend-code-standards-reviewer` | Reviewing any frontend code before PR is opened |
+| Agent | When to invoke |
+|---|---|
+| `backend-developer` | Implementing NestJS entities, services, controllers, modules |
+| `frontend-developer` | Implementing React components, hooks, stores, services |
+| `backend-qa-tester` | Writing/running unit, integration, or API tests for backend |
+| `frontend-qa-tester` | Writing/running Vitest unit tests or Playwright page tests |
+| `backend-code-standards-reviewer` | Reviewing any backend code before PR is opened |
+| `frontend-code-standards-reviewer` | Reviewing any frontend code before PR is opened |
 
 ---
 
@@ -520,52 +524,50 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 ## 10. Branch summary table
 
 > **Legend**: `✅ MERGED` — merged into main | `🔄 IN PROGRESS` — branch open, awaiting review | `⏳ PENDING` — not yet started
->
-> **Agent codes**: `be-dev` backend-developer · `fe-dev` frontend-developer · `be-qa` backend-qa-tester · `fe-qa` frontend-qa-tester · `be-rev` backend-code-standards-reviewer · `fe-rev` frontend-code-standards-reviewer
 
 | Branch | Files | Depends on | Agents | Status |
 |---|---|---|---|---|
-| B01 `chore/monorepo-foundation` | 6 | — | `be-dev`, `be-rev` | ✅ MERGED |
-| B02 `chore/tooling-quality` | 7 | B01 | `be-dev`, `be-rev` | ✅ MERGED |
-| B03 `ci/github-actions` | 3 | B01 | `be-dev`, `be-rev` | ✅ MERGED |
-| B04 `feat/sdk-core` | 8 | B01 | `be-dev`, `be-rev` | ✅ MERGED |
-| B05 `feat/sdk-types-clients` | 5 | B04 | `be-dev`, `be-rev` | ✅ MERGED |
-| B06 `feat/sdk-observability` | 4 | B04 | `be-dev`, `be-qa`, `be-rev` | ✅ MERGED |
-| B07 `feat/identity-scaffold` | 10 | B05 | `be-dev`, `be-rev` | ✅ MERGED |
-| B08 `feat/identity-platform` | 6 | B07 | `be-dev`, `be-rev` | ✅ MERGED |
-| B09 `feat/identity-user-domain` | 10 | B07 | `be-dev`, `be-rev` | ✅ MERGED |
-| B10 `feat/identity-auth-access` | 6 | B09 | `be-dev`, `be-rev` | ✅ MERGED |
-| B11 `feat/identity-refresh-tokens` | 5 | B10 | `be-dev`, `be-rev` | ✅ MERGED |
-| B12 `feat/identity-csrf-lockout` | 5 | B11 | `be-dev`, `be-rev` | 🔄 IN PROGRESS |
-| B13a `test/identity-unit` | 4 | B12 | `be-qa`, `be-rev` | ⏳ PENDING |
-| B13b `test/identity-integration` | 4 | B13a | `be-qa`, `be-rev` | ⏳ PENDING |
-| B13c `test/identity-api` | 3 | B13b | `be-qa`, `be-rev` | ⏳ PENDING |
-| B14 `feat/cinema-scaffold` | 9 | B05 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B15 `feat/cinema-platform` | 7 | B14 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B16 `feat/cinema-seats` | 10 | B15 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B17 `feat/cinema-reservations-domain` | 5 | B16 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B18 `feat/cinema-seat-rules` | 8 | B17 | `be-dev`, `be-qa`, `be-rev` | ⏳ PENDING |
-| B19 `feat/cinema-reservations-core` | 6 | B18 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B20 `feat/cinema-realtime` | 3 | B19 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B21 `feat/cinema-expiry-cron` | 2 | B19 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B22 `feat/cinema-idempotency` | 3 | B19 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B23 `test/cinema-unit` | 4 | B19 | `be-qa`, `be-rev` | ⏳ PENDING |
-| B24a `test/cinema-integration` | 5 | B22 | `be-qa`, `be-rev` | ⏳ PENDING |
-| B24b `test/cinema-api` | 6 | B24a | `be-qa`, `be-rev` | ⏳ PENDING |
-| B25 `feat/web-scaffold` | 10 | B03 | `fe-dev`, `fe-rev` | ⏳ PENDING |
-| B26 `feat/web-foundation` | 9 | B25 | `fe-dev`, `fe-rev` | ⏳ PENDING |
-| B27 `feat/web-http-core` | 6 | B26 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B28 `feat/web-auth-state` | 7 | B27 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B29 `feat/web-shared-ui` | 9 | B26 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B30 `feat/web-routing-layouts` | 10 | B28, B29 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B31 `feat/web-auth-forms` | 6 | B29 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B32 `feat/web-auth-views` | 8 | B30, B31 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B33 `feat/web-cinema-services-stores` | 9 | B27 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B34 `feat/web-cinema-hooks` | 6 | B33 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B35 `feat/web-cinema-seat-components` | 9 | B34 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B36 `feat/web-cinema-view` | 7 | B35 | `fe-dev`, `fe-qa`, `fe-rev` | ⏳ PENDING |
-| B37 `feat/infra-docker` | 7 | B13c, B24b, B36 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B38 `feat/infra-scaling` | 3 | B37 | `be-dev`, `be-rev` | ⏳ PENDING |
-| B39 `docs/finalize` + live smoke | 3 | B38 | `be-dev`, `be-qa`, `fe-qa`, `be-rev` | ⏳ PENDING |
+| B01 `chore/monorepo-foundation` | 6 | — | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B02 `chore/tooling-quality` | 7 | B01 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B03 `ci/github-actions` | 3 | B01 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B04 `feat/sdk-core` | 8 | B01 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B05 `feat/sdk-types-clients` | 5 | B04 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B06 `feat/sdk-observability` | 4 | B04 | `backend-developer`, `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B07 `feat/identity-scaffold` | 10 | B05 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B08 `feat/identity-platform` | 6 | B07 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B09 `feat/identity-user-domain` | 10 | B07 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B10 `feat/identity-auth-access` | 6 | B09 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B11 `feat/identity-refresh-tokens` | 5 | B10 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B12 `feat/identity-csrf-lockout` | 5 | B11 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
+| B13a `test/identity-unit` | 4 | B12 | `backend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B13b `test/identity-integration` | 4 | B13a | `backend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B13c `test/identity-api` | 3 | B13b | `backend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B14 `feat/cinema-scaffold` | 9 | B05 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B15 `feat/cinema-platform` | 7 | B14 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B16 `feat/cinema-seats` | 10 | B15 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B17 `feat/cinema-reservations-domain` | 5 | B16 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B18 `feat/cinema-seat-rules` | 8 | B17 | `backend-developer`, `backend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B19 `feat/cinema-reservations-core` | 6 | B18 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B20 `feat/cinema-realtime` | 3 | B19 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B21 `feat/cinema-expiry-cron` | 2 | B19 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B22 `feat/cinema-idempotency` | 3 | B19 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B23 `test/cinema-unit` | 4 | B19 | `backend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B24a `test/cinema-integration` | 5 | B22 | `backend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B24b `test/cinema-api` | 6 | B24a | `backend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B25 `feat/web-scaffold` | 10 | B03 | `frontend-developer`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B26 `feat/web-foundation` | 9 | B25 | `frontend-developer`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B27 `feat/web-http-core` | 6 | B26 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B28 `feat/web-auth-state` | 7 | B27 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B29 `feat/web-shared-ui` | 9 | B26 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B30 `feat/web-routing-layouts` | 10 | B28, B29 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B31 `feat/web-auth-forms` | 6 | B29 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B32 `feat/web-auth-views` | 8 | B30, B31 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B33 `feat/web-cinema-services-stores` | 9 | B27 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B34 `feat/web-cinema-hooks` | 6 | B33 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B35 `feat/web-cinema-seat-components` | 9 | B34 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B36 `feat/web-cinema-view` | 7 | B35 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B37 `feat/infra-docker` | 7 | B13c, B24b, B36 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B38 `feat/infra-scaling` | 3 | B37 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B39 `docs/finalize` + live smoke | 3 | B38 | `backend-developer`, `backend-qa-tester`, `frontend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |
 
 **Total: 42 branches**, every one ≤ 10 files.
