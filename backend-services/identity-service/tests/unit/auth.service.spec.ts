@@ -224,6 +224,17 @@ describe('AuthService', () => {
         });
     });
 
+    describe('logout, Given:Token not found in DB, When:Logging out', () => {
+        it('should return silently without revoking anything', async () => {
+            refreshTokenDao.findByTokenHash.mockResolvedValue(null);
+
+            await service.logout('already-cleaned-up-token');
+
+            expect(refreshTokenDao.findByTokenHash).toHaveBeenCalled();
+            expect(refreshTokenDao.revokeFamily).not.toHaveBeenCalled();
+        });
+    });
+
     describe('getMe, Given:Existing userId, When:Fetching profile', () => {
         it('should return the user domain model', async () => {
             const user = makeUser();
