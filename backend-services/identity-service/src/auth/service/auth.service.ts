@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { Request } from 'express';
-import { Logger } from '@cinema/internal-sdk';
+import { Logger } from '@cinema/shared';
 import { UserDao } from '../dao/user.dao';
 import { RefreshTokenDao } from '../dao/refresh-token.dao';
 import { UserModel } from '../domain-model/user';

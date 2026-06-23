@@ -1,4 +1,4 @@
-import { EMAIL_PATTERN, ValidationException, isValidDate, isValidString, isValidUuid } from '@cinema/internal-sdk';
+import { EMAIL_PATTERN, ValidationException, isValidDate, isValidString, isValidUuid } from '@cinema/shared';
 
 export interface UserModelAttrs {
     id: string;

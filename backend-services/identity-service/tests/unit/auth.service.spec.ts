@@ -11,7 +11,7 @@ import { UserModel, UserModelAttrs } from '../../src/auth/domain-model/user';
 import { RefreshTokenModel, RefreshTokenModelAttrs } from '../../src/auth/domain-model/refresh-token';
 import { DuplicateEmailException } from '../../src/auth/exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../../src/auth/exception/invalid-credentials.exception';
-import { RecordNotFoundException } from '@cinema/internal-sdk';
+import { RecordNotFoundException } from '@cinema/shared';
 import { randomUUID } from 'crypto';
 import { Request } from 'express';
 

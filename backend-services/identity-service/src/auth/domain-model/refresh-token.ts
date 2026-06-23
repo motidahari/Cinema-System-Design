@@ -1,4 +1,4 @@
-import { ValidationException, isValidDate, isValidString, isValidUuid } from '@cinema/internal-sdk';
+import { ValidationException, isValidDate, isValidString, isValidUuid } from '@cinema/shared';
 
 export interface RefreshTokenModelAttrs {
     id: string;

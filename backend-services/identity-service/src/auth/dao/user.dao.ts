@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
-import { BaseDao } from '@cinema/internal-sdk';
+import { BaseDao } from '@cinema/shared';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { UserModel } from '../domain-model/user';
 

@@ -1,5 +1,5 @@
 import { DataSourceOptions } from 'typeorm';
-import { DatabaseLogger } from '@cinema/internal-sdk';
+import { DatabaseLogger } from '@cinema/shared';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { AppConfig } from './app.config';
 

@@ -6,6 +6,7 @@
         "backend-services/identity-service",
         "backend-services/cinema-service",
         "backend-services/libs/core/sdk",
+        "backend-services/libs/core/shared",
         "frontend-application/cinema-app"
     ],
     "scripts": {

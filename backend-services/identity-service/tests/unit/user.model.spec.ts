@@ -1,4 +1,4 @@
-import { ValidationException } from '@cinema/internal-sdk';
+import { ValidationException } from '@cinema/shared';
 import { randomUUID } from 'crypto';
 import { UserModel, UserModelAttrs } from '../../src/auth/domain-model/user';
 
