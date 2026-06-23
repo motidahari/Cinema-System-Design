@@ -1,5 +1,6 @@
 import { DataSourceOptions } from 'typeorm';
 import { DatabaseLogger } from '@cinema/shared';
+import { SeatEntity } from '../../domain/entities/seat.entity';
 import { AppConfig } from './app.config';
 
 // Entities are registered per-domain as branches land (seats in B16, reservations in B17+).
@@ -11,7 +12,7 @@ export const createDataSourceOptions = (appConfig: AppConfig): DataSourceOptions
     password: appConfig.dbPassword,
     database: appConfig.dbName,
     schema: 'cinema',
-    entities: [],
+    entities: [SeatEntity],
     synchronize: appConfig.isLocal,
     migrations: ['dist/migrations/*.js'],
     logger: new DatabaseLogger(),

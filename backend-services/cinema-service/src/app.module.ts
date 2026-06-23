@@ -8,8 +8,11 @@ import { AppConfigModule } from './infrastructure/config/app-config.module';
 import { AppConfig } from './infrastructure/config/app.config';
 import { createDataSourceOptions } from './infrastructure/config/typeorm.config';
 import { RequestIdMiddleware } from './infrastructure/middleware/request-id.middleware';
+import { CsrfGuard } from './infrastructure/guards/csrf.guard';
 import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { SeatsModule } from './seats/seats.module';
+import { SeedModule } from './seed/seed.module';
 
 const envSchema = z.object({
     PORT: z.coerce.number().default(3002),
@@ -43,8 +46,13 @@ const envSchema = z.object({
         }),
         HealthModule,
         MetricsModule,
+        SeatsModule,
+        SeedModule,
     ],
-    providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
+    providers: [
+        { provide: APP_GUARD, useClass: ThrottlerGuard },
+        { provide: APP_GUARD, useClass: CsrfGuard },
+    ],
 })
 export class AppModule implements NestModule {
     configure(consumer: MiddlewareConsumer): void {

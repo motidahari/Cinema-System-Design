@@ -173,7 +173,7 @@ jobs:
               run: npm run build --workspace backend-services/libs/core/shared --if-present
 
             - name: Create DB schemas
-              run: PGPASSWORD=cinema_pass psql -h localhost -U cinema_user -d cinema_db -c "CREATE SCHEMA IF NOT EXISTS identity;"
+              run: PGPASSWORD=cinema_pass psql -h localhost -U cinema_user -d cinema_db -c "CREATE SCHEMA IF NOT EXISTS identity; CREATE SCHEMA IF NOT EXISTS cinema;"
 
             - name: Run integration tests
               run: |
