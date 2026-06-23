@@ -110,10 +110,10 @@ docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -q -c "
 " && success "Schema 'identity' ready."
 
 # ── ADD NEW SERVICE SCHEMAS HERE ──────────────────────────────────────────────
-# B14 cinema-service:
-# docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -q -c "
-#     CREATE SCHEMA IF NOT EXISTS cinema;
-# " && success "Schema 'cinema' ready."
+# cinema-service (B16+):
+docker exec "$DB_CONTAINER" psql -U "$DB_USER" -d "$DB_NAME" -q -c "
+    CREATE SCHEMA IF NOT EXISTS cinema;
+" && success "Schema 'cinema' ready."
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── 3. Install workspace dependencies ─────────────────────────────────────────

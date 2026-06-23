@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { AppConfig } from './infrastructure/config/app.config';
+import { SeatSeederService } from './seed/seat-seeder.service';
 import { HttpExceptionFilter } from './infrastructure/filters/http-exception.filter';
 import { HttpLoggingInterceptor } from './infrastructure/interceptors/http-logging.interceptor';
 
@@ -27,6 +28,10 @@ async function bootstrap(): Promise<void> {
     app.useGlobalFilters(new HttpExceptionFilter());
 
     app.enableShutdownHooks();
+
+    const seeder = app.get(SeatSeederService);
+    await seeder.seedIfEmpty();
+
     await app.listen(appConfig.port);
 }
 

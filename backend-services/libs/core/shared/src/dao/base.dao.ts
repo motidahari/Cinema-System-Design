@@ -1,4 +1,5 @@
-import { Repository, FindOptionsWhere, DeepPartial } from 'typeorm';
+import { Repository, FindOptionsWhere, DeepPartial, FindManyOptions, In } from 'typeorm';
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { RecordNotFoundException } from './exceptions';
 
 /**
@@ -35,5 +36,44 @@ export abstract class BaseDao<TEntity extends { id: string }, TDomain> {
     protected async findOneBy(where: FindOptionsWhere<TEntity>): Promise<TDomain | null> {
         const entity = await this.repo.findOne({ where });
         return entity ? this.toDomain(entity) : null;
+    }
+
+    async findAll(options?: FindManyOptions<TEntity>): Promise<TDomain[]> {
+        const entities = await this.repo.find(options);
+        return entities.map((e) => this.toDomain(e));
+    }
+
+    async findByIds(ids: string[], options?: FindManyOptions<TEntity>): Promise<TDomain[]> {
+        if (ids.length === 0) return [];
+
+        const idCondition = { id: In(ids) } as FindOptionsWhere<TEntity>;
+        const baseWhere = options?.where;
+        let where: FindOptionsWhere<TEntity> | FindOptionsWhere<TEntity>[];
+        if (Array.isArray(baseWhere)) {
+            where = baseWhere.map((w) => ({ ...w, ...idCondition }));
+        } else if (baseWhere) {
+            where = { ...baseWhere, ...idCondition };
+        } else {
+            where = idCondition;
+        }
+
+        const entities = await this.repo.find({ ...options, where });
+        return entities.map((e) => this.toDomain(e));
+    }
+
+    async save(domain: TDomain): Promise<TDomain> {
+        const entity = this.toEntity(domain);
+        const saved = await this.repo.save(entity);
+        return this.toDomain(saved as TEntity);
+    }
+
+    async update(id: string, partialDomain: Partial<TDomain>): Promise<TDomain> {
+        const partialEntity = partialDomain as unknown as QueryDeepPartialEntity<TEntity>;
+        await this.repo.update(id, partialEntity);
+        return this.getById(id);
+    }
+
+    async delete(id: string): Promise<void> {
+        await this.repo.delete(id);
     }
 }
