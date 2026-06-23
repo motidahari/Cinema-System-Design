@@ -4,11 +4,17 @@ import { Request, Response } from 'express';
 import { AuthService } from './service/auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UserProfileDto } from './dto/user-profile.dto';
+import { UserModel } from './domain-model/user';
 import { JwtAuthGuard } from '../infrastructure/guards/jwt-auth.guard';
 import { CookieService } from '../infrastructure/cookies/cookie.service';
 import { JwtPayload } from '../infrastructure/guards/jwt.strategy';
 
 type AuthenticatedRequest = Request & { user: JwtPayload };
+
+function toProfileDto(user: UserModel): UserProfileDto {
+    return { id: user.id, email: user.email, createdAt: user.createdAt.toISOString() };
+}
 
 @Controller('api/v1/auth')
 export class AuthController {
@@ -22,7 +28,7 @@ export class AuthController {
     async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
         const { user, accessToken } = await this.authService.register(dto.email, dto.password);
         this.cookieService.setAuthCookies(res, accessToken);
-        return { user };
+        return { user: toProfileDto(user) };
     }
 
     @Post('login')
@@ -31,14 +37,14 @@ export class AuthController {
     async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
         const { user, accessToken } = await this.authService.login(dto.email, dto.password);
         this.cookieService.setAuthCookies(res, accessToken);
-        return { user };
+        return { user: toProfileDto(user) };
     }
 
     @Get('me')
     @UseGuards(JwtAuthGuard)
     async me(@Req() req: AuthenticatedRequest) {
         const user = await this.authService.getMe(req.user.userId);
-        return { user };
+        return { user: toProfileDto(user) };
     }
 
     @Get('validate')

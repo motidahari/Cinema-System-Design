@@ -64,7 +64,7 @@ describe('AuthService', () => {
             });
             expect(result.accessToken).toBe('signed.jwt.token');
             expect(result.user.email).toBe('alice@cinema.test');
-            expect(result.user).not.toHaveProperty('passwordHash');
+            expect(result.user).toBeInstanceOf(UserModel);
         });
     });
 
@@ -117,7 +117,7 @@ describe('AuthService', () => {
 
             expect(profile.id).toBe(user.id);
             expect(profile.email).toBe(user.email);
-            expect(profile.createdAt).toBe(user.createdAt.toISOString());
+            expect(profile.createdAt).toBe(user.createdAt);
         });
     });
 

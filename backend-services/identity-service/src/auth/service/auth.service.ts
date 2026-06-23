@@ -7,17 +7,8 @@ import { UserModel } from '../domain-model/user';
 import { DuplicateEmailException } from '../exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../exception/invalid-credentials.exception';
 import { UserNotFoundException } from '../exception/user-not-found.exception';
-import { UserProfileDto } from '../dto/user-profile.dto';
 
 const BCRYPT_ROUNDS = 12;
-
-function toProfileDto(user: UserModel): UserProfileDto {
-    return {
-        id: user.id,
-        email: user.email,
-        createdAt: user.createdAt.toISOString(),
-    };
-}
 
 @Injectable()
 export class AuthService {
@@ -26,7 +17,7 @@ export class AuthService {
         private readonly jwtService: JwtService
     ) {}
 
-    async register(email: string, password: string): Promise<{ user: UserProfileDto; accessToken: string }> {
+    async register(email: string, password: string): Promise<{ user: UserModel; accessToken: string }> {
         const existing = await this.userDao.findByEmail(email);
         if (existing) {
             throw new DuplicateEmailException(email);
@@ -35,10 +26,10 @@ export class AuthService {
         const user = await this.userDao.create({ email, passwordHash });
         const accessToken = this.signToken(user);
         Logger.info('User registered', { userId: user.id });
-        return { user: toProfileDto(user), accessToken };
+        return { user, accessToken };
     }
 
-    async login(email: string, password: string): Promise<{ user: UserProfileDto; accessToken: string }> {
+    async login(email: string, password: string): Promise<{ user: UserModel; accessToken: string }> {
         const user = await this.userDao.findByEmail(email);
         if (!user) {
             throw new InvalidCredentialsException();
@@ -49,15 +40,15 @@ export class AuthService {
         }
         const accessToken = this.signToken(user);
         Logger.info('User logged in', { userId: user.id });
-        return { user: toProfileDto(user), accessToken };
+        return { user, accessToken };
     }
 
-    async getMe(userId: string): Promise<UserProfileDto> {
+    async getMe(userId: string): Promise<UserModel> {
         const user = await this.userDao.findById(userId);
         if (!user) {
             throw new UserNotFoundException(userId);
         }
-        return toProfileDto(user);
+        return user;
     }
 
     private signToken(user: UserModel): string {
