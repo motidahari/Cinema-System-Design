@@ -15,7 +15,7 @@ import { RecordNotFoundException } from '@cinema/internal-sdk';
 import { randomUUID } from 'crypto';
 import { Request } from 'express';
 
-const makeUser = (overrides: Partial<ConstructorParameters<typeof UserModel>[0]> = {}): UserModel =>
+const makeUser = (overrides: Partial<UserModel> = {}): UserModel =>
     new UserModel({
         id: randomUUID(),
         email: 'alice@cinema.test',
@@ -25,9 +25,7 @@ const makeUser = (overrides: Partial<ConstructorParameters<typeof UserModel>[0]>
         ...overrides,
     });
 
-const makeRefreshToken = (
-    overrides: Partial<ConstructorParameters<typeof RefreshTokenModel>[0]> = {}
-): RefreshTokenModel =>
+const makeRefreshToken = (overrides: Partial<RefreshTokenModel> = {}): RefreshTokenModel =>
     new RefreshTokenModel({
         id: randomUUID(),
         userId: randomUUID(),

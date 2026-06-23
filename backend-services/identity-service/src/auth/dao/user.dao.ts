@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DeepPartial, FindOptionsWhere } from 'typeorm';
+import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
 import { BaseDao } from '@cinema/internal-sdk';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { UserModel } from '../domain-model/user';
@@ -34,17 +34,16 @@ export class UserDao extends BaseDao<UserEntity, UserModel> {
         };
     }
 
-    async create(attrs: Pick<UserModel, 'email' | 'passwordHash'>): Promise<UserModel> {
-        const entity = this.repo.create({
-            email: attrs.email.toLowerCase().trim(),
-            passwordHash: attrs.passwordHash,
-        });
+    async create(attrs: { email: string; passwordHash: string }): Promise<UserModel> {
+        const draft = new UserModel(attrs);
+        const entity = this.repo.create({ email: draft.email, passwordHash: draft.passwordHash });
         const saved = await this.repo.save(entity);
         return this.toDomain(saved);
     }
 
     async findByEmail(email: string): Promise<UserModel | null> {
-        return this.findOneBy({ email: email.toLowerCase().trim() } as FindOptionsWhere<UserEntity>);
+        const normalized = email.toLowerCase().trim();
+        return this.findOneBy({ email: normalized } as FindOptionsWhere<UserEntity>);
     }
 
     async getByEmail(email: string): Promise<UserModel> {

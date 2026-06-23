@@ -1,8 +1,9 @@
 import { ValidationException } from '@cinema/internal-sdk';
-import { UserModel, UserAttrs } from '../../src/auth/domain-model/user';
+import { randomUUID } from 'crypto';
+import { UserModel } from '../../src/auth/domain-model/user';
 
-const validAttrs: UserAttrs = {
-    id: 'aaaaaaaa-0000-4000-8000-000000000001',
+const validAttrs = {
+    id: randomUUID(),
     email: 'alice@cinema.test',
     passwordHash: '$2b$10$examplehashvalue',
     createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -53,6 +54,18 @@ describe('UserModel', () => {
     describe('constructor, Given:Empty passwordHash, When:Constructing', () => {
         it('should throw ValidationException', () => {
             expect(() => new UserModel({ ...validAttrs, passwordHash: '' })).toThrow(ValidationException);
+        });
+    });
+
+    describe('setter, Given:Invalid createdAt, When:Setting', () => {
+        it('should throw ValidationException', () => {
+            expect(() => new UserModel({ ...validAttrs, createdAt: new Date('invalid') })).toThrow(ValidationException);
+        });
+    });
+
+    describe('setter, Given:Invalid updatedAt, When:Setting', () => {
+        it('should throw ValidationException', () => {
+            expect(() => new UserModel({ ...validAttrs, updatedAt: new Date('invalid') })).toThrow(ValidationException);
         });
     });
 
