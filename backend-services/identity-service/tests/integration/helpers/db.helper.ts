@@ -1,5 +1,7 @@
 import { DataSourceOptions } from 'typeorm';
 import { UserEntity } from '../../../src/domain/entities/user.entity';
+import { RefreshTokenEntity } from '../../../src/domain/entities/refresh-token.entity';
+import { LoginAttemptEntity } from '../../../src/domain/entities/login-attempt.entity';
 
 export function identityTestDataSourceOptions(): DataSourceOptions {
     return {
@@ -10,7 +12,7 @@ export function identityTestDataSourceOptions(): DataSourceOptions {
         password: process.env.TEST_DB_PASSWORD ?? 'cinema_pass',
         database: process.env.TEST_DB_NAME ?? 'cinema_db',
         schema: 'identity',
-        entities: [UserEntity],
+        entities: [UserEntity, RefreshTokenEntity, LoginAttemptEntity],
         synchronize: true,
     };
 }
