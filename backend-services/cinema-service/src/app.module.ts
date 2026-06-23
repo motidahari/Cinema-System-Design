@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
@@ -7,6 +7,9 @@ import { z } from 'zod';
 import { AppConfigModule } from './infrastructure/config/app-config.module';
 import { AppConfig } from './infrastructure/config/app.config';
 import { createDataSourceOptions } from './infrastructure/config/typeorm.config';
+import { RequestIdMiddleware } from './infrastructure/middleware/request-id.middleware';
+import { HealthModule } from './health/health.module';
+import { MetricsModule } from './metrics/metrics.module';
 
 const envSchema = z.object({
     PORT: z.coerce.number().default(3002),
@@ -38,7 +41,13 @@ const envSchema = z.object({
             useFactory: (cfg: AppConfig) => createDataSourceOptions(cfg),
             inject: [AppConfig],
         }),
+        HealthModule,
+        MetricsModule,
     ],
     providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+    configure(consumer: MiddlewareConsumer): void {
+        consumer.apply(RequestIdMiddleware).forRoutes('*');
+    }
+}
