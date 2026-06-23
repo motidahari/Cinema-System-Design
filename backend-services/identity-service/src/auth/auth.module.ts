@@ -5,7 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthController } from './auth.controller';
 import { AuthService } from './service/auth.service';
 import { UserDao } from './dao/user.dao';
+import { RefreshTokenDao } from './dao/refresh-token.dao';
 import { UserEntity } from '../domain/entities/user.entity';
+import { RefreshTokenEntity } from '../domain/entities/refresh-token.entity';
 import { JwtStrategy } from '../infrastructure/guards/jwt.strategy';
 import { JwtAuthGuard } from '../infrastructure/guards/jwt-auth.guard';
 import { CookieService } from '../infrastructure/cookies/cookie.service';
@@ -14,7 +16,7 @@ import { AppConfig } from '../infrastructure/config/app.config';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([UserEntity]),
+        TypeOrmModule.forFeature([UserEntity, RefreshTokenEntity]),
         PassportModule,
         JwtModule.registerAsync({
             imports: [AppConfigModule],
@@ -27,6 +29,6 @@ import { AppConfig } from '../infrastructure/config/app.config';
         AppConfigModule,
     ],
     controllers: [AuthController],
-    providers: [AuthService, UserDao, JwtStrategy, JwtAuthGuard, CookieService],
+    providers: [AuthService, UserDao, RefreshTokenDao, JwtStrategy, JwtAuthGuard, CookieService],
 })
 export class AuthModule {}
