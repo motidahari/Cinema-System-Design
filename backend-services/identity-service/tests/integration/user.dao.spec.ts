@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { UserDao } from '../../src/auth/dao/user.dao';
 import { UserEntity } from '../../src/domain/entities/user.entity';
-import { RecordNotFoundException } from '@cinema/internal-sdk';
+import { RecordNotFoundException } from '@cinema/shared';
 import { identityTestDataSourceOptions } from './helpers/db.helper';
 
 describe('UserDao (integration)', () => {

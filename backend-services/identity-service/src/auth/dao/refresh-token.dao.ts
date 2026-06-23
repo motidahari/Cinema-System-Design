@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
-import { BaseDao } from '@cinema/internal-sdk';
+import { BaseDao } from '@cinema/shared';
 import { RefreshTokenEntity } from '../../domain/entities/refresh-token.entity';
 import { RefreshTokenModel } from '../domain-model/refresh-token';
 

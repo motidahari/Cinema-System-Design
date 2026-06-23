@@ -7,15 +7,15 @@ import { AuthService } from '../../src/auth/service/auth.service';
 jest.mock('bcrypt', () => ({ hash: jest.fn(), compare: jest.fn() }));
 import { UserDao } from '../../src/auth/dao/user.dao';
 import { RefreshTokenDao } from '../../src/auth/dao/refresh-token.dao';
-import { UserModel } from '../../src/auth/domain-model/user';
-import { RefreshTokenModel } from '../../src/auth/domain-model/refresh-token';
+import { UserModel, UserModelAttrs } from '../../src/auth/domain-model/user';
+import { RefreshTokenModel, RefreshTokenModelAttrs } from '../../src/auth/domain-model/refresh-token';
 import { DuplicateEmailException } from '../../src/auth/exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../../src/auth/exception/invalid-credentials.exception';
-import { RecordNotFoundException } from '@cinema/internal-sdk';
+import { RecordNotFoundException } from '@cinema/shared';
 import { randomUUID } from 'crypto';
 import { Request } from 'express';
 
-const makeUser = (overrides: Partial<ConstructorParameters<typeof UserModel>[0]> = {}): UserModel =>
+const makeUser = (overrides: Partial<UserModelAttrs> = {}): UserModel =>
     new UserModel({
         id: randomUUID(),
         email: 'alice@cinema.test',
@@ -25,9 +25,7 @@ const makeUser = (overrides: Partial<ConstructorParameters<typeof UserModel>[0]>
         ...overrides,
     });
 
-const makeRefreshToken = (
-    overrides: Partial<ConstructorParameters<typeof RefreshTokenModel>[0]> = {}
-): RefreshTokenModel =>
+const makeRefreshToken = (overrides: Partial<RefreshTokenModelAttrs> = {}): RefreshTokenModel =>
     new RefreshTokenModel({
         id: randomUUID(),
         userId: randomUUID(),
@@ -220,6 +218,17 @@ describe('AuthService', () => {
             await service.logout(undefined);
 
             expect(refreshTokenDao.findByTokenHash).not.toHaveBeenCalled();
+            expect(refreshTokenDao.revokeFamily).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('logout, Given:Token not found in DB, When:Logging out', () => {
+        it('should return silently without revoking anything', async () => {
+            refreshTokenDao.findByTokenHash.mockResolvedValue(null);
+
+            await service.logout('already-cleaned-up-token');
+
+            expect(refreshTokenDao.findByTokenHash).toHaveBeenCalled();
             expect(refreshTokenDao.revokeFamily).not.toHaveBeenCalled();
         });
     });
