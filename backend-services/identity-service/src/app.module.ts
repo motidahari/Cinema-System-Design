@@ -10,6 +10,7 @@ import { createDataSourceOptions } from './infrastructure/config/typeorm.config'
 import { RequestIdMiddleware } from './infrastructure/middleware/request-id.middleware';
 import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
+import { AuthModule } from './auth/auth.module';
 
 const envSchema = z.object({
     JWT_SECRET: z.string().min(32),
@@ -43,6 +44,7 @@ const envSchema = z.object({
         }),
         HealthModule,
         MetricsModule,
+        AuthModule,
     ],
     providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
