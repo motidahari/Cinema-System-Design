@@ -14,6 +14,7 @@ Source of truth: [design-packages/ROADMAP.md](design-packages/ROADMAP.md)
 | Commit footer | `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>` |
 | Merge strategy | Always `--merge`. Never `--squash` or `--rebase`. |
 | Tests must pass | **All tests must pass before every `git push`** — unit, integration, API, page, and e2e. Never push a branch with failing tests. |
+| CI must pass before merge | **Wait for CI to pass (green) before merging into `main`.** Never merge while CI is running or failing. |
 
 **Split rule**: when a logical unit > 10 files, split by layer (entity/model/dao → service/controller → tests) or by sub-feature (access-token → refresh-token → csrf/lockout).
 
