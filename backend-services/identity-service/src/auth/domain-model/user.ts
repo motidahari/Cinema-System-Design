@@ -1,4 +1,4 @@
-import { ValidationException } from '@cinema/internal-sdk';
+import { ValidationException, assertDate, assertString } from '@cinema/internal-sdk';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -21,10 +21,8 @@ export class UserModel {
         return this._id;
     }
     set id(value: string | undefined) {
-        if (value === undefined) return;
-        if (typeof value !== 'string' || value.trim().length === 0)
-            throw new ValidationException('User id must be a non-empty string');
-        this._id = value;
+        const v = assertString(value, 'id', { optional: true });
+        if (v !== undefined) this._id = v;
     }
 
     get email(): string {
@@ -33,7 +31,8 @@ export class UserModel {
     set email(value: string | undefined) {
         if (value === undefined) return;
         const normalized = value.toLowerCase().trim();
-        if (!EMAIL_REGEX.test(normalized)) throw new ValidationException(`Invalid email: ${value}`);
+        if (!EMAIL_REGEX.test(normalized))
+            throw new ValidationException(`email must be a valid email address, received: "${value}"`);
         this._email = normalized;
     }
 
@@ -41,30 +40,24 @@ export class UserModel {
         return this._passwordHash;
     }
     set passwordHash(value: string | undefined) {
-        if (value === undefined) return;
-        if (typeof value !== 'string' || value.trim().length === 0)
-            throw new ValidationException('Password hash must be a non-empty string');
-        this._passwordHash = value;
+        const v = assertString(value, 'passwordHash', { optional: true });
+        if (v !== undefined) this._passwordHash = v;
     }
 
     get createdAt(): Date {
         return this._createdAt;
     }
     set createdAt(value: Date | undefined) {
-        if (value === undefined) return;
-        if (!(value instanceof Date) || isNaN(value.getTime()))
-            throw new ValidationException('createdAt must be a valid Date');
-        this._createdAt = value;
+        const v = assertDate(value, 'createdAt', { optional: true });
+        if (v !== undefined) this._createdAt = v;
     }
 
     get updatedAt(): Date {
         return this._updatedAt;
     }
     set updatedAt(value: Date | undefined) {
-        if (value === undefined) return;
-        if (!(value instanceof Date) || isNaN(value.getTime()))
-            throw new ValidationException('updatedAt must be a valid Date');
-        this._updatedAt = value;
+        const v = assertDate(value, 'updatedAt', { optional: true });
+        if (v !== undefined) this._updatedAt = v;
     }
 
     toJSON() {

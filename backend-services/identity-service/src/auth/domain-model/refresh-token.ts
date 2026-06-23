@@ -1,4 +1,10 @@
-import { ValidationException } from '@cinema/internal-sdk';
+import {
+    ValidationException,
+    assertDate,
+    assertNullableDate,
+    assertNullableString,
+    assertString,
+} from '@cinema/internal-sdk';
 
 export class RefreshTokenModel {
     private _id!: string;
@@ -29,30 +35,24 @@ export class RefreshTokenModel {
         return this._id;
     }
     set id(value: string | undefined) {
-        if (value === undefined) return;
-        if (typeof value !== 'string' || value.trim().length === 0)
-            throw new ValidationException('RefreshToken id must be a non-empty string');
-        this._id = value;
+        const v = assertString(value, 'id', { optional: true });
+        if (v !== undefined) this._id = v;
     }
 
     get userId(): string {
         return this._userId;
     }
     set userId(value: string | undefined) {
-        if (value === undefined) return;
-        if (typeof value !== 'string' || value.trim().length === 0)
-            throw new ValidationException('RefreshToken userId must be a non-empty string');
-        this._userId = value;
+        const v = assertString(value, 'userId', { optional: true });
+        if (v !== undefined) this._userId = v;
     }
 
     get familyId(): string {
         return this._familyId;
     }
     set familyId(value: string | undefined) {
-        if (value === undefined) return;
-        if (typeof value !== 'string' || value.trim().length === 0)
-            throw new ValidationException('RefreshToken familyId must be a non-empty string');
-        this._familyId = value;
+        const v = assertString(value, 'familyId', { optional: true });
+        if (v !== undefined) this._familyId = v;
     }
 
     get tokenHash(): string {
@@ -61,7 +61,7 @@ export class RefreshTokenModel {
     set tokenHash(value: string | undefined) {
         if (value === undefined) return;
         if (typeof value !== 'string' || value.length !== 64)
-            throw new ValidationException('RefreshToken tokenHash must be a 64-char hex string');
+            throw new ValidationException(`tokenHash must be a 64-char hex string, received length: ${value.length}`);
         this._tokenHash = value;
     }
 
@@ -69,30 +69,24 @@ export class RefreshTokenModel {
         return this._expiresAt;
     }
     set expiresAt(value: Date | undefined) {
-        if (value === undefined) return;
-        if (!(value instanceof Date) || isNaN(value.getTime()))
-            throw new ValidationException('RefreshToken expiresAt must be a valid Date');
-        this._expiresAt = value;
+        const v = assertDate(value, 'expiresAt', { optional: true });
+        if (v !== undefined) this._expiresAt = v;
     }
 
     get revokedAt(): Date | null {
         return this._revokedAt;
     }
     set revokedAt(value: Date | null | undefined) {
-        if (value === undefined) return;
-        if (value !== null && (!(value instanceof Date) || isNaN(value.getTime())))
-            throw new ValidationException('RefreshToken revokedAt must be a valid Date or null');
-        this._revokedAt = value;
+        const v = assertNullableDate(value, 'revokedAt');
+        if (v !== undefined) this._revokedAt = v;
     }
 
     get replacedBy(): string | null {
         return this._replacedBy;
     }
     set replacedBy(value: string | null | undefined) {
-        if (value === undefined) return;
-        if (value !== null && (typeof value !== 'string' || value.trim().length === 0))
-            throw new ValidationException('RefreshToken replacedBy must be a non-empty string or null');
-        this._replacedBy = value;
+        const v = assertNullableString(value, 'replacedBy');
+        if (v !== undefined) this._replacedBy = v;
     }
 
     get userAgent(): string | null {
@@ -115,10 +109,8 @@ export class RefreshTokenModel {
         return this._createdAt;
     }
     set createdAt(value: Date | undefined) {
-        if (value === undefined) return;
-        if (!(value instanceof Date) || isNaN(value.getTime()))
-            throw new ValidationException('RefreshToken createdAt must be a valid Date');
-        this._createdAt = value;
+        const v = assertDate(value, 'createdAt', { optional: true });
+        if (v !== undefined) this._createdAt = v;
     }
 
     isExpired(): boolean {
