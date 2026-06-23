@@ -43,6 +43,12 @@ jobs:
                   npm run build --workspace backend-services/libs/core/sdk --if-present 2>&1 | tee /tmp/sdk_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/sdk_out.txt
 
+            - name: Build shared
+              run: |
+                  set -o pipefail
+                  npm run build --workspace backend-services/libs/core/shared --if-present 2>&1 | tee /tmp/shared_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/shared_out.txt
+
             - name: Typecheck all workspaces
               run: |
                   set -o pipefail
@@ -100,6 +106,9 @@ jobs:
 
             - name: Build SDK
               run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
+            - name: Build shared
+              run: npm run build --workspace backend-services/libs/core/shared --if-present
 
             - name: Run unit tests
               run: |
@@ -159,6 +168,9 @@ jobs:
 
             - name: Build SDK
               run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
+            - name: Build shared
+              run: npm run build --workspace backend-services/libs/core/shared --if-present
 
             - name: Create DB schemas
               run: PGPASSWORD=cinema_pass psql -h localhost -U cinema_user -d cinema_db -c "CREATE SCHEMA IF NOT EXISTS identity;"

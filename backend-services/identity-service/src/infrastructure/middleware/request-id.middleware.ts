@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import type { NextFunction, Request, Response } from 'express';
-import { requestContext } from '@cinema/internal-sdk';
+import { requestContext } from '@cinema/shared';
 
 @Injectable()
 export class RequestIdMiddleware implements NestMiddleware {

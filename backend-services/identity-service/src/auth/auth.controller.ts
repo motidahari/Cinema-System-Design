@@ -1,4 +1,15 @@
-import { Controller, Post, Get, Body, Req, Res, HttpCode, HttpStatus, UseGuards } from '@nestjs/common';
+import {
+    Controller,
+    Post,
+    Get,
+    Body,
+    Req,
+    Res,
+    HttpCode,
+    HttpStatus,
+    UnauthorizedException,
+    UseGuards,
+} from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 import { AuthService } from './service/auth.service';
@@ -25,19 +36,41 @@ export class AuthController {
 
     @Post('register')
     @HttpCode(HttpStatus.CREATED)
-    async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) res: Response) {
-        const { user, accessToken } = await this.authService.register(dto.email, dto.password);
-        this.cookieService.setAuthCookies(res, accessToken);
+    async register(@Body() dto: RegisterDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        const { user, accessToken, refreshToken } = await this.authService.register(dto.email, dto.password, req);
+        this.cookieService.setAuthCookies(res, accessToken, refreshToken);
         return { user: toProfileDto(user) };
     }
 
     @Post('login')
     @HttpCode(HttpStatus.OK)
     @Throttle({ default: { limit: 5, ttl: 60_000 } })
-    async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
-        const { user, accessToken } = await this.authService.login(dto.email, dto.password);
-        this.cookieService.setAuthCookies(res, accessToken);
+    async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        const { user, accessToken, refreshToken } = await this.authService.login(dto.email, dto.password, req);
+        this.cookieService.setAuthCookies(res, accessToken, refreshToken);
         return { user: toProfileDto(user) };
+    }
+
+    @Post('refresh')
+    @HttpCode(HttpStatus.OK)
+    @Throttle({ default: { limit: 10, ttl: 60_000 } })
+    async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+        const rawToken: string | undefined = req.cookies?.['refresh_token'];
+        if (!rawToken) {
+            throw new UnauthorizedException('Invalid or expired refresh token');
+        }
+        const { user, accessToken, refreshToken } = await this.authService.refresh(rawToken, req);
+        this.cookieService.setAuthCookies(res, accessToken, refreshToken);
+        return { user: toProfileDto(user) };
+    }
+
+    @Post('logout')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    @UseGuards(JwtAuthGuard)
+    async logout(@Req() req: AuthenticatedRequest, @Res({ passthrough: true }) res: Response) {
+        const rawToken: string | undefined = req.cookies?.['refresh_token'];
+        await this.authService.logout(rawToken);
+        this.cookieService.clearAuthCookies(res);
     }
 
     @Get('me')

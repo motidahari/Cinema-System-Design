@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import type { Request, Response } from 'express';
-import { Logger } from '@cinema/internal-sdk';
+import { Logger } from '@cinema/shared';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {

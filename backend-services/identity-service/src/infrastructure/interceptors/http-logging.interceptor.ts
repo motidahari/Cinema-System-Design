@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { Observable, tap } from 'rxjs';
-import { Logger } from '@cinema/internal-sdk';
+import { Logger } from '@cinema/shared';
 
 @Injectable()
 export class HttpLoggingInterceptor implements NestInterceptor {
