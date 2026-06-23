@@ -50,3 +50,6 @@ Thumbs.db
 playwright-report/
 test-results/
 
+# Local dev stack (scripts/dev.sh runtime PIDs)
+.dev-pids
+

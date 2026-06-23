@@ -1,59 +1,81 @@
-# Cinema Reservation System — Claude Guidelines
+# Cinema Reservation System
 
-Source of truth: [design-packages/ROADMAP.md](design-packages/ROADMAP.md)
+An npm-workspaces monorepo: NestJS + TypeORM + PostgreSQL backend services behind a React + Vite + TypeScript SPA.
+
+> **Process** (branches, PR rules, Definition of Done, per-branch design docs & agents) → [design-packages/ROADMAP.md](design-packages/ROADMAP.md) §1. Read it when you pick up a branch — not every session.
+> **Design specs** → [design-packages/](design-packages/). Read only the docs ROADMAP lists for the active branch; never the whole directory.
 
 ---
 
-## Branch & PR conventions
+## Monorepo layout
 
-| Topic | Rule |
+| Path | What it is |
 |---|---|
-| Base branch | `main`. Every feature branch is cut from `main` and merged back via PR. |
-| Branch naming | `chore/…`, `ci/…`, `feat/…`, `test/…`, `docs/…` (Conventional Commits style). |
-| PR size limit | **≤ 10 files** changed. If a unit naturally exceeds 10, split by layer first (entity → service → controller), then by sub-feature. |
-| Commit footer | `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>` |
-| Merge strategy | Always `--merge`. Never `--squash` or `--rebase`. |
-| Tests must pass | **All tests must pass before every `git push`** — unit, integration, API, page, and e2e. Never push a branch with failing tests. |
-| CI must pass before merge | **Wait for CI to pass (green) before merging into `main`.** Never merge while CI is running or failing. |
+| [backend-services/identity-service](backend-services/identity-service) | Auth: register / login / refresh / CSRF / lockout (NestJS) |
+| `backend-services/cinema-service` | Seats, reservations, realtime, expiry (NestJS) |
+| [backend-services/libs/core/sdk](backend-services/libs/core/sdk) | `@cinema/internal-sdk` — logger, env, shared types, identity client |
+| [backend-services/libs/core/shared](backend-services/libs/core/shared) | Shared core utilities |
+| `frontend-application/cinema-app` | React SPA (Vite + MUI + Zustand + TanStack Query) — *not yet scaffolded* |
+| [design-packages/](design-packages/) | Architecture, API contract, DB design, security, test strategy, roadmap |
+| [scripts/](scripts/) | `dev.sh` (local stack), schema init |
 
-**Split rule**: when a logical unit > 10 files, split by layer (entity/model/dao → service/controller → tests) or by sub-feature (access-token → refresh-token → csrf/lockout).
+**Backend domain layering** (DDD): `domain/entities/` → `<feature>/dao/` → `<feature>/service/` → `<feature>/*.controller.ts`, with `dto/`, `enum/`, `exception/` alongside. Cross-cutting code lives under `src/infrastructure/`.
 
----
-
-## Pre-implementation read (mandatory)
-
-**Before touching a single file**, read the design docs listed under "Design docs" for that branch in ROADMAP.md. Do **not** read the entire `design-packages/` directory — read only what is listed. Implementation decisions must be derived from the spec, not assumed.
+**Frontend component folder**: each component is its own folder — `index.ts` (barrel) + `<Name>.tsx` + `<Name>.spec.tsx` (views add `<Name>.page.spec.tsx`). Consumers import the folder, never the file.
 
 ---
 
-## Definition of Done
+## Commands
 
-A branch is done when:
-1. `tsc` compiles with no errors.
-2. `npm run lint` passes clean.
-3. Its own tests pass.
-4. It does **not** break previously-merged branches.
+**Root** (runs across all workspaces):
+
+```bash
+npm run lint            # eslint over .ts/.tsx        npm run lint:fix
+npm run format          # prettier --write            npm run format:check
+npm run typecheck       # tsc --noEmit per workspace
+npm run test            # test per workspace
+npm run build           # build per workspace
+npm run dev             # local stack (scripts/dev.sh) · dev:stop · dev:logs
+```
+
+**Per backend service** (run inside the service directory):
+
+```bash
+npm run start:dev          # ts-node watch
+npm run build / typecheck  # tsc / tsc --noEmit
+npm run test:unit          # Jest unit (mocked repos)
+npm run test:integration   # Jest integration — needs PostgreSQL test DB
+npm run test:api           # Jest API via supertest — needs PostgreSQL test DB
+npm run test:cov           # coverage
+```
+
+**Frontend** (`frontend-application/cinema-app`, once scaffolded):
+
+```bash
+npm run test:unit          # Vitest
+npm run test:page          # Playwright page/component
+npm run test:e2e           # Playwright e2e
+```
 
 ---
 
-## Testing (non-negotiable)
+## Stack reference
 
-- Tests ship **in the same branch** as the code, **always** — even when that pushes the branch past 10 files. Untested code is not done. The 10-file limit is **never** a reason to defer tests.
-- **Backend coverage**: every **endpoint** ships an API test (happy path + each documented error); every **DAO** ships an integration test against the real DB; service/domain logic is unit-tested.
-- **Frontend coverage**: every **component** has a co-located unit test; every **view** also has a Playwright page test with mocked responses; every store/service/hook has a co-located `.spec`.
-- **Component-folder + barrel**: each component is its own folder — `index.ts` (barrel) + `<Name>.tsx` + `<Name>.spec.tsx` (views add `<Name>.page.spec.tsx`). Consumers import the folder, never the file.
+- **Backend**: NestJS · TypeORM · PostgreSQL · Jest · class-validator · Zod env · Throttler · helmet · cookie-parser
+- **Frontend**: React · Vite · TypeScript · MUI · Zustand · TanStack Query · Vitest · Playwright · react-i18next (Hebrew)
+- **Tooling**: ESLint · Prettier · Husky + lint-staged · commitlint (Conventional Commits) · GitHub Actions CI · Node 20
 
 ---
 
-## Agent legend
+## Agents
 
-Load only the agents listed for the current branch — they carry the skills and context relevant to that layer.
+Load **only** the agents ROADMAP §1.2 lists for the active branch. Each agent carries its own layer's conventions, quality gate, and coverage rules — they load only when that agent runs, so this file stays thin.
 
-| Code | Agent | When to invoke |
-|---|---|---|
-| `be-dev` | `backend-developer` | Implementing NestJS entities, services, controllers, modules |
-| `fe-dev` | `frontend-developer` | Implementing React components, hooks, stores, services |
-| `be-qa` | `backend-qa-tester` | Writing/running unit, integration, or API tests for backend |
-| `fe-qa` | `frontend-qa-tester` | Writing/running Vitest unit tests or Playwright page tests |
-| `be-rev` | `backend-code-standards-reviewer` | Reviewing any backend code before PR is opened |
-| `fe-rev` | `frontend-code-standards-reviewer` | Reviewing any frontend code before PR is opened |
+| Agent | Layer |
+|---|---|
+| `backend-developer` | NestJS entities / services / controllers / modules |
+| `frontend-developer` | React components / hooks / stores / services |
+| `backend-qa-tester` | backend unit / integration / API tests |
+| `frontend-qa-tester` | Vitest + Playwright tests |
+| `backend-code-standards-reviewer` | backend review before PR |
+| `frontend-code-standards-reviewer` | frontend review before PR |
