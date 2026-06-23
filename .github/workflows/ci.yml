@@ -10,7 +10,7 @@ env:
     NODE_VERSION: '20'
 
 jobs:
-    # ── 1. Build ─────────────────────────────────────────────────────────────────
+    # ── 1. Build ──────────────────────────────────────────────────────────────────
     build:
         name: Build
         runs-on: ubuntu-latest
@@ -82,7 +82,7 @@ jobs:
                   cache-from: type=gha
                   cache-to: type=gha,mode=max
 
-    # ── 2. Unit Tests ─────────────────────────────────────────────────────────────
+    # ── 2. Unit Tests (frontend + backend) ───────────────────────────────────────
     unit-tests:
         name: Unit Tests
         needs: build
@@ -117,9 +117,9 @@ jobs:
                       frontend-application/*/coverage
                   retention-days: 7
 
-    # ── 3. Integration & Other Tests ──────────────────────────────────────────────
-    other-tests:
-        name: Integration & Other Tests
+    # ── 3. Integration & API Tests (backend, Postgres) ────────────────────────────
+    integration-tests:
+        name: Integration & API Tests
         needs: unit-tests
         runs-on: ubuntu-latest
 
@@ -175,6 +175,25 @@ jobs:
                   npm run test:api --workspaces --if-present 2>&1 | tee /tmp/api_out.txt || \
                     grep -qE "No workspaces found|Workspace not found" /tmp/api_out.txt
 
+            - name: Check coverage thresholds
+              run: npm run test:cov --workspaces --if-present
+
+    # ── 4. E2E & Page Tests (frontend, Playwright) ────────────────────────────────
+    e2e-tests:
+        name: E2E & Page Tests
+        needs: unit-tests
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Install dependencies
+              run: npm ci --legacy-peer-deps
+
             - name: Install Playwright browsers
               run: npx playwright install --with-deps chromium
               working-directory: frontend-application/cinema-app
@@ -183,6 +202,3 @@ jobs:
             - name: Run Playwright page tests
               run: npm run test:e2e --workspaces --if-present
               continue-on-error: true
-
-            - name: Check coverage thresholds
-              run: npm run test:cov --workspaces --if-present
