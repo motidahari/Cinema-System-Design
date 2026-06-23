@@ -1,0 +1,53 @@
+name: Unit Tests
+
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+
+env:
+    NODE_VERSION: '20'
+
+jobs:
+    unit:
+        name: Unit Tests
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: npm
+
+            - name: Restore node_modules
+              uses: actions/cache@v5
+              with:
+                  path: |
+                      node_modules
+                      backend-services/*/node_modules
+                      backend-services/libs/core/sdk/node_modules
+                      frontend-application/*/node_modules
+                  key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+
+            - run: npm ci --legacy-peer-deps
+
+            - name: Build SDK
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
+            - name: Run unit tests
+              run: |
+                  set -o pipefail
+                  npm run test:unit --workspaces --if-present 2>&1 | tee /tmp/unit_out.txt || \
+                    grep -qE "No workspaces found|Workspace not found" /tmp/unit_out.txt
+
+            - name: Upload coverage reports
+              uses: actions/upload-artifact@v7
+              if: always()
+              with:
+                  name: coverage-unit
+                  path: |
+                      backend-services/*/coverage
+                      frontend-application/*/coverage
+                  retention-days: 7
