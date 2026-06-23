@@ -19,17 +19,17 @@ export class UserModel {
         return this._id;
     }
     set id(value: string | undefined) {
-        if (!isValidString(value, { optional: true }))
-            throw new ValidationException(`id must be a non-empty string, received: "${value}"`);
-        if (value !== undefined) this._id = value;
+        if (!isValidString(value)) throw new ValidationException(`id must be a non-empty string, received: "${value}"`);
+        this._id = value!;
     }
 
     get email(): string {
         return this._email;
     }
     set email(value: string | undefined) {
-        if (value === undefined) return;
-        const normalized = value.toLowerCase().trim();
+        if (!isValidString(value))
+            throw new ValidationException(`email must be a non-empty string, received: "${value}"`);
+        const normalized = value!.toLowerCase().trim();
         if (!isValidString(normalized, { pattern: EMAIL_PATTERN }))
             throw new ValidationException(`email must be a valid email address, received: "${value}"`);
         this._email = normalized;
@@ -39,27 +39,27 @@ export class UserModel {
         return this._passwordHash;
     }
     set passwordHash(value: string | undefined) {
-        if (!isValidString(value, { optional: true }))
+        if (!isValidString(value))
             throw new ValidationException(`passwordHash must be a non-empty string, received: "${value}"`);
-        if (value !== undefined) this._passwordHash = value;
+        this._passwordHash = value!;
     }
 
     get createdAt(): Date {
         return this._createdAt;
     }
     set createdAt(value: Date | undefined) {
-        if (!isValidDate(value, { optional: true }))
+        if (!isValidDate(value))
             throw new ValidationException(`createdAt must be a valid Date, received: ${String(value)}`);
-        if (value !== undefined) this._createdAt = value;
+        this._createdAt = value!;
     }
 
     get updatedAt(): Date {
         return this._updatedAt;
     }
     set updatedAt(value: Date | undefined) {
-        if (!isValidDate(value, { optional: true }))
+        if (!isValidDate(value))
             throw new ValidationException(`updatedAt must be a valid Date, received: ${String(value)}`);
-        if (value !== undefined) this._updatedAt = value;
+        this._updatedAt = value!;
     }
 
     toJSON() {

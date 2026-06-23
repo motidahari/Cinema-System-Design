@@ -35,8 +35,10 @@ export class UserDao extends BaseDao<UserEntity, UserModel> {
     }
 
     async create(attrs: { email: string; passwordHash: string }): Promise<UserModel> {
-        const draft = new UserModel(attrs);
-        const entity = this.repo.create({ email: draft.email, passwordHash: draft.passwordHash });
+        const entity = this.repo.create({
+            email: attrs.email.toLowerCase().trim(),
+            passwordHash: attrs.passwordHash,
+        });
         const saved = await this.repo.save(entity);
         return this.toDomain(saved);
     }
