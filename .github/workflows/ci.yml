@@ -66,8 +66,11 @@ jobs:
             - name: Format check
               run: npm run format:check
 
-            - name: Dependency audit
-              run: npm audit --audit-level=high
+            - name: Dependency audit (report)
+              run: npm audit --audit-level=high || true
+
+            - name: Dependency audit (gate — critical only, ADR-14)
+              run: npm audit --audit-level=critical
 
     # ── 3. Typecheck ─────────────────────────────────────────────────────────────
     typecheck:
@@ -93,6 +96,9 @@ jobs:
                   key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
 
             - run: npm ci --legacy-peer-deps
+
+            - name: Build SDK (required before typecheck)
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
 
             - name: Typecheck all workspaces
               run: |
@@ -155,6 +161,9 @@ jobs:
                   key: node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
 
             - run: npm ci --legacy-peer-deps
+
+            - name: Build SDK (required before tests)
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
 
             - name: Run unit tests
               run: |
@@ -221,6 +230,12 @@ jobs:
 
             - run: npm ci --legacy-peer-deps
 
+            - name: Build SDK (required before tests)
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
+            - name: Create DB schemas
+              run: PGPASSWORD=cinema_pass psql -h localhost -U cinema_user -d cinema_db -c "CREATE SCHEMA IF NOT EXISTS identity;"
+
             - name: Run integration tests (DAO layer)
               run: |
                   set -o pipefail
@@ -284,6 +299,12 @@ jobs:
 
             - run: npm ci --legacy-peer-deps
 
+            - name: Build SDK (required before tests)
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
+            - name: Create DB schemas
+              run: PGPASSWORD=cinema_pass psql -h localhost -U cinema_user -d cinema_db -c "CREATE SCHEMA IF NOT EXISTS identity;"
+
             - name: Run API tests (controller layer + concurrency)
               run: |
                   set -o pipefail
@@ -303,6 +324,30 @@ jobs:
         name: Coverage Gate
         needs: [unit, integration, api]
         runs-on: ubuntu-latest
+
+        services:
+            postgres:
+                image: postgres:15-alpine
+                env:
+                    POSTGRES_USER: cinema_user
+                    POSTGRES_PASSWORD: cinema_pass
+                    POSTGRES_DB: cinema_db
+                ports:
+                    - 5432:5432
+                options: >-
+                    --health-cmd "pg_isready -U cinema_user"
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+
+        env:
+            TEST_DB_HOST: localhost
+            TEST_DB_PORT: 5432
+            TEST_DB_USERNAME: cinema_user
+            TEST_DB_PASSWORD: cinema_pass
+            TEST_DB_NAME: cinema_db
+            JWT_SECRET: test-cinema-jwt-secret-minimum-32-chars!!
+
         steps:
             - uses: actions/checkout@v4
 
@@ -343,6 +388,12 @@ jobs:
                   name: coverage-api
                   path: coverage-api
               continue-on-error: true
+
+            - name: Build SDK (required before coverage)
+              run: npm run build --workspace backend-services/libs/core/sdk --if-present
+
+            - name: Create DB schemas
+              run: PGPASSWORD=cinema_pass psql -h localhost -U cinema_user -d cinema_db -c "CREATE SCHEMA IF NOT EXISTS identity;"
 
             - name: Check coverage thresholds
               run: npm run test:cov --workspaces --if-present

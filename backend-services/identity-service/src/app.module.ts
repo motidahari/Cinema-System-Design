@@ -37,6 +37,7 @@ const envSchema = z.object({
         ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
         AppConfigModule,
         TypeOrmModule.forRootAsync({
+            imports: [AppConfigModule],
             useFactory: (cfg: AppConfig) => createDataSourceOptions(cfg),
             inject: [AppConfig],
         }),

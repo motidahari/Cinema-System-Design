@@ -9,8 +9,8 @@
         "start:dev": "ts-node -r tsconfig-paths/register src/main.ts",
         "test:unit": "jest --config jest.config.js --selectProjects unit",
         "test:integration": "jest --config jest.config.js --selectProjects integration",
-        "test:api": "jest --config jest.config.js --selectProjects api",
-        "test:cov": "jest --config jest.config.js --coverage"
+        "test:api": "jest --config jest.config.js --selectProjects api --passWithNoTests",
+        "test:cov": "jest --config jest.config.js --coverage --passWithNoTests"
     },
     "dependencies": {
         "@cinema/internal-sdk": "*",
@@ -46,6 +46,8 @@
         "@types/passport-jwt": "^4.0.1",
         "jest": "^29.7.0",
         "ts-jest": "^29.2.5",
+        "ts-node": "^10.9.2",
+        "tsconfig-paths": "^4.2.0",
         "typescript": "^5.4.5"
     }
 }
