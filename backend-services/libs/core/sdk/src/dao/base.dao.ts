@@ -1,29 +1,25 @@
 import { Repository, FindOptionsWhere, DeepPartial } from 'typeorm';
+import { RecordNotFoundException } from './exceptions';
 
 /**
  * Convention:
  *   findBy*  — returns null when not found (caller decides if it's an error)
- *   getBy*   — throws when not found (record must exist)
+ *   getBy*   — throws when not found (auto-handled by BaseDao)
  *
- * Subclasses implement toDomain, toEntity, and notFoundError.
- * All conversion calls happen inside BaseDao — public DAO methods stay clean.
+ * Subclasses must implement toDomain and toEntity.
+ * Override notFoundError() to throw a domain-specific exception instead of RecordNotFoundException.
  */
-export abstract class BaseDao<TEntity extends { id: string }, TDomain, TCreateAttrs> {
+export abstract class BaseDao<TEntity extends { id: string }, TDomain> {
     protected abstract readonly repo: Repository<TEntity>;
 
-    /** DB row → domain model */
+    /** DB row → domain model (all fields) */
     protected abstract toDomain(entity: TEntity): TDomain;
 
-    /** Domain create attrs → partial entity for repo.create() */
-    protected abstract toEntity(attrs: TCreateAttrs): DeepPartial<TEntity>;
+    /** Domain model → DB row (all fields) — used for update/upsert */
+    protected abstract toEntity(domain: TDomain): DeepPartial<TEntity>;
 
-    /** Error to throw when a getBy* lookup finds no row */
-    protected abstract notFoundError(id: string): Error;
-
-    async create(attrs: TCreateAttrs): Promise<TDomain> {
-        const entity = this.repo.create(this.toEntity(attrs) as TEntity);
-        const saved = await this.repo.save(entity);
-        return this.toDomain(saved);
+    protected notFoundError(id: string): Error {
+        return new RecordNotFoundException(id);
     }
 
     async findById(id: string): Promise<TDomain | null> {

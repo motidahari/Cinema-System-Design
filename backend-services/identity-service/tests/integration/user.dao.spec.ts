@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { UserDao } from '../../src/auth/dao/user.dao';
 import { UserEntity } from '../../src/domain/entities/user.entity';
-import { UserNotFoundException } from '../../src/auth/exception/user-not-found.exception';
+import { RecordNotFoundException } from '@cinema/internal-sdk';
 import { identityTestDataSourceOptions } from './helpers/db.helper';
 
 describe('UserDao (integration)', () => {
@@ -114,8 +114,8 @@ describe('UserDao (integration)', () => {
     });
 
     describe('getById, Given:A non-existent id, When:Looking up', () => {
-        it('should throw UserNotFoundException', async () => {
-            await expect(dao.getById('aaaaaaaa-0000-4000-8000-000000000099')).rejects.toThrow(UserNotFoundException);
+        it('should throw RecordNotFoundException', async () => {
+            await expect(dao.getById('aaaaaaaa-0000-4000-8000-000000000099')).rejects.toThrow(RecordNotFoundException);
         });
     });
 });

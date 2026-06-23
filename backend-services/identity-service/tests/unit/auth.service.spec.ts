@@ -8,7 +8,7 @@ import { UserDao } from '../../src/auth/dao/user.dao';
 import { UserModel } from '../../src/auth/domain-model/user';
 import { DuplicateEmailException } from '../../src/auth/exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../../src/auth/exception/invalid-credentials.exception';
-import { UserNotFoundException } from '../../src/auth/exception/user-not-found.exception';
+import { RecordNotFoundException } from '@cinema/internal-sdk';
 
 const makeUser = (overrides: Partial<ConstructorParameters<typeof UserModel>[0]> = {}): UserModel =>
     new UserModel({
@@ -124,9 +124,9 @@ describe('AuthService', () => {
 
     describe('getMe, Given:Non-existent userId, When:Fetching profile', () => {
         it('should propagate UserNotFoundException from the DAO', async () => {
-            userDao.getById.mockRejectedValue(new UserNotFoundException('nonexistent-id'));
+            userDao.getById.mockRejectedValue(new RecordNotFoundException('nonexistent-id'));
 
-            await expect(service.getMe('nonexistent-id')).rejects.toThrow(UserNotFoundException);
+            await expect(service.getMe('nonexistent-id')).rejects.toThrow(RecordNotFoundException);
         });
     });
 });
