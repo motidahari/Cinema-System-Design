@@ -23,6 +23,7 @@ export class ReservationExpiryCron extends BaseCronJob {
         super();
     }
 
+    // Runs every minute (ADR-7: ≤60 s staleness window)
     @Cron('* * * * *')
     async releaseExpired(): Promise<void> {
         await this.runWithGuard('ReservationExpiryCron', async () => {
