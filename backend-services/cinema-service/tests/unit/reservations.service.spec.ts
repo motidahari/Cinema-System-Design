@@ -5,6 +5,7 @@ import { ReservationsService } from '../../src/reservations/service/reservations
 import { ReservationDao } from '../../src/reservations/dao/reservation.dao';
 import { ReservationSeatDao } from '../../src/reservations/dao/reservation-seat.dao';
 import { SeatDao } from '../../src/seats/dao/seat.dao';
+import { SeatGateway } from '../../src/gateway/seat.gateway';
 import { AppConfig } from '../../src/infrastructure/config/app.config';
 import { TransactionManager } from '@cinema/internal-sdk';
 import { ReservationModel, ReservationModelAttrs } from '../../src/reservations/domain-model/reservation';
@@ -52,7 +53,13 @@ describe('ReservationsService', () => {
         updateStatus: jest.Mock;
     };
     let reservationSeatDao: { deactivateByReservation: jest.Mock };
-    let seatDao: { lockForUpdate: jest.Mock; findByRow: jest.Mock; updateStatusBatch: jest.Mock };
+    let seatDao: {
+        lockForUpdate: jest.Mock;
+        findByRow: jest.Mock;
+        findByIds: jest.Mock;
+        updateStatusBatch: jest.Mock;
+    };
+    let seatGateway: { emitSeatReserved: jest.Mock; emitSeatBooked: jest.Mock; emitSeatReleased: jest.Mock };
     let transactionManager: { runInTransaction: jest.Mock };
 
     const USER = randomUUID();
@@ -69,7 +76,13 @@ describe('ReservationsService', () => {
         seatDao = {
             lockForUpdate: jest.fn(),
             findByRow: jest.fn(),
+            findByIds: jest.fn().mockResolvedValue([]),
             updateStatusBatch: jest.fn().mockResolvedValue(undefined),
+        };
+        seatGateway = {
+            emitSeatReserved: jest.fn(),
+            emitSeatBooked: jest.fn(),
+            emitSeatReleased: jest.fn(),
         };
         // Runs the callback with a dummy QueryRunner; DAOs are mocked so the runner is unused.
         transactionManager = {
@@ -82,6 +95,7 @@ describe('ReservationsService', () => {
                 { provide: ReservationDao, useValue: reservationDao },
                 { provide: ReservationSeatDao, useValue: reservationSeatDao },
                 { provide: SeatDao, useValue: seatDao },
+                { provide: SeatGateway, useValue: seatGateway },
                 { provide: AppConfig, useValue: { reservationHoldMins: 15 } },
                 { provide: TransactionManager, useValue: transactionManager },
             ],
@@ -144,7 +158,7 @@ describe('ReservationsService', () => {
     });
 
     describe('reserve, Given:Valid consecutive available seats, When:Reserving', () => {
-        it('should mark seats RESERVED, persist, and return the reservation', async () => {
+        it('should mark seats RESERVED, persist, broadcast, and return the reservation', async () => {
             const ids = [randomUUID(), randomUUID()];
             const selected = [makeSeat(ids[0], 'A', 1), makeSeat(ids[1], 'A', 2)];
             seatDao.lockForUpdate.mockResolvedValue(selected);
@@ -157,6 +171,7 @@ describe('ReservationsService', () => {
             expect(result).toBe(created);
             expect(seatDao.updateStatusBatch).toHaveBeenCalledWith(expect.anything(), ids, SeatStatus.RESERVED);
             expect(reservationDao.createWithSeats).toHaveBeenCalledWith(expect.anything(), USER, ids, expect.any(Date));
+            expect(seatGateway.emitSeatReserved).toHaveBeenCalledWith(selected);
         });
     });
 
@@ -201,16 +216,14 @@ describe('ReservationsService', () => {
             await expect(service.confirm(randomUUID(), USER)).rejects.toThrow('has expired');
         });
 
-        it('Given:A valid PENDING reservation, should book the seats and return the updated reservation', async () => {
+        it('Given:A valid PENDING reservation, should book the seats, broadcast, and return the updated reservation', async () => {
             const id = randomUUID();
-            const pending = makeReservation({ id, userId: USER, seatIds: [randomUUID(), randomUUID()] });
-            const confirmed = makeReservation({
-                id,
-                userId: USER,
-                status: ReservationStatus.CONFIRMED,
-                seatIds: pending.seatIds,
-            });
+            const seatIds = [randomUUID(), randomUUID()];
+            const pending = makeReservation({ id, userId: USER, seatIds });
+            const confirmed = makeReservation({ id, userId: USER, status: ReservationStatus.CONFIRMED, seatIds });
+            const bookedSeats = seatIds.map((sid, i) => makeSeat(sid, 'A', i + 1, SeatStatus.BOOKED));
             reservationDao.findById.mockResolvedValueOnce(pending).mockResolvedValueOnce(confirmed);
+            seatDao.findByIds.mockResolvedValue(bookedSeats);
 
             const result = await service.confirm(id, USER);
 
@@ -220,11 +233,8 @@ describe('ReservationsService', () => {
                 id,
                 ReservationStatus.CONFIRMED
             );
-            expect(seatDao.updateStatusBatch).toHaveBeenCalledWith(
-                expect.anything(),
-                pending.seatIds,
-                SeatStatus.BOOKED
-            );
+            expect(seatDao.updateStatusBatch).toHaveBeenCalledWith(expect.anything(), seatIds, SeatStatus.BOOKED);
+            expect(seatGateway.emitSeatBooked).toHaveBeenCalledWith(bookedSeats);
         });
     });
 
@@ -247,10 +257,13 @@ describe('ReservationsService', () => {
             await expect(service.cancel(randomUUID(), USER)).rejects.toThrow('Cannot cancel a CONFIRMED reservation');
         });
 
-        it('Given:A valid PENDING reservation, should release seats and deactivate the holder rows', async () => {
+        it('Given:A valid PENDING reservation, should release seats, broadcast, and deactivate the holder rows', async () => {
             const id = randomUUID();
-            const pending = makeReservation({ id, userId: USER, seatIds: [randomUUID()] });
+            const seatId = randomUUID();
+            const pending = makeReservation({ id, userId: USER, seatIds: [seatId] });
+            const releasedSeats = [makeSeat(seatId, 'A', 1, SeatStatus.AVAILABLE)];
             reservationDao.findById.mockResolvedValue(pending);
+            seatDao.findByIds.mockResolvedValue(releasedSeats);
 
             await service.cancel(id, USER);
 
@@ -265,6 +278,7 @@ describe('ReservationsService', () => {
                 SeatStatus.AVAILABLE
             );
             expect(reservationSeatDao.deactivateByReservation).toHaveBeenCalledWith(expect.anything(), id);
+            expect(seatGateway.emitSeatReleased).toHaveBeenCalledWith(releasedSeats);
         });
     });
 

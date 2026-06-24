@@ -6,6 +6,7 @@ import { TransactionManager } from '@cinema/internal-sdk';
 import { SeatDao } from '../../seats/dao/seat.dao';
 import { SeatStatus } from '../../seats/enum/seat-status.enum';
 import { SeatNotFoundException } from '../../seats/exception/seat-not-found.exception';
+import { SeatGateway } from '../../gateway/seat.gateway';
 import { ReservationDao } from '../dao/reservation.dao';
 import { ReservationSeatDao } from '../dao/reservation-seat.dao';
 import { ReservationModel } from '../domain-model/reservation';
@@ -32,6 +33,7 @@ export class ReservationsService {
         private readonly reservationDao: ReservationDao,
         private readonly reservationSeatDao: ReservationSeatDao,
         private readonly seatDao: SeatDao,
+        private readonly seatGateway: SeatGateway,
         private readonly appConfig: AppConfig,
         private readonly transactionManager: TransactionManager
     ) {}
@@ -48,19 +50,20 @@ export class ReservationsService {
 
         try {
             const reservation = await this.transactionManager.runInTransaction(async (queryRunner) => {
-                await this.validateReserve(queryRunner, userId, seatIds);
+                const lockedSeats = await this.validateReserve(queryRunner, userId, seatIds);
 
                 await this.seatDao.updateStatusBatch(queryRunner, seatIds, SeatStatus.RESERVED);
 
                 // If a concurrent path bypassed the lock, the partial unique index raises
                 // a unique violation here (ADR-9).
                 const expiresAt = new Date(Date.now() + this.appConfig.reservationHoldMins * 60 * 1000);
-                return this.reservationDao.createWithSeats(queryRunner, userId, seatIds, expiresAt);
+                const created = await this.reservationDao.createWithSeats(queryRunner, userId, seatIds, expiresAt);
+                return { reservation: created, lockedSeats };
             });
 
-            Logger.info('Reservation created', { reservationId: reservation.id, userId });
-            // NOTE: realtime seat:reserved broadcast is wired in B20 (feat/cinema-realtime).
-            return reservation;
+            Logger.info('Reservation created', { reservationId: reservation.reservation.id, userId });
+            this.seatGateway.emitSeatReserved(reservation.lockedSeats);
+            return reservation.reservation;
         } catch (err) {
             // Map the DB anti-double-booking backstop (ADR-9) to the same 409 as the app check.
             if (isUniqueViolation(err, 'UQ_reservation_seats_active_seat')) {
@@ -70,7 +73,7 @@ export class ReservationsService {
         }
     }
 
-    private async validateReserve(qr: QueryRunner, userId: string, seatIds: string[]): Promise<void> {
+    private async validateReserve(qr: QueryRunner, userId: string, seatIds: string[]) {
         const activePending = await this.reservationDao.findActivePendingByUser(qr, userId);
         if (activePending) throw new ActiveReservationExistsException(activePending.id);
 
@@ -87,6 +90,8 @@ export class ReservationsService {
 
         const allRowSeats = await this.seatDao.findByRow(qr, lockedSeats[0].row);
         SeatSelectionValidator.validateNoIsolatedSeat(allRowSeats, new Set(seatIds));
+
+        return lockedSeats;
     }
 
     /** Confirms a PENDING reservation, transitioning its seats to BOOKED. */
@@ -99,7 +104,9 @@ export class ReservationsService {
         });
 
         Logger.info('Reservation confirmed', { reservationId, userId });
-        // NOTE: realtime seat:booked broadcast is wired in B20 (feat/cinema-realtime).
+
+        const bookedSeats = await this.seatDao.findByIds(reservation.seatIds);
+        this.seatGateway.emitSeatBooked(bookedSeats);
 
         // Re-fetch so we return a real ReservationModel instance (its seats stay held).
         const updated = await this.reservationDao.findById(reservationId);
@@ -127,7 +134,9 @@ export class ReservationsService {
         });
 
         Logger.info('Reservation cancelled', { reservationId, userId });
-        // NOTE: realtime seat:released broadcast is wired in B20 (feat/cinema-realtime).
+
+        const releasedSeats = await this.seatDao.findByIds(reservation.seatIds);
+        this.seatGateway.emitSeatReleased(releasedSeats);
     }
 
     private async validateCancel(reservationId: string, userId: string): Promise<ReservationModel> {
