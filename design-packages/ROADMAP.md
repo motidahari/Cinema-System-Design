@@ -554,7 +554,7 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B23 `test/cinema-unit` | 4 | B19 | `backend-qa-tester`, `backend-code-standards-reviewer` | 🔄 IN PROGRESS |
 | B24a `test/cinema-integration` | 5 | B22 | `backend-qa-tester`, `backend-code-standards-reviewer` | 🔄 IN PROGRESS |
 | B24b `test/cinema-api` | 6 | B24a | `backend-qa-tester`, `backend-code-standards-reviewer` | 🔄 IN PROGRESS |
-| B25 `feat/web-scaffold` | 10 | B03 | `frontend-developer`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B25 `feat/web-scaffold` | 10 | B03 | `frontend-developer`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B26 `feat/web-foundation` | 9 | B25 | `frontend-developer`, `frontend-code-standards-reviewer` | ⏳ PENDING |
 | B27 `feat/web-http-core` | 6 | B26 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
 | B28 `feat/web-auth-state` | 7 | B27 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |

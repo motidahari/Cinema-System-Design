@@ -21,10 +21,13 @@ module.exports = {
             env: { jest: true },
         },
         {
-            files: ['frontend-application/**/*.tsx'],
+            files: ['frontend-application/**/*.tsx', 'frontend-application/**/*.ts'],
             extends: ['plugin:react/recommended', 'plugin:react-hooks/recommended'],
             settings: {
                 react: { version: 'detect' },
+            },
+            rules: {
+                'react/react-in-jsx-scope': 'off',
             },
         },
     ],
