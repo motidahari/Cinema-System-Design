@@ -10,7 +10,7 @@
         "test:unit": "jest --config jest.config.js --selectProjects unit",
         "test:integration": "jest --config jest.config.js --selectProjects integration --runInBand",
         "test:api": "jest --config jest.config.js --selectProjects api --runInBand --passWithNoTests",
-        "test:cov": "jest --config jest.config.js --coverage --passWithNoTests"
+        "test:cov": "jest --config jest.config.js --coverage --runInBand --passWithNoTests"
     },
     "dependencies": {
         "@cinema/internal-sdk": "*",
