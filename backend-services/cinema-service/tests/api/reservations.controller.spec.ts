@@ -6,7 +6,7 @@
  *                                       + 404 (unknown seat) + 409 (unavailable) + 409 (active exists) + 401
  *   POST   /api/v1/reservations/:id/confirm  200 + 404 + 403 + 401
  *   DELETE /api/v1/reservations/:id          204 + 404 + 401
- *   GET    /api/v1/reservations/my           200 (active reservations)
+ *   GET    /api/v1/reservations               200 (active reservations)
  */
 
 import request from 'supertest';
@@ -148,19 +148,19 @@ describe('ReservationsController (api)', () => {
     });
 
     // ── my ────────────────────────────────────────────────────────────────────
-    describe('GET /api/v1/reservations/my', () => {
+    describe('GET /api/v1/reservations', () => {
         it('should return the active reservations for the authenticated user', async () => {
             const seatIds = [await getSeatId(app, 'A1'), await getSeatId(app, 'A2')];
             await reserve(seatIds).expect(201);
 
-            const res = await request(app.getHttpServer()).get('/api/v1/reservations/my').expect(200);
+            const res = await request(app.getHttpServer()).get('/api/v1/reservations').expect(200);
             expect(res.body.reservations).toHaveLength(1);
             expect(res.body.reservations[0].seatIds.sort()).toEqual([...seatIds].sort());
         });
 
         it('should return 401 without a token', async () => {
             authState.mode = 'missing-token';
-            await request(app.getHttpServer()).get('/api/v1/reservations/my').expect(401);
+            await request(app.getHttpServer()).get('/api/v1/reservations').expect(401);
         });
     });
 });

@@ -1,12 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource, QueryRunner } from 'typeorm';
 
-/**
- * Centralises atomic DB work. `runInTransaction` opens a dedicated QueryRunner,
- * starts a transaction, runs the callback, then commits — rolling back on any error
- * and always releasing the runner. Callers receive the active QueryRunner and pass it
- * to DAO methods so every statement participates in the same transaction.
- */
 @Injectable()
 export class TransactionManager {
     constructor(private readonly dataSource: DataSource) {}

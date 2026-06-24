@@ -1,5 +1,5 @@
 import { DataSource, QueryRunner } from 'typeorm';
-import { TransactionManager } from '../../src/infrastructure/database/transaction.manager';
+import { TransactionManager } from '@cinema/internal-sdk';
 
 describe('TransactionManager', () => {
     let manager: TransactionManager;

@@ -14,7 +14,7 @@ import { ReservationDao } from '../../../src/reservations/dao/reservation.dao';
 import { ReservationSeatDao } from '../../../src/reservations/dao/reservation-seat.dao';
 import { ReservationsService } from '../../../src/reservations/service/reservations.service';
 import { ReservationsController } from '../../../src/reservations/reservations.controller';
-import { TransactionManager } from '../../../src/infrastructure/database/transaction.manager';
+import { TransactionManager } from '@cinema/internal-sdk';
 import { AppConfig } from '../../../src/infrastructure/config/app.config';
 import { RemoteAuthGuard } from '../../../src/infrastructure/guards/remote-auth.guard';
 import { HttpExceptionFilter } from '../../../src/infrastructure/filters/http-exception.filter';

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TransactionManager } from './transaction.manager';
+import { TransactionManager } from '@cinema/internal-sdk';
 
 /**
  * Exposes shared persistence utilities. Import it in any module whose services run

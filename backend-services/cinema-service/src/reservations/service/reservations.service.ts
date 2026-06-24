@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Logger } from '@cinema/shared';
 import { AppConfig } from '../../infrastructure/config/app.config';
-import { TransactionManager } from '../../infrastructure/database/transaction.manager';
+import { TransactionManager } from '@cinema/internal-sdk';
 import { SeatDao } from '../../seats/dao/seat.dao';
 import { SeatStatus } from '../../seats/enum/seat-status.enum';
 import { SeatNotFoundException } from '../../seats/exception/seat-not-found.exception';

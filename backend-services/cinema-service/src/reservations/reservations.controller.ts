@@ -39,7 +39,7 @@ export class ReservationsController {
         await this.reservationsService.cancel(id, req.user.userId);
     }
 
-    @Get('my')
+    @Get()
     async getMyReservations(@Req() req: AuthenticatedRequest) {
         const reservations = await this.reservationsService.getMyReservations(req.user.userId);
         return { reservations };

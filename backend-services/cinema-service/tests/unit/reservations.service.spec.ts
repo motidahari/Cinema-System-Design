@@ -6,7 +6,7 @@ import { ReservationDao } from '../../src/reservations/dao/reservation.dao';
 import { ReservationSeatDao } from '../../src/reservations/dao/reservation-seat.dao';
 import { SeatDao } from '../../src/seats/dao/seat.dao';
 import { AppConfig } from '../../src/infrastructure/config/app.config';
-import { TransactionManager } from '../../src/infrastructure/database/transaction.manager';
+import { TransactionManager } from '@cinema/internal-sdk';
 import { ReservationModel, ReservationModelAttrs } from '../../src/reservations/domain-model/reservation';
 import { ReservationStatus } from '../../src/reservations/enum/reservation-status.enum';
 import { SeatModel } from '../../src/seats/domain-model/seat';
