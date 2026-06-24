@@ -51,7 +51,7 @@ describe('ReservationsController (concurrency)', () => {
             const [{ count }] = await ds.query<[{ count: string }]>(
                 `SELECT COUNT(*) AS count FROM cinema.reservation_seats rs
                  JOIN cinema.reservations r ON r.id = rs.reservation_id
-                 WHERE rs.seat_id = $1 AND r.is_active = true`,
+                 WHERE rs.seat_id = $1 AND r.status IN ('PENDING', 'CONFIRMED')`,
                 [seat.id]
             );
             expect(Number(count)).toBe(1);
