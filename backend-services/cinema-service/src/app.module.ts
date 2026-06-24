@@ -13,6 +13,7 @@ import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { SeatsModule } from './seats/seats.module';
 import { ReservationsModule } from './reservations/reservations.module';
+import { GatewayModule } from './gateway/gateway.module';
 import { SeedModule } from './seed/seed.module';
 
 const envSchema = z.object({
@@ -49,6 +50,7 @@ const envSchema = z.object({
         MetricsModule,
         SeatsModule,
         ReservationsModule,
+        GatewayModule,
         SeedModule,
     ],
     providers: [
