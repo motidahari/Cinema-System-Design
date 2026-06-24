@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { QueryRunner } from 'typeorm';
 import { Logger } from '@cinema/shared';
 import { AppConfig } from '../../infrastructure/config/app.config';
 import { TransactionManager } from '@cinema/internal-sdk';
@@ -41,46 +42,18 @@ export class ReservationsService {
      * validated against the locked snapshot before persisting.
      */
     async reserve(userId: string, seatIds: string[]): Promise<ReservationModel> {
-        if (seatIds.length === 0) {
-            throw new SeatsUnavailableException('No seat IDs provided');
-        }
+        if (seatIds.length === 0) throw new SeatsUnavailableException('No seat IDs provided');
 
         Logger.info('Reservation attempt', { userId, seatCount: seatIds.length });
 
         try {
             const reservation = await this.transactionManager.runInTransaction(async (queryRunner) => {
-                // 0. One active PENDING reservation per user (ADR-2), checked in-transaction.
-                const activePending = await this.reservationDao.findActivePendingByUser(queryRunner, userId);
-                if (activePending) {
-                    throw new ActiveReservationExistsException(activePending.id);
-                }
+                await this.validateReserve(queryRunner, userId, seatIds);
 
-                // 1. Blocking row-level locks on the requested seats (ADR-6).
-                const lockedSeats = await this.seatDao.lockForUpdate(queryRunner, seatIds);
-                if (lockedSeats.length !== seatIds.length) {
-                    throw new SeatNotFoundException();
-                }
-
-                // 2. All seats must currently be AVAILABLE.
-                const unavailable = lockedSeats.filter((s) => !s.isAvailable());
-                if (unavailable.length > 0) {
-                    throw new SeatsUnavailableException(
-                        `Seats ${unavailable.map((s) => `${s.row}${s.number}`).join(', ')} are not available`
-                    );
-                }
-
-                // 3. Rule 1 — consecutive seats in a single row.
-                SeatSelectionValidator.validateConsecutive(lockedSeats);
-
-                // 4. Rule 2 — no isolated seat (boundary-only, ADR-3), evaluated against the row.
-                const allRowSeats = await this.seatDao.findByRow(queryRunner, lockedSeats[0].row);
-                SeatSelectionValidator.validateNoIsolatedSeat(allRowSeats, new Set(seatIds));
-
-                // 5. Flip the seats to RESERVED.
                 await this.seatDao.updateStatusBatch(queryRunner, seatIds, SeatStatus.RESERVED);
 
-                // 6. Persist the reservation + its join rows. If a concurrent path bypassed the
-                //    lock, the partial unique index raises a unique violation here (ADR-9).
+                // If a concurrent path bypassed the lock, the partial unique index raises
+                // a unique violation here (ADR-9).
                 const expiresAt = new Date(Date.now() + this.appConfig.reservationHoldMins * 60 * 1000);
                 return this.reservationDao.createWithSeats(queryRunner, userId, seatIds, expiresAt);
             });
@@ -97,17 +70,28 @@ export class ReservationsService {
         }
     }
 
+    private async validateReserve(qr: QueryRunner, userId: string, seatIds: string[]): Promise<void> {
+        const activePending = await this.reservationDao.findActivePendingByUser(qr, userId);
+        if (activePending) throw new ActiveReservationExistsException(activePending.id);
+
+        const lockedSeats = await this.seatDao.lockForUpdate(qr, seatIds);
+        if (lockedSeats.length !== seatIds.length) throw new SeatNotFoundException();
+
+        const unavailable = lockedSeats.filter((s) => !s.isAvailable());
+        if (unavailable.length > 0)
+            throw new SeatsUnavailableException(
+                `Seats ${unavailable.map((s) => `${s.row}${s.number}`).join(', ')} are not available`
+            );
+
+        SeatSelectionValidator.validateConsecutive(lockedSeats);
+
+        const allRowSeats = await this.seatDao.findByRow(qr, lockedSeats[0].row);
+        SeatSelectionValidator.validateNoIsolatedSeat(allRowSeats, new Set(seatIds));
+    }
+
     /** Confirms a PENDING reservation, transitioning its seats to BOOKED. */
     async confirm(reservationId: string, userId: string): Promise<ReservationModel> {
-        const reservation = await this.reservationDao.findById(reservationId);
-        if (!reservation) throw new ReservationNotFoundException(reservationId);
-        if (!reservation.isOwnedBy(userId)) throw new ReservationNotOwnedException(reservationId);
-        if (!reservation.isPending()) {
-            throw new SeatsUnavailableException(`Reservation ${reservationId} is not in PENDING state`);
-        }
-        if (reservation.isExpired()) {
-            throw new SeatsUnavailableException(`Reservation ${reservationId} has expired`);
-        }
+        const reservation = await this.validateConfirm(reservationId, userId);
 
         await this.transactionManager.runInTransaction(async (queryRunner) => {
             await this.reservationDao.updateStatus(queryRunner, reservationId, ReservationStatus.CONFIRMED);
@@ -122,14 +106,19 @@ export class ReservationsService {
         return updated!;
     }
 
-    /** Cancels a PENDING reservation, releasing its seats back to AVAILABLE. */
-    async cancel(reservationId: string, userId: string): Promise<void> {
+    private async validateConfirm(reservationId: string, userId: string): Promise<ReservationModel> {
         const reservation = await this.reservationDao.findById(reservationId);
         if (!reservation) throw new ReservationNotFoundException(reservationId);
         if (!reservation.isOwnedBy(userId)) throw new ReservationNotOwnedException(reservationId);
-        if (!reservation.isPending()) {
-            throw new SeatsUnavailableException(`Cannot cancel a ${reservation.status} reservation`);
-        }
+        if (!reservation.isPending())
+            throw new SeatsUnavailableException(`Reservation ${reservationId} is not in PENDING state`);
+        if (reservation.isExpired()) throw new SeatsUnavailableException(`Reservation ${reservationId} has expired`);
+        return reservation;
+    }
+
+    /** Cancels a PENDING reservation, releasing its seats back to AVAILABLE. */
+    async cancel(reservationId: string, userId: string): Promise<void> {
+        const reservation = await this.validateCancel(reservationId, userId);
 
         await this.transactionManager.runInTransaction(async (queryRunner) => {
             await this.reservationDao.updateStatus(queryRunner, reservationId, ReservationStatus.CANCELLED);
@@ -139,6 +128,15 @@ export class ReservationsService {
 
         Logger.info('Reservation cancelled', { reservationId, userId });
         // NOTE: realtime seat:released broadcast is wired in B20 (feat/cinema-realtime).
+    }
+
+    private async validateCancel(reservationId: string, userId: string): Promise<ReservationModel> {
+        const reservation = await this.reservationDao.findById(reservationId);
+        if (!reservation) throw new ReservationNotFoundException(reservationId);
+        if (!reservation.isOwnedBy(userId)) throw new ReservationNotOwnedException(reservationId);
+        if (!reservation.isPending())
+            throw new SeatsUnavailableException(`Cannot cancel a ${reservation.status} reservation`);
+        return reservation;
     }
 
     /** The authenticated user's active (PENDING) reservations, newest first. */
