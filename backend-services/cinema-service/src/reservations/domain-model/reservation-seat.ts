@@ -61,10 +61,10 @@ export class ReservationSeatModel {
 
     toJSON() {
         return {
-            id: this._id,
-            reservationId: this._reservationId,
-            seatId: this._seatId,
-            isActive: this._isActive,
+            id: this.id,
+            reservationId: this.reservationId,
+            seatId: this.seatId,
+            isActive: this.isActive,
         };
     }
 }

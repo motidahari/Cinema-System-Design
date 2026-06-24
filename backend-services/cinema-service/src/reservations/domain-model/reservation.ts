@@ -121,11 +121,11 @@ export class ReservationModel {
 
     toJSON() {
         return {
-            id: this._id,
-            status: this._status,
-            expiresAt: this._expiresAt.toISOString(),
+            id: this.id,
+            status: this.status,
+            expiresAt: this.expiresAt.toISOString(),
             expiresInSeconds: this.expiresInSeconds(),
-            seatIds: this._seatIds,
+            seatIds: this.seatIds,
         };
     }
 }

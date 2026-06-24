@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, MoreThan, QueryRunner, Repository } from 'typeorm';
-import { BaseDao } from '@cinema/shared';
+import { BaseDao, SortOrder } from '@cinema/shared';
 import { ReservationEntity } from '../../domain/entities/reservation.entity';
 import { ReservationModel } from '../domain-model/reservation';
 import { ReservationStatus } from '../enum/reservation-status.enum';
@@ -83,7 +83,7 @@ export class ReservationDao extends BaseDao<ReservationEntity, ReservationModel>
         const entities = await this.repo.find({
             where: { userId, status: ReservationStatus.PENDING },
             relations: ['reservationSeats'],
-            order: { createdAt: 'DESC' },
+            order: { createdAt: SortOrder.DESC },
         });
         return entities.map((e) => this.toDomain(e));
     }

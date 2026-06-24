@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, QueryRunner, Repository } from 'typeorm';
-import { BaseDao } from '@cinema/shared';
+import { BaseDao, SortOrder } from '@cinema/shared';
 import { SeatEntity } from '../../domain/entities/seat.entity';
 import { SeatModel } from '../domain-model/seat';
 import { SeatStatus } from '../enum/seat-status.enum';
@@ -39,7 +39,7 @@ export class SeatDao extends BaseDao<SeatEntity, SeatModel> {
 
     /** Full seating map, ordered by row then seat number. */
     async findAll(): Promise<SeatModel[]> {
-        return super.findAll({ order: { row: 'ASC', number: 'ASC' } });
+        return super.findAll({ order: { row: SortOrder.ASC, number: SortOrder.ASC } });
     }
 
     async findByIds(ids: string[]): Promise<SeatModel[]> {
@@ -89,7 +89,7 @@ export class SeatDao extends BaseDao<SeatEntity, SeatModel> {
     async findByRow(qr: QueryRunner, row: string): Promise<SeatModel[]> {
         const entities = await qr.manager.getRepository(SeatEntity).find({
             where: { row },
-            order: { number: 'ASC' },
+            order: { number: SortOrder.ASC },
         });
         return entities.map((e) => this.toDomain(e));
     }

@@ -1,4 +1,6 @@
 export { BaseDao } from './dao/base.dao';
+
+export { SortOrder } from './enums/sort-order.enum';
 export { RecordNotFoundException } from './dao/exceptions';
 
 export { BaseCronJob } from './cron/base-cron-job';

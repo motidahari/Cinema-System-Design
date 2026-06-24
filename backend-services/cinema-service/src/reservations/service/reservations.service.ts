@@ -15,14 +15,14 @@ import { ReservationNotFoundException } from '../exception/reservation-not-found
 import { ReservationNotOwnedException } from '../exception/reservation-not-owned.exception';
 import { SeatsUnavailableException } from '../exception/seats-unavailable.exception';
 
-const UNIQUE_VIOLATION = '23505';
-
 /** True when `err` is a Postgres unique-violation on the named constraint/index. */
 function isUniqueViolation(err: unknown, constraint: string): boolean {
     const e = err as { code?: string; constraint?: string; driverError?: { code?: string; constraint?: string } };
     const code = e.code ?? e.driverError?.code;
     const name = e.constraint ?? e.driverError?.constraint;
-    return code === UNIQUE_VIOLATION && name === constraint;
+
+    const uniqueViolationErrorCode = '23505';
+    return code === uniqueViolationErrorCode && name === constraint;
 }
 
 @Injectable()
@@ -48,15 +48,15 @@ export class ReservationsService {
         Logger.info('Reservation attempt', { userId, seatCount: seatIds.length });
 
         try {
-            const reservation = await this.transactionManager.runInTransaction(async (qr) => {
+            const reservation = await this.transactionManager.runInTransaction(async (queryRunner) => {
                 // 0. One active PENDING reservation per user (ADR-2), checked in-transaction.
-                const activePending = await this.reservationDao.findActivePendingByUser(qr, userId);
+                const activePending = await this.reservationDao.findActivePendingByUser(queryRunner, userId);
                 if (activePending) {
                     throw new ActiveReservationExistsException(activePending.id);
                 }
 
                 // 1. Blocking row-level locks on the requested seats (ADR-6).
-                const lockedSeats = await this.seatDao.lockForUpdate(qr, seatIds);
+                const lockedSeats = await this.seatDao.lockForUpdate(queryRunner, seatIds);
                 if (lockedSeats.length !== seatIds.length) {
                     throw new SeatNotFoundException();
                 }
@@ -73,16 +73,16 @@ export class ReservationsService {
                 SeatSelectionValidator.validateConsecutive(lockedSeats);
 
                 // 4. Rule 2 — no isolated seat (boundary-only, ADR-3), evaluated against the row.
-                const allRowSeats = await this.seatDao.findByRow(qr, lockedSeats[0].row);
+                const allRowSeats = await this.seatDao.findByRow(queryRunner, lockedSeats[0].row);
                 SeatSelectionValidator.validateNoIsolatedSeat(allRowSeats, new Set(seatIds));
 
                 // 5. Flip the seats to RESERVED.
-                await this.seatDao.updateStatusBatch(qr, seatIds, SeatStatus.RESERVED);
+                await this.seatDao.updateStatusBatch(queryRunner, seatIds, SeatStatus.RESERVED);
 
                 // 6. Persist the reservation + its join rows. If a concurrent path bypassed the
                 //    lock, the partial unique index raises a unique violation here (ADR-9).
                 const expiresAt = new Date(Date.now() + this.appConfig.reservationHoldMins * 60 * 1000);
-                return this.reservationDao.createWithSeats(qr, userId, seatIds, expiresAt);
+                return this.reservationDao.createWithSeats(queryRunner, userId, seatIds, expiresAt);
             });
 
             Logger.info('Reservation created', { reservationId: reservation.id, userId });
@@ -109,9 +109,9 @@ export class ReservationsService {
             throw new SeatsUnavailableException(`Reservation ${reservationId} has expired`);
         }
 
-        await this.transactionManager.runInTransaction(async (qr) => {
-            await this.reservationDao.updateStatus(qr, reservationId, ReservationStatus.CONFIRMED);
-            await this.seatDao.updateStatusBatch(qr, reservation.seatIds, SeatStatus.BOOKED);
+        await this.transactionManager.runInTransaction(async (queryRunner) => {
+            await this.reservationDao.updateStatus(queryRunner, reservationId, ReservationStatus.CONFIRMED);
+            await this.seatDao.updateStatusBatch(queryRunner, reservation.seatIds, SeatStatus.BOOKED);
         });
 
         Logger.info('Reservation confirmed', { reservationId, userId });
@@ -131,10 +131,10 @@ export class ReservationsService {
             throw new SeatsUnavailableException(`Cannot cancel a ${reservation.status} reservation`);
         }
 
-        await this.transactionManager.runInTransaction(async (qr) => {
-            await this.reservationDao.updateStatus(qr, reservationId, ReservationStatus.CANCELLED);
-            await this.seatDao.updateStatusBatch(qr, reservation.seatIds, SeatStatus.AVAILABLE);
-            await this.reservationSeatDao.deactivateByReservation(qr, reservationId); // release DB holder slot (ADR-9)
+        await this.transactionManager.runInTransaction(async (queryRunner) => {
+            await this.reservationDao.updateStatus(queryRunner, reservationId, ReservationStatus.CANCELLED);
+            await this.seatDao.updateStatusBatch(queryRunner, reservation.seatIds, SeatStatus.AVAILABLE);
+            await this.reservationSeatDao.deactivateByReservation(queryRunner, reservationId); // release DB holder slot (ADR-9)
         });
 
         Logger.info('Reservation cancelled', { reservationId, userId });

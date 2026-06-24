@@ -43,8 +43,8 @@ export class ReservationSeatDao extends BaseDao<ReservationSeatEntity, Reservati
      * all of its rows. Called on cancel and expire — NOT on confirm (a BOOKED seat
      * stays actively held). Must run in the same transaction as the seat-status change.
      */
-    async deactivateByReservation(qr: QueryRunner, reservationId: string): Promise<void> {
-        await qr.manager.update(ReservationSeatEntity, { reservationId }, { isActive: false });
+    async deactivateByReservation(queryRunner: QueryRunner, reservationId: string): Promise<void> {
+        await queryRunner.manager.update(ReservationSeatEntity, { reservationId }, { isActive: false });
     }
 
     /** Seat ids currently linked to a reservation (any active state). */
