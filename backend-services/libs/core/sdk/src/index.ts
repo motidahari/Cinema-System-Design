@@ -1,4 +1,5 @@
 export { IdentityClient } from './clients/identity.client';
+export { TransactionManager } from './database/transaction.manager';
 
 export type { UserProfile } from './types/user-profile.types';
 export type { Seat } from './types/seat.types';

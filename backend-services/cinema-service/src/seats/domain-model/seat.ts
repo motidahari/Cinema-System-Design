@@ -97,10 +97,10 @@ export class SeatModel {
 
     toJSON() {
         return {
-            id: this._id,
-            row: this._row,
-            number: this._number,
-            status: this._status,
+            id: this.id,
+            row: this.row,
+            number: this.number,
+            status: this.status,
         };
     }
 }

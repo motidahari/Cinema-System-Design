@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -117,7 +118,7 @@ describe('SeatDao (integration)', () => {
         });
 
         it('should return null for a non-existent id', async () => {
-            expect(await dao.findById('aaaaaaaa-0000-4000-8000-000000000099')).toBeNull();
+            expect(await dao.findById(randomUUID())).toBeNull();
         });
     });
 });

@@ -12,6 +12,7 @@ import { CsrfGuard } from './infrastructure/guards/csrf.guard';
 import { HealthModule } from './health/health.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { SeatsModule } from './seats/seats.module';
+import { ReservationsModule } from './reservations/reservations.module';
 import { SeedModule } from './seed/seed.module';
 
 const envSchema = z.object({
@@ -47,6 +48,7 @@ const envSchema = z.object({
         HealthModule,
         MetricsModule,
         SeatsModule,
+        ReservationsModule,
         SeedModule,
     ],
     providers: [
