@@ -80,21 +80,19 @@ export class ReservationDao extends BaseDao<ReservationEntity, ReservationModel>
 
     /** All PENDING reservations for a user, newest first. */
     async findPendingByUser(userId: string): Promise<ReservationModel[]> {
-        const entities = await this.repo.find({
+        return this.findAll({
             where: { userId, status: ReservationStatus.PENDING },
             relations: ['reservationSeats'],
             order: { createdAt: SortOrder.DESC },
         });
-        return entities.map((e) => this.toDomain(e));
     }
 
     /** All PENDING reservations whose expiry timestamp is in the past. Used by the expiry cron. */
     async findExpiredPending(): Promise<ReservationModel[]> {
-        const entities = await this.repo.find({
+        return this.findAll({
             where: { status: ReservationStatus.PENDING, expiresAt: LessThan(new Date()) },
             relations: ['reservationSeats'],
         });
-        return entities.map((e) => this.toDomain(e));
     }
 
     async updateStatus(qr: QueryRunner, id: string, status: ReservationStatus): Promise<void> {
