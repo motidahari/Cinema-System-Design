@@ -2,6 +2,7 @@ import { DataSource, DataSourceOptions, QueryRunner } from 'typeorm';
 import { SeatEntity } from '../../../src/domain/entities/seat.entity';
 import { ReservationEntity } from '../../../src/domain/entities/reservation.entity';
 import { ReservationSeatEntity } from '../../../src/domain/entities/reservation-seat.entity';
+import { IdempotencyKeyEntity } from '../../../src/domain/entities/idempotency-key.entity';
 
 /** DataSource options for the cinema-service integration-test suite. */
 export function cinemaTestDataSourceOptions(): DataSourceOptions {
@@ -13,16 +14,17 @@ export function cinemaTestDataSourceOptions(): DataSourceOptions {
         password: process.env.TEST_DB_PASSWORD ?? 'cinema_pass',
         database: process.env.TEST_DB_NAME ?? 'cinema_db',
         schema: 'cinema',
-        entities: [SeatEntity, ReservationEntity, ReservationSeatEntity],
+        entities: [SeatEntity, ReservationEntity, ReservationSeatEntity, IdempotencyKeyEntity],
         synchronize: true,
     };
 }
 
-/** Deletes all cinema rows in FK-safe order (join → reservations → seats). */
+/** Deletes all cinema rows in FK-safe order (join → reservations → seats → idempotency). */
 export async function clearCinemaTables(dataSource: DataSource): Promise<void> {
     await dataSource.query(`DELETE FROM cinema.reservation_seats`);
     await dataSource.query(`DELETE FROM cinema.reservations`);
     await dataSource.query(`DELETE FROM cinema.seats`);
+    await dataSource.query(`DELETE FROM cinema.idempotency_keys`);
 }
 
 /** Inserts seats and returns their generated ids keyed by `${row}${number}`. */

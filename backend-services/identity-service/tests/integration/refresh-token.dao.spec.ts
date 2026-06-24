@@ -2,6 +2,9 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { randomBytes, randomUUID } from 'crypto';
+
+const RUN = randomUUID().slice(0, 8);
+const RT_USER_EMAIL = `rt-test-${RUN}@cinema.test`;
 import { RefreshTokenDao } from '../../src/auth/dao/refresh-token.dao';
 import { RefreshTokenEntity } from '../../src/domain/entities/refresh-token.entity';
 import { RefreshTokenModel } from '../../src/auth/domain-model/refresh-token';
@@ -44,21 +47,19 @@ describe('RefreshTokenDao (integration)', () => {
 
         // Insert a single user once — refresh tokens need a valid user_id FK.
         const result = await dataSource.query<{ id: string }[]>(
-            `INSERT INTO identity.users (email, password_hash)
-             VALUES ('rt-test@cinema.test', 'hashed')
-             RETURNING id`
+            `INSERT INTO identity.users (email, password_hash) VALUES ($1, 'hashed') RETURNING id`,
+            [RT_USER_EMAIL]
         );
         testUserId = result[0].id;
     });
 
     afterEach(async () => {
-        // Tokens first (FK child), then no need to touch the user row between tests.
-        await dataSource.query(`DELETE FROM identity.refresh_tokens`);
+        await dataSource.query(`DELETE FROM identity.refresh_tokens WHERE user_id = $1`, [testUserId]);
     });
 
     afterAll(async () => {
-        await dataSource.query(`DELETE FROM identity.refresh_tokens`);
-        await dataSource.query(`DELETE FROM identity.users WHERE email = 'rt-test@cinema.test'`);
+        await dataSource.query(`DELETE FROM identity.refresh_tokens WHERE user_id = $1`, [testUserId]);
+        await dataSource.query(`DELETE FROM identity.users WHERE email = $1`, [RT_USER_EMAIL]);
         await module.close();
     });
 
