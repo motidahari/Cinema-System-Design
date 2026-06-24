@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { DataSourceOptions, DataSource } from 'typeorm';
 import { CanActivate, ExecutionContext, INestApplication, UnauthorizedException, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -19,7 +20,7 @@ import { AppConfig } from '../../../src/infrastructure/config/app.config';
 import { RemoteAuthGuard } from '../../../src/infrastructure/guards/remote-auth.guard';
 import { HttpExceptionFilter } from '../../../src/infrastructure/filters/http-exception.filter';
 
-export const TEST_USER_ID = 'aaaaaaaa-0000-4000-8000-000000000001';
+export const TEST_USER_ID = randomUUID();
 export const TEST_USER = { userId: TEST_USER_ID, email: 'tester@cinema.test' };
 
 export type AuthMode = 'authenticated' | 'missing-token' | 'invalid-token';
