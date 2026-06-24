@@ -90,11 +90,12 @@ describe('AuthController (api)', () => {
         app = await buildAuthTestApp();
     });
 
-    beforeEach(async () => {
+    afterEach(async () => {
         await truncateIdentityTables(app, `%-${RUN}@cinema.test`);
     });
 
     afterAll(async () => {
+        await truncateIdentityTables(app, `%-${RUN}@cinema.test`);
         await app.close();
     });
 
