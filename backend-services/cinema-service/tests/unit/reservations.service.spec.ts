@@ -216,7 +216,7 @@ describe('ReservationsService', () => {
             await expect(service.confirm(randomUUID(), USER)).rejects.toThrow('has expired');
         });
 
-        it('Given:A valid PENDING reservation, should book the seats, broadcast, and return the updated reservation', async () => {
+        it('Given:A valid PENDING reservation, should book the seats, broadcast off-path, and return the updated reservation', async () => {
             const id = randomUUID();
             const seatIds = [randomUUID(), randomUUID()];
             const pending = makeReservation({ id, userId: USER, seatIds });
@@ -226,6 +226,7 @@ describe('ReservationsService', () => {
             seatDao.findByIds.mockResolvedValue(bookedSeats);
 
             const result = await service.confirm(id, USER);
+            await Promise.resolve(); // flush the background findByIds → emit microtask
 
             expect(result.status).toBe(ReservationStatus.CONFIRMED);
             expect(reservationDao.updateStatus).toHaveBeenCalledWith(
@@ -257,7 +258,7 @@ describe('ReservationsService', () => {
             await expect(service.cancel(randomUUID(), USER)).rejects.toThrow('Cannot cancel a CONFIRMED reservation');
         });
 
-        it('Given:A valid PENDING reservation, should release seats, broadcast, and deactivate the holder rows', async () => {
+        it('Given:A valid PENDING reservation, should release seats, broadcast off-path, and deactivate the holder rows', async () => {
             const id = randomUUID();
             const seatId = randomUUID();
             const pending = makeReservation({ id, userId: USER, seatIds: [seatId] });
@@ -266,6 +267,7 @@ describe('ReservationsService', () => {
             seatDao.findByIds.mockResolvedValue(releasedSeats);
 
             await service.cancel(id, USER);
+            await Promise.resolve(); // flush the background findByIds → emit microtask
 
             expect(reservationDao.updateStatus).toHaveBeenCalledWith(
                 expect.anything(),

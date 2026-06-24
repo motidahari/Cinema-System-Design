@@ -105,8 +105,11 @@ export class ReservationsService {
 
         Logger.info('Reservation confirmed', { reservationId, userId });
 
-        const bookedSeats = await this.seatDao.findByIds(reservation.seatIds);
-        this.seatGateway.emitSeatBooked(bookedSeats);
+        // Broadcast off the critical path — client response does not wait for seat lookup or emit.
+        void this.seatDao
+            .findByIds(reservation.seatIds)
+            .then((seats) => this.seatGateway.emitSeatBooked(seats))
+            .catch((err) => Logger.error('Failed to emit seat:booked', { reservationId, err }));
 
         // Re-fetch so we return a real ReservationModel instance (its seats stay held).
         const updated = await this.reservationDao.findById(reservationId);
@@ -135,8 +138,11 @@ export class ReservationsService {
 
         Logger.info('Reservation cancelled', { reservationId, userId });
 
-        const releasedSeats = await this.seatDao.findByIds(reservation.seatIds);
-        this.seatGateway.emitSeatReleased(releasedSeats);
+        // Broadcast off the critical path — client response does not wait for seat lookup or emit.
+        void this.seatDao
+            .findByIds(reservation.seatIds)
+            .then((seats) => this.seatGateway.emitSeatReleased(seats))
+            .catch((err) => Logger.error('Failed to emit seat:released', { reservationId, err }));
     }
 
     private async validateCancel(reservationId: string, userId: string): Promise<ReservationModel> {
