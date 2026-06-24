@@ -3,7 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TerminusModule, TypeOrmHealthIndicator, HealthCheckError } from '@nestjs/terminus';
-import { HealthController } from '../../../src/health/health.controller';
+import { HealthController } from '../../src/health/health.controller';
 import { buildHealthTestApp, cinemaTestDataSourceOptions } from './helpers/db.helper';
 
 describe('HealthController (api)', () => {

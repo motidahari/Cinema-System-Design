@@ -2,7 +2,7 @@ import request from 'supertest';
 import { randomUUID } from 'crypto';
 import { INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { SeatEntity } from '../../../src/domain/entities/seat.entity';
+import { SeatEntity } from '../../src/domain/entities/seat.entity';
 import { buildReservationsTestApp, seedSeats, clearAll, getSeatId, resetAuthState } from './helpers/db.helper';
 
 describe('ReservationsController (concurrency)', () => {
