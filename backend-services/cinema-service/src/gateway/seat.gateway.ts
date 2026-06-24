@@ -13,7 +13,10 @@ import { SeatModel } from '../seats/domain-model/seat';
 import { createWsAuthMiddleware } from './ws-auth.middleware';
 
 @WebSocketGateway({
-    cors: { origin: true, credentials: true },
+    cors: {
+        origin: process.env.SOCKET_CORS_ORIGINS?.split(',').map((o) => o.trim()) ?? ['http://localhost:5173'],
+        credentials: true,
+    },
     namespace: '/',
 })
 export class SeatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
