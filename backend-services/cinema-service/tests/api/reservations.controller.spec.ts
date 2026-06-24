@@ -74,6 +74,17 @@ describe('ReservationsController (api)', () => {
         });
     });
 
+    describe('POST /api/v1/reservations, Given:Selection would leave a seat isolated, When:Reserving', () => {
+        it('should return 400', async () => {
+            await reserve([await getSeatId(app, 'A1')]).expect(201);
+
+            authState.userId = randomUUID();
+            const seatIds = [await getSeatId(app, 'A3'), await getSeatId(app, 'A4')];
+            const res = await reserve(seatIds).expect(400);
+            expect(res.body.errorMessage).toContain('isolated');
+        });
+    });
+
     describe('POST /api/v1/reservations, Given:An unknown seat id, When:Reserving', () => {
         it('should return 404', async () => {
             await reserve([randomUUID()]).expect(404);

@@ -17,11 +17,13 @@ import { ReservationSeatDao } from '../../../src/reservations/dao/reservation-se
 import { ReservationsService } from '../../../src/reservations/service/reservations.service';
 import { ReservationsController } from '../../../src/reservations/reservations.controller';
 import { IdempotencyDao } from '../../../src/reservations/idempotency/idempotency.dao';
+import { IdempotencyInterceptor } from '../../../src/reservations/idempotency/idempotency.interceptor';
 import { TransactionManager } from '@cinema/internal-sdk';
 import { AppConfig } from '../../../src/infrastructure/config/app.config';
 import { RemoteAuthGuard } from '../../../src/infrastructure/guards/remote-auth.guard';
 import { HttpExceptionFilter } from '../../../src/infrastructure/filters/http-exception.filter';
 import { SeatGateway } from '../../../src/gateway/seat.gateway';
+import { HealthModule } from '../../../src/health/health.module';
 
 export const TEST_USER_ID = randomUUID();
 export const TEST_USER = { userId: TEST_USER_ID, email: 'tester@cinema.test' };
@@ -104,8 +106,9 @@ export async function buildReservationsTestApp(): Promise<INestApplication> {
             ReservationSeatDao,
             ReservationsService,
             IdempotencyDao,
+            IdempotencyInterceptor,
             TransactionManager,
-            { provide: AppConfig, useValue: { reservationHoldMins: 15 } },
+            { provide: AppConfig, useValue: { reservationHoldMins: 15, idempotencyTtlHours: 24 } },
             {
                 provide: SeatGateway,
                 useValue: { emitSeatReserved: jest.fn(), emitSeatBooked: jest.fn(), emitSeatReleased: jest.fn() },
@@ -145,5 +148,18 @@ export async function clearAll(app: INestApplication): Promise<void> {
     const ds = app.get(DataSource);
     await ds.query(`DELETE FROM cinema.reservation_seats`);
     await ds.query(`DELETE FROM cinema.reservations`);
+    await ds.query(`DELETE FROM cinema.idempotency_keys`);
     await ds.query(`DELETE FROM cinema.seats`);
+}
+
+/** Health stack wired to the real test DB; no auth required. */
+export async function buildHealthTestApp(): Promise<INestApplication> {
+    const moduleRef = await Test.createTestingModule({
+        imports: [TypeOrmModule.forRoot(cinemaTestDataSourceOptions()), HealthModule],
+    }).compile();
+
+    const app = moduleRef.createNestApplication();
+    applyMiddleware(app);
+    await app.init();
+    return app;
 }
