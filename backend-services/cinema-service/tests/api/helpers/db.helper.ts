@@ -19,6 +19,7 @@ import { TransactionManager } from '@cinema/internal-sdk';
 import { AppConfig } from '../../../src/infrastructure/config/app.config';
 import { RemoteAuthGuard } from '../../../src/infrastructure/guards/remote-auth.guard';
 import { HttpExceptionFilter } from '../../../src/infrastructure/filters/http-exception.filter';
+import { SeatGateway } from '../../../src/gateway/seat.gateway';
 
 export const TEST_USER_ID = randomUUID();
 export const TEST_USER = { userId: TEST_USER_ID, email: 'tester@cinema.test' };
@@ -102,6 +103,10 @@ export async function buildReservationsTestApp(): Promise<INestApplication> {
             ReservationsService,
             TransactionManager,
             { provide: AppConfig, useValue: { reservationHoldMins: 15 } },
+            {
+                provide: SeatGateway,
+                useValue: { emitSeatReserved: jest.fn(), emitSeatBooked: jest.fn(), emitSeatReleased: jest.fn() },
+            },
         ],
     })
         .overrideGuard(RemoteAuthGuard)

@@ -6,8 +6,7 @@ import {
     WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
-import { IdentityClient } from '@cinema/internal-sdk';
-import type { Seat } from '@cinema/internal-sdk';
+import { IdentityClient, Seat } from '@cinema/internal-sdk';
 import { Logger } from '@cinema/shared';
 import { AppConfig } from '../infrastructure/config/app.config';
 import { SeatModel } from '../seats/domain-model/seat';
@@ -55,6 +54,6 @@ export class SeatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
     }
 
     private toPayload(s: SeatModel): Seat {
-        return { id: s.id, row: s.row, number: s.number, status: s.status };
+        return new Seat(s.id, s.row, s.number, s.status);
     }
 }
