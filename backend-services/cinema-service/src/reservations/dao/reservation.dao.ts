@@ -62,8 +62,7 @@ export class ReservationDao extends BaseDao<ReservationEntity, ReservationModel>
 
     /** Loads a reservation with its seat ids populated. */
     async findById(id: string): Promise<ReservationModel | null> {
-        const entity = await this.repo.findOne({ where: { id }, relations: ['reservationSeats'] });
-        return entity ? this.toDomain(entity) : null;
+        return super.findById(id, ['reservationSeats']);
     }
 
     /**
@@ -90,6 +89,6 @@ export class ReservationDao extends BaseDao<ReservationEntity, ReservationModel>
     }
 
     async updateStatus(qr: QueryRunner, id: string, status: ReservationStatus): Promise<void> {
-        await qr.manager.update(ReservationEntity, id, { status });
+        await this.updateInTx(qr, id, { status });
     }
 }

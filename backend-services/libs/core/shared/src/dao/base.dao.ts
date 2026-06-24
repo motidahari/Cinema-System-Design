@@ -1,4 +1,4 @@
-import { Repository, FindOptionsWhere, DeepPartial, FindManyOptions, In } from 'typeorm';
+import { Repository, FindOptionsWhere, DeepPartial, FindManyOptions, In, QueryRunner } from 'typeorm';
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity';
 import { RecordNotFoundException } from './exceptions';
 
@@ -23,8 +23,9 @@ export abstract class BaseDao<TEntity extends { id: string }, TDomain> {
         return new RecordNotFoundException(id);
     }
 
-    async findById(id: string): Promise<TDomain | null> {
-        return this.findOneBy({ id } as FindOptionsWhere<TEntity>);
+    async findById(id: string, relations?: string[]): Promise<TDomain | null> {
+        const entity = await this.repo.findOne({ where: { id } as FindOptionsWhere<TEntity>, relations });
+        return entity ? this.toDomain(entity) : null;
     }
 
     async getById(id: string): Promise<TDomain> {
@@ -67,10 +68,14 @@ export abstract class BaseDao<TEntity extends { id: string }, TDomain> {
         return this.toDomain(saved as TEntity);
     }
 
-    async update(id: string, partialDomain: Partial<TDomain>): Promise<TDomain> {
-        const partialEntity = partialDomain as unknown as QueryDeepPartialEntity<TEntity>;
-        await this.repo.update(id, partialEntity);
-        return this.getById(id);
+    async update(domain: TDomain): Promise<TDomain> {
+        const entity = this.toEntity(domain);
+        const saved = await this.repo.save(entity);
+        return this.toDomain(saved as TEntity);
+    }
+
+    async updateInTx(qr: QueryRunner, id: string, partial: QueryDeepPartialEntity<TEntity>): Promise<void> {
+        await qr.manager.update(this.repo.target, id, partial);
     }
 
     async delete(id: string): Promise<void> {
