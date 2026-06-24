@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, MoreThan, QueryRunner, Repository } from 'typeorm';
+import { DeepPartial, LessThan, MoreThan, QueryRunner, Repository } from 'typeorm';
 import { BaseDao, SortOrder } from '@cinema/shared';
 import { ReservationEntity } from '../../domain/entities/reservation.entity';
 import { ReservationModel } from '../domain-model/reservation';
@@ -80,12 +80,19 @@ export class ReservationDao extends BaseDao<ReservationEntity, ReservationModel>
 
     /** All PENDING reservations for a user, newest first. */
     async findPendingByUser(userId: string): Promise<ReservationModel[]> {
-        const entities = await this.repo.find({
+        return this.findAll({
             where: { userId, status: ReservationStatus.PENDING },
             relations: ['reservationSeats'],
             order: { createdAt: SortOrder.DESC },
         });
-        return entities.map((e) => this.toDomain(e));
+    }
+
+    /** All PENDING reservations whose expiry timestamp is in the past. Used by the expiry cron. */
+    async findExpiredPending(): Promise<ReservationModel[]> {
+        return this.findAll({
+            where: { status: ReservationStatus.PENDING, expiresAt: LessThan(new Date()) },
+            relations: ['reservationSeats'],
+        });
     }
 
     async updateStatus(qr: QueryRunner, id: string, status: ReservationStatus): Promise<void> {

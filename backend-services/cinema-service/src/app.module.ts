@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import { z } from 'zod';
 import { AppConfigModule } from './infrastructure/config/app-config.module';
@@ -15,6 +16,7 @@ import { SeatsModule } from './seats/seats.module';
 import { ReservationsModule } from './reservations/reservations.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { SeedModule } from './seed/seed.module';
+import { SchedulerModule } from './scheduler/scheduler.module';
 
 const envSchema = z.object({
     PORT: z.coerce.number().default(3002),
@@ -46,12 +48,14 @@ const envSchema = z.object({
             useFactory: (cfg: AppConfig) => createDataSourceOptions(cfg),
             inject: [AppConfig],
         }),
+        ScheduleModule.forRoot(),
         HealthModule,
         MetricsModule,
         SeatsModule,
         ReservationsModule,
         GatewayModule,
         SeedModule,
+        SchedulerModule,
     ],
     providers: [
         { provide: APP_GUARD, useClass: ThrottlerGuard },
