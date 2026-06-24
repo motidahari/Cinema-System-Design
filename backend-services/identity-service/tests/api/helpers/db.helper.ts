@@ -117,11 +117,24 @@ export async function buildAuthTestApp(): Promise<INestApplication> {
     return app;
 }
 
-/** Truncates all identity tables between tests. */
-export async function truncateIdentityTables(app: INestApplication): Promise<void> {
+/**
+ * Cleans identity tables between tests.
+ * Pass `runPattern` (e.g. `'%-abc123@cinema.test'`) to scope deletes to a single
+ * test-file run and avoid clobbering rows written by parallel test workers.
+ * Omit it only when you intentionally want a full wipe.
+ */
+export async function truncateIdentityTables(app: INestApplication, runPattern?: string): Promise<void> {
     const ds = app.get(DataSource);
-    // Truncate in dependency order (refresh_tokens and login_attempts reference users)
-    await ds.query(`DELETE FROM identity.login_attempts`);
-    await ds.query(`DELETE FROM identity.refresh_tokens`);
-    await ds.query(`DELETE FROM identity.users`);
+    if (runPattern) {
+        await ds.query(`DELETE FROM identity.login_attempts WHERE email LIKE $1`, [runPattern]);
+        await ds.query(
+            `DELETE FROM identity.refresh_tokens WHERE user_id IN (SELECT id FROM identity.users WHERE email LIKE $1)`,
+            [runPattern]
+        );
+        await ds.query(`DELETE FROM identity.users WHERE email LIKE $1`, [runPattern]);
+    } else {
+        await ds.query(`DELETE FROM identity.login_attempts`);
+        await ds.query(`DELETE FROM identity.refresh_tokens`);
+        await ds.query(`DELETE FROM identity.users`);
+    }
 }

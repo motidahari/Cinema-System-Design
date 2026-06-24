@@ -13,9 +13,19 @@
  * Cookie assertions follow SECURITY.md §3 and API-CONTRACT.md §1.
  */
 
+import { randomUUID } from 'crypto';
 import request from 'supertest';
 import { INestApplication } from '@nestjs/common';
 import { buildAuthTestApp, truncateIdentityTables } from './helpers/db.helper';
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Per-run isolation
+// ──────────────────────────────────────────────────────────────────────────────
+
+/** Unique 8-char suffix for this worker's run — prevents email collisions across parallel Jest workers. */
+const RUN = randomUUID().slice(0, 8);
+/** Build a worker-unique email so parallel test files never share the same address. */
+const u = (name: string) => `${name}-${RUN}@cinema.test`;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -45,7 +55,7 @@ function extractCookieValue(cookieLine: string): string {
  */
 async function registerUser(
     app: INestApplication,
-    email = 'testuser@cinema.test',
+    email = u('testuser'),
     password = 'SecretPass1!'
 ): Promise<{ cookies: string[]; csrfToken: string }> {
     const res = await request(app.getHttpServer())
@@ -81,7 +91,7 @@ describe('AuthController (api)', () => {
     });
 
     beforeEach(async () => {
-        await truncateIdentityTables(app);
+        await truncateIdentityTables(app, `%-${RUN}@cinema.test`);
     });
 
     afterAll(async () => {
@@ -96,12 +106,12 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'alice@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('alice'), password: 'SecretPass1!' });
 
             expect(res.status).toBe(201);
             expect(res.body.user).toBeDefined();
             expect(res.body.user.id).toMatch(/^[0-9a-f-]{36}$/);
-            expect(res.body.user.email).toBe('alice@cinema.test');
+            expect(res.body.user.email).toBe(u('alice'));
             expect(res.body.user.createdAt).toBeDefined();
             expect(res.body).not.toHaveProperty('accessToken');
             expect(res.body).not.toHaveProperty('refreshToken');
@@ -112,7 +122,7 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'bob@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('bob'), password: 'SecretPass1!' });
 
             const cookies = parseCookies(res);
             const accessCookie = findCookie(cookies, 'access_token');
@@ -126,7 +136,7 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'carol@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('carol'), password: 'SecretPass1!' });
 
             const cookies = parseCookies(res);
             const refreshCookie = findCookie(cookies, 'refresh_token');
@@ -140,7 +150,7 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'dave@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('dave'), password: 'SecretPass1!' });
 
             const cookies = parseCookies(res);
             const csrfCookie = findCookie(cookies, 'csrf_token');
@@ -155,10 +165,10 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'Eve@Cinema.TEST', password: 'SecretPass1!' });
+                .send({ email: `Eve-${RUN}@Cinema.TEST`, password: 'SecretPass1!' });
 
             expect(res.status).toBe(201);
-            expect(res.body.user.email).toBe('eve@cinema.test');
+            expect(res.body.user.email).toBe(u('eve'));
         });
     });
 
@@ -182,7 +192,7 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'frank@cinema.test', password: 'weak' });
+                .send({ email: u('frank'), password: 'weak' });
 
             expect(res.status).toBe(400);
             expect(res.body.errorCode).toBe(400);
@@ -195,7 +205,7 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'grace@cinema.test', password: 'NoSpecial1' });
+                .send({ email: u('grace'), password: 'NoSpecial1' });
 
             expect(res.status).toBe(400);
             expect(res.body.errorCode).toBe(400);
@@ -220,14 +230,14 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'dup@cinema.test', password: 'SecretPass1!' })
+                .send({ email: u('dup'), password: 'SecretPass1!' })
                 .expect(201);
 
             const res = await request(app.getHttpServer())
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'dup@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('dup'), password: 'SecretPass1!' });
 
             expect(res.status).toBe(409);
             expect(res.body.errorCode).toBe(409);
@@ -238,7 +248,7 @@ describe('AuthController (api)', () => {
         it('should return 403 CSRF token mismatch', async () => {
             const res = await request(app.getHttpServer())
                 .post('/api/v1/auth/register')
-                .send({ email: 'csrf-test@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('csrf-test'), password: 'SecretPass1!' });
 
             expect(res.status).toBe(403);
             expect(res.body.errorCode).toBe(403);
@@ -252,7 +262,7 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=correct-token`)
                 .set('X-CSRF-Token', 'wrong-token')
-                .send({ email: 'csrf2@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('csrf2'), password: 'SecretPass1!' });
 
             expect(res.status).toBe(403);
         });
@@ -262,29 +272,29 @@ describe('AuthController (api)', () => {
 
     describe('Login, Given:Valid credentials and CSRF, When:Logging in', () => {
         it('should return 200 with user profile in body and no tokens in body', async () => {
-            await registerUser(app, 'login-user@cinema.test');
+            await registerUser(app, u('login-user'));
 
             const res = await request(app.getHttpServer())
                 .post('/api/v1/auth/login')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'login-user@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('login-user'), password: 'SecretPass1!' });
 
             expect(res.status).toBe(200);
             expect(res.body.user).toBeDefined();
-            expect(res.body.user.email).toBe('login-user@cinema.test');
+            expect(res.body.user.email).toBe(u('login-user'));
             expect(res.body).not.toHaveProperty('accessToken');
             expect(res.body).not.toHaveProperty('refreshToken');
         });
 
         it('should set httpOnly access_token, refresh_token, and readable csrf_token cookies', async () => {
-            await registerUser(app, 'cookie-check@cinema.test');
+            await registerUser(app, u('cookie-check'));
 
             const res = await request(app.getHttpServer())
                 .post('/api/v1/auth/login')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'cookie-check@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('cookie-check'), password: 'SecretPass1!' });
 
             const cookies = parseCookies(res);
             const accessCookie = findCookie(cookies, 'access_token');
@@ -314,13 +324,13 @@ describe('AuthController (api)', () => {
 
     describe('Login, Given:Wrong password for existing user, When:Logging in', () => {
         it('should return 401 with errorCode 401', async () => {
-            await registerUser(app, 'wrong-pw@cinema.test');
+            await registerUser(app, u('wrong-pw'));
 
             const res = await request(app.getHttpServer())
                 .post('/api/v1/auth/login')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'wrong-pw@cinema.test', password: 'WrongPass1!' });
+                .send({ email: u('wrong-pw'), password: 'WrongPass1!' });
 
             expect(res.status).toBe(401);
             expect(res.body.errorCode).toBe(401);
@@ -334,7 +344,7 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/login')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'nobody@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('nobody'), password: 'SecretPass1!' });
 
             expect(res.status).toBe(401);
             expect(res.body.errorCode).toBe(401);
@@ -345,7 +355,7 @@ describe('AuthController (api)', () => {
         it('should return 403', async () => {
             const res = await request(app.getHttpServer())
                 .post('/api/v1/auth/login')
-                .send({ email: 'user@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('user'), password: 'SecretPass1!' });
 
             expect(res.status).toBe(403);
             expect(res.body.errorCode).toBe(403);
@@ -354,7 +364,7 @@ describe('AuthController (api)', () => {
 
     describe('Login, Given:Account locked after too many failures, When:Logging in', () => {
         it('should return 429 after exceeding the lockout threshold', async () => {
-            await registerUser(app, 'lockout@cinema.test');
+            await registerUser(app, u('lockout'));
 
             // Exhaust the lockout threshold (default: 5 failures)
             for (let i = 0; i < 5; i++) {
@@ -362,7 +372,7 @@ describe('AuthController (api)', () => {
                     .post('/api/v1/auth/login')
                     .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                     .set('X-CSRF-Token', CSRF_VALUE)
-                    .send({ email: 'lockout@cinema.test', password: 'WrongPass1!' });
+                    .send({ email: u('lockout'), password: 'WrongPass1!' });
             }
 
             // The 6th attempt should trigger the lockout
@@ -370,7 +380,7 @@ describe('AuthController (api)', () => {
                 .post('/api/v1/auth/login')
                 .set('Cookie', `csrf_token=${CSRF_VALUE}`)
                 .set('X-CSRF-Token', CSRF_VALUE)
-                .send({ email: 'lockout@cinema.test', password: 'SecretPass1!' });
+                .send({ email: u('lockout'), password: 'SecretPass1!' });
 
             expect(res.status).toBe(429);
             expect(res.body.errorCode).toBe(429);
@@ -381,7 +391,7 @@ describe('AuthController (api)', () => {
 
     describe('Refresh, Given:Valid refresh_token cookie and CSRF, When:Refreshing', () => {
         it('should return 200 with user profile and rotate cookies', async () => {
-            const { cookies, csrfToken } = await registerUser(app, 'refresh-user@cinema.test');
+            const { cookies, csrfToken } = await registerUser(app, u('refresh-user'));
             const cookieHeader = buildCookieHeader(cookies);
 
             const res = await request(app.getHttpServer())
@@ -392,7 +402,7 @@ describe('AuthController (api)', () => {
 
             expect(res.status).toBe(200);
             expect(res.body.user).toBeDefined();
-            expect(res.body.user.email).toBe('refresh-user@cinema.test');
+            expect(res.body.user.email).toBe(u('refresh-user'));
 
             const newCookies = parseCookies(res);
             expect(findCookie(newCookies, 'access_token')).toBeDefined();
@@ -400,7 +410,7 @@ describe('AuthController (api)', () => {
         });
 
         it('should issue a new refresh_token (token rotation)', async () => {
-            const { cookies, csrfToken } = await registerUser(app, 'rotation@cinema.test');
+            const { cookies, csrfToken } = await registerUser(app, u('rotation'));
             const cookieHeader = buildCookieHeader(cookies);
             const oldRefresh = findCookie(cookies, 'refresh_token')!;
             const oldRefreshValue = extractCookieValue(oldRefresh);
@@ -447,7 +457,7 @@ describe('AuthController (api)', () => {
 
     describe('Refresh, Given:Missing X-CSRF-Token header, When:Refreshing', () => {
         it('should return 403', async () => {
-            const { cookies } = await registerUser(app, 'refresh-csrf@cinema.test');
+            const { cookies } = await registerUser(app, u('refresh-csrf'));
             const cookieHeader = buildCookieHeader(cookies);
 
             const res = await request(app.getHttpServer())
@@ -462,7 +472,7 @@ describe('AuthController (api)', () => {
     describe('Refresh, Given:A reused (already-rotated) refresh token, When:Refreshing', () => {
         it('should return 401 and revoke the entire family (reuse detection)', async () => {
             // Step 1: register and capture rt0
-            const { cookies: cookies0 } = await registerUser(app, 'reuse@cinema.test');
+            const { cookies: cookies0 } = await registerUser(app, u('reuse'));
             // Extract only the auth tokens (not csrf) for controlled cookie merging
             const rt0Line = findCookie(cookies0, 'refresh_token')!;
             const at0Line = findCookie(cookies0, 'access_token')!;
@@ -513,7 +523,7 @@ describe('AuthController (api)', () => {
 
     describe('Logout, Given:Authenticated user with valid access_token cookie, When:Logging out', () => {
         it('should return 204 with cleared auth cookies (Max-Age=0)', async () => {
-            const { cookies, csrfToken } = await registerUser(app, 'logout@cinema.test');
+            const { cookies, csrfToken } = await registerUser(app, u('logout'));
             const cookieHeader = buildCookieHeader(cookies);
 
             const res = await request(app.getHttpServer())
@@ -540,7 +550,7 @@ describe('AuthController (api)', () => {
         });
 
         it('should revoke the refresh token family so refresh returns 401 afterwards', async () => {
-            const { cookies, csrfToken } = await registerUser(app, 'logout-revoke@cinema.test');
+            const { cookies, csrfToken } = await registerUser(app, u('logout-revoke'));
             const cookieHeader = buildCookieHeader(cookies);
 
             await request(app.getHttpServer())
@@ -576,7 +586,7 @@ describe('AuthController (api)', () => {
 
     describe('Logout, Given:Missing X-CSRF-Token header, When:Logging out', () => {
         it('should return 403', async () => {
-            const { cookies } = await registerUser(app, 'logout-csrf@cinema.test');
+            const { cookies } = await registerUser(app, u('logout-csrf'));
             const cookieHeader = buildCookieHeader(cookies);
 
             const res = await request(app.getHttpServer())
@@ -592,14 +602,14 @@ describe('AuthController (api)', () => {
 
     describe('Me, Given:Authenticated user with valid access_token cookie, When:Fetching profile', () => {
         it('should return 200 with the user profile', async () => {
-            const { cookies } = await registerUser(app, 'me@cinema.test');
+            const { cookies } = await registerUser(app, u('me'));
             const cookieHeader = buildCookieHeader(cookies);
 
             const res = await request(app.getHttpServer()).get('/api/v1/auth/me').set('Cookie', cookieHeader);
 
             expect(res.status).toBe(200);
             expect(res.body.user).toBeDefined();
-            expect(res.body.user.email).toBe('me@cinema.test');
+            expect(res.body.user.email).toBe(u('me'));
             expect(res.body.user.id).toMatch(/^[0-9a-f-]{36}$/);
             expect(res.body.user.createdAt).toBeDefined();
         });
@@ -616,7 +626,7 @@ describe('AuthController (api)', () => {
 
     describe('Me, Given:Bearer token (fallback transport), When:Fetching profile', () => {
         it('should return 200 — Bearer is accepted as a fallback', async () => {
-            const { cookies } = await registerUser(app, 'bearer@cinema.test');
+            const { cookies } = await registerUser(app, u('bearer'));
             // Extract the raw JWT from the access_token cookie
             const accessLine = findCookie(cookies, 'access_token')!;
             const jwt = extractCookieValue(accessLine);
@@ -624,7 +634,7 @@ describe('AuthController (api)', () => {
             const res = await request(app.getHttpServer()).get('/api/v1/auth/me').set('Authorization', `Bearer ${jwt}`);
 
             expect(res.status).toBe(200);
-            expect(res.body.user.email).toBe('bearer@cinema.test');
+            expect(res.body.user.email).toBe(u('bearer'));
         });
     });
 
@@ -632,14 +642,14 @@ describe('AuthController (api)', () => {
 
     describe('Validate, Given:Authenticated user with valid access_token cookie, When:Validating', () => {
         it('should return 200 with userId and email', async () => {
-            const { cookies } = await registerUser(app, 'validate@cinema.test');
+            const { cookies } = await registerUser(app, u('validate'));
             const cookieHeader = buildCookieHeader(cookies);
 
             const res = await request(app.getHttpServer()).get('/api/v1/auth/validate').set('Cookie', cookieHeader);
 
             expect(res.status).toBe(200);
             expect(res.body.userId).toBeDefined();
-            expect(res.body.email).toBe('validate@cinema.test');
+            expect(res.body.email).toBe(u('validate'));
         });
     });
 

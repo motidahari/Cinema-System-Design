@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Test, TestingModule } from '@nestjs/testing';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -5,6 +6,9 @@ import { UserDao } from '../../src/auth/dao/user.dao';
 import { UserEntity } from '../../src/domain/entities/user.entity';
 import { RecordNotFoundException } from '@cinema/shared';
 import { identityTestDataSourceOptions } from './helpers/db.helper';
+
+const RUN = randomUUID().slice(0, 8);
+const u = (name: string) => `${name}-${RUN}@cinema.test`;
 
 describe('UserDao (integration)', () => {
     let module: TestingModule;
@@ -22,7 +26,7 @@ describe('UserDao (integration)', () => {
     });
 
     afterEach(async () => {
-        await dataSource.query(`DELETE FROM identity.users`);
+        await dataSource.query(`DELETE FROM identity.users WHERE email LIKE $1`, [`%-${RUN}@cinema.test`]);
     });
 
     afterAll(async () => {
@@ -31,67 +35,67 @@ describe('UserDao (integration)', () => {
 
     describe('create, Given:Valid email and passwordHash, When:Creating', () => {
         it('should persist the user and return a UserModel with a generated UUID', async () => {
-            const user = await dao.create({ email: 'alice@cinema.test', passwordHash: 'hashed-pw' });
+            const user = await dao.create({ email: u('alice'), passwordHash: 'hashed-pw' });
 
             expect(user.id).toBeDefined();
             expect(user.id).toMatch(/^[0-9a-f-]{36}$/);
-            expect(user.email).toBe('alice@cinema.test');
+            expect(user.email).toBe(u('alice'));
             expect(user.passwordHash).toBe('hashed-pw');
             expect(user.createdAt).toBeInstanceOf(Date);
             expect(user.updatedAt).toBeInstanceOf(Date);
         });
 
         it('should normalize email to lowercase before persisting', async () => {
-            const user = await dao.create({ email: 'Bob@Cinema.TEST', passwordHash: 'hashed-pw' });
-            expect(user.email).toBe('bob@cinema.test');
+            const user = await dao.create({ email: `Bob-${RUN}@Cinema.TEST`, passwordHash: 'hashed-pw' });
+            expect(user.email).toBe(u('bob'));
         });
     });
 
     describe('create, Given:Duplicate email, When:Creating a second user', () => {
         it('should throw a unique constraint violation', async () => {
-            await dao.create({ email: 'dup@cinema.test', passwordHash: 'h1' });
-            await expect(dao.create({ email: 'dup@cinema.test', passwordHash: 'h2' })).rejects.toThrow();
+            await dao.create({ email: u('dup'), passwordHash: 'h1' });
+            await expect(dao.create({ email: u('dup'), passwordHash: 'h2' })).rejects.toThrow();
         });
     });
 
     describe('findByEmail, Given:An existing user, When:Looking up by exact email', () => {
         it('should return the matching UserModel', async () => {
-            await dao.create({ email: 'carol@cinema.test', passwordHash: 'hashed' });
+            await dao.create({ email: u('carol'), passwordHash: 'hashed' });
 
-            const found = await dao.findByEmail('carol@cinema.test');
+            const found = await dao.findByEmail(u('carol'));
 
             expect(found).not.toBeNull();
-            expect(found!.email).toBe('carol@cinema.test');
+            expect(found!.email).toBe(u('carol'));
         });
     });
 
     describe('findByEmail, Given:An existing user, When:Looking up with mixed case', () => {
         it('should find the user via case-insensitive normalization', async () => {
-            await dao.create({ email: 'dave@cinema.test', passwordHash: 'hashed' });
+            await dao.create({ email: u('dave'), passwordHash: 'hashed' });
 
-            const found = await dao.findByEmail('Dave@Cinema.TEST');
+            const found = await dao.findByEmail(`Dave-${RUN}@Cinema.TEST`);
 
             expect(found).not.toBeNull();
-            expect(found!.email).toBe('dave@cinema.test');
+            expect(found!.email).toBe(u('dave'));
         });
     });
 
     describe('findByEmail, Given:No matching user, When:Looking up', () => {
         it('should return null', async () => {
-            const found = await dao.findByEmail('nobody@cinema.test');
+            const found = await dao.findByEmail(u('nobody'));
             expect(found).toBeNull();
         });
     });
 
     describe('findById, Given:An existing user, When:Looking up by id', () => {
         it('should return the matching UserModel', async () => {
-            const created = await dao.create({ email: 'eve@cinema.test', passwordHash: 'hashed' });
+            const created = await dao.create({ email: u('eve'), passwordHash: 'hashed' });
 
             const found = await dao.findById(created.id);
 
             expect(found).not.toBeNull();
             expect(found!.id).toBe(created.id);
-            expect(found!.email).toBe('eve@cinema.test');
+            expect(found!.email).toBe(u('eve'));
         });
     });
 
@@ -104,12 +108,12 @@ describe('UserDao (integration)', () => {
 
     describe('getById, Given:An existing user, When:Looking up by id', () => {
         it('should return the matching UserModel', async () => {
-            const created = await dao.create({ email: 'frank@cinema.test', passwordHash: 'hashed' });
+            const created = await dao.create({ email: u('frank'), passwordHash: 'hashed' });
 
             const found = await dao.getById(created.id);
 
             expect(found.id).toBe(created.id);
-            expect(found.email).toBe('frank@cinema.test');
+            expect(found.email).toBe(u('frank'));
         });
     });
 
