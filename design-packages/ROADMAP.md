@@ -547,7 +547,7 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B16 `feat/cinema-seats` | 10 | B15 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B17 `feat/cinema-reservations-domain` | 5 | B16 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B18 `feat/cinema-seat-rules` | 8 | B17 | `backend-developer`, `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
-| B19 `feat/cinema-reservations-core` | 6 | B18 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B19 `feat/cinema-reservations-core` | 6 | B18 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B20 `feat/cinema-realtime` | 3 | B19 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
 | B21 `feat/cinema-expiry-cron` | 2 | B19 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
 | B22 `feat/cinema-idempotency` | 3 | B19 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
