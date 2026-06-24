@@ -10,10 +10,12 @@ import {
     Post,
     Req,
     UseGuards,
+    UseInterceptors,
 } from '@nestjs/common';
 import { RemoteAuthGuard, AuthenticatedRequest } from '../infrastructure/guards/remote-auth.guard';
 import { ReservationsService } from './service/reservations.service';
 import { CreateReservationDto } from './dto/create-reservation.dto';
+import { IdempotencyInterceptor } from './idempotency/idempotency.interceptor';
 
 @Controller('api/v1/reservations')
 @UseGuards(RemoteAuthGuard)
@@ -23,6 +25,7 @@ export class ReservationsController {
     // Endpoints return domain models (serialized via ReservationModel.toJSON) — never DTOs.
     @Post()
     @HttpCode(HttpStatus.CREATED)
+    @UseInterceptors(IdempotencyInterceptor)
     async reserve(@Body() dto: CreateReservationDto, @Req() req: AuthenticatedRequest) {
         return this.reservationsService.reserve(req.user.userId, dto.seatIds);
     }
