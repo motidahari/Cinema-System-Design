@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import { SeatEntity } from '../../../src/domain/entities/seat.entity';
 import { ReservationEntity } from '../../../src/domain/entities/reservation.entity';
 import { ReservationSeatEntity } from '../../../src/domain/entities/reservation-seat.entity';
+import { IdempotencyKeyEntity } from '../../../src/domain/entities/idempotency-key.entity';
 import { SeatDao } from '../../../src/seats/dao/seat.dao';
 import { SeatsService } from '../../../src/seats/service/seats.service';
 import { SeatsController } from '../../../src/seats/seats.controller';
@@ -15,6 +16,7 @@ import { ReservationDao } from '../../../src/reservations/dao/reservation.dao';
 import { ReservationSeatDao } from '../../../src/reservations/dao/reservation-seat.dao';
 import { ReservationsService } from '../../../src/reservations/service/reservations.service';
 import { ReservationsController } from '../../../src/reservations/reservations.controller';
+import { IdempotencyDao } from '../../../src/reservations/idempotency/idempotency.dao';
 import { TransactionManager } from '@cinema/internal-sdk';
 import { AppConfig } from '../../../src/infrastructure/config/app.config';
 import { RemoteAuthGuard } from '../../../src/infrastructure/guards/remote-auth.guard';
@@ -59,7 +61,7 @@ export function cinemaTestDataSourceOptions(): DataSourceOptions {
         password: process.env.TEST_DB_PASSWORD ?? 'cinema_pass',
         database: process.env.TEST_DB_NAME ?? 'cinema_db',
         schema: 'cinema',
-        entities: [SeatEntity, ReservationEntity, ReservationSeatEntity],
+        entities: [SeatEntity, ReservationEntity, ReservationSeatEntity, IdempotencyKeyEntity],
         synchronize: true,
     };
 }
@@ -92,7 +94,7 @@ export async function buildReservationsTestApp(): Promise<INestApplication> {
     const moduleRef = await Test.createTestingModule({
         imports: [
             TypeOrmModule.forRoot(cinemaTestDataSourceOptions()),
-            TypeOrmModule.forFeature([SeatEntity, ReservationEntity, ReservationSeatEntity]),
+            TypeOrmModule.forFeature([SeatEntity, ReservationEntity, ReservationSeatEntity, IdempotencyKeyEntity]),
         ],
         controllers: [ReservationsController],
         providers: [
@@ -101,6 +103,7 @@ export async function buildReservationsTestApp(): Promise<INestApplication> {
             ReservationDao,
             ReservationSeatDao,
             ReservationsService,
+            IdempotencyDao,
             TransactionManager,
             { provide: AppConfig, useValue: { reservationHoldMins: 15 } },
             {
