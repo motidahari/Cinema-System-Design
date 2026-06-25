@@ -542,7 +542,7 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B13a `test/identity-unit` | 4 | B12 | `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B13b `test/identity-integration` | 4 | B13a | `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B13c `test/identity-api` | 3 | B13b | `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
-| B14 `feat/cinema-scaffold` | 9 | B05 | `backend-developer`, `backend-code-standards-reviewer` | 🔄 IN PROGRESS |
+| B14 `feat/cinema-scaffold` | 9 | B05 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B15 `feat/cinema-platform` | 7 | B14 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B16 `feat/cinema-seats` | 10 | B15 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B17 `feat/cinema-reservations-domain` | 5 | B16 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
@@ -565,7 +565,7 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B33 `feat/web-cinema-services-stores` | 9 | B27 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B34 `feat/web-cinema-hooks` | 6 | B33 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B35 `feat/web-cinema-seat-components` | 9 | B34 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
-| B36 `feat/web-cinema-view` | 7 | B35 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B36 `feat/web-cinema-view` | 7 | B35 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B37 `feat/infra-docker` | 7 | B13c, B24b, B36 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
 | B38 `feat/infra-scaling` | 3 | B37 | `backend-developer`, `backend-code-standards-reviewer` | ⏳ PENDING |
 | B39 `docs/finalize` + live smoke | 3 | B38 | `backend-developer`, `backend-qa-tester`, `frontend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |

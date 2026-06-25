@@ -9,12 +9,11 @@ import AppLayout from '@/shared/layouts/AppLayout';
 // Views
 import LoginView from '@/features/auth/views/LoginView';
 import RegisterView from '@/features/auth/views/RegisterView';
+import CinemaView from '@/features/cinema/views/CinemaView';
 
-// LoginView / RegisterView land here in B32. CinemaView is still a placeholder slot
-// until B36 replaces it — without touching the guard/layout wiring established here.
 const LoginViewSlot = <LoginView />;
 const RegisterViewSlot = <RegisterView />;
-const CinemaViewSlot = <p>Cinema view (B36)</p>;
+const CinemaViewSlot = <CinemaView />;
 
 // Route map (FRONTEND-DESIGN §8): guest-only auth routes behind <RequireGuest>, the
 // authenticated cinema route behind <RequireAuth>; "/" redirects into the app.
