@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, Repository } from 'typeorm';
 import { BaseDao } from '@cinema/shared';
 import { RefreshTokenEntity } from '../../domain/entities/refresh-token.entity';
 import { RefreshTokenModel } from '../domain-model/refresh-token';
@@ -50,14 +50,12 @@ export class RefreshTokenDao extends BaseDao<RefreshTokenEntity, RefreshTokenMod
         return entity ? this.toDomain(entity) : null;
     }
 
-    async create(attrs: {
-        userId: string;
-        familyId: string;
-        tokenHash: string;
-        userAgent: string | null;
-        ip: string | null;
-    }): Promise<RefreshTokenModel> {
-        const entity = this.repo.create({
+    async create(
+        attrs: { userId: string; familyId: string; tokenHash: string; userAgent: string | null; ip: string | null },
+        manager?: EntityManager
+    ): Promise<RefreshTokenModel> {
+        const repo = manager ? manager.getRepository(RefreshTokenEntity) : this.repo;
+        const entity = repo.create({
             userId: attrs.userId,
             familyId: attrs.familyId,
             tokenHash: attrs.tokenHash,
@@ -66,7 +64,7 @@ export class RefreshTokenDao extends BaseDao<RefreshTokenEntity, RefreshTokenMod
             userAgent: attrs.userAgent,
             ip: attrs.ip,
         });
-        const saved = await this.repo.save(entity);
+        const saved = await repo.save(entity);
         return this.toDomain(saved);
     }
 

@@ -245,27 +245,26 @@ describe('AuthController (api)', () => {
         });
     });
 
-    describe('Register, Given:Missing X-CSRF-Token header, When:Registering', () => {
-        it('should return 403 CSRF token mismatch', async () => {
+    describe('Register, Given:No X-CSRF-Token header (pre-auth), When:Registering', () => {
+        it('should return 201 — register is CSRF-exempt (user has no session yet)', async () => {
             const res = await request(app.getHttpServer())
                 .post('/api/v1/auth/register')
                 .send({ email: u('csrf-test'), password: 'SecretPass1!' });
 
-            expect(res.status).toBe(403);
-            expect(res.body.errorCode).toBe(403);
-            expect(res.body.errorMessage).toMatch(/CSRF/i);
+            expect(res.status).toBe(201);
+            expect(res.body.user).toBeDefined();
         });
     });
 
-    describe('Register, Given:Mismatched X-CSRF-Token and cookie, When:Registering', () => {
-        it('should return 403', async () => {
+    describe('Register, Given:Mismatched X-CSRF-Token and cookie (pre-auth), When:Registering', () => {
+        it('should return 201 — register is CSRF-exempt regardless of token state', async () => {
             const res = await request(app.getHttpServer())
                 .post('/api/v1/auth/register')
                 .set('Cookie', `csrf_token=correct-token`)
                 .set('X-CSRF-Token', 'wrong-token')
                 .send({ email: u('csrf2'), password: 'SecretPass1!' });
 
-            expect(res.status).toBe(403);
+            expect(res.status).toBe(201);
         });
     });
 
@@ -352,14 +351,14 @@ describe('AuthController (api)', () => {
         });
     });
 
-    describe('Login, Given:Missing X-CSRF-Token header, When:Logging in', () => {
-        it('should return 403', async () => {
+    describe('Login, Given:No X-CSRF-Token header (pre-auth), When:Logging in', () => {
+        it('should return 401 (not 403) — login is CSRF-exempt, fails on credentials not CSRF', async () => {
             const res = await request(app.getHttpServer())
                 .post('/api/v1/auth/login')
-                .send({ email: u('user'), password: 'SecretPass1!' });
+                .send({ email: u('no-such-user'), password: 'SecretPass1!' });
 
-            expect(res.status).toBe(403);
-            expect(res.body.errorCode).toBe(403);
+            expect(res.status).toBe(401);
+            expect(res.body.errorCode).toBe(401);
         });
     });
 
