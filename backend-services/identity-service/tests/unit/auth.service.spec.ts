@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { HttpStatus, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { DataSource } from 'typeorm';
 import { AuthService } from '../../src/auth/service/auth.service';
 
 jest.mock('bcrypt', () => ({ hash: jest.fn(), compare: jest.fn() }));
@@ -92,6 +93,14 @@ describe('AuthService', () => {
                     provide: JwtService,
                     useValue: { sign: jest.fn().mockReturnValue('signed.jwt.token') },
                 },
+                {
+                    provide: DataSource,
+                    useValue: {
+                        // Execute the callback immediately with a no-op manager so
+                        // unit tests don't need a real DB connection.
+                        transaction: jest.fn().mockImplementation((cb: (m: unknown) => Promise<unknown>) => cb({})),
+                    },
+                },
             ],
         }).compile();
 
@@ -113,10 +122,10 @@ describe('AuthService', () => {
 
             const result = await service.register('alice@cinema.test', 'password123', mockReq);
 
-            expect(userDao.create).toHaveBeenCalledWith({
-                email: 'alice@cinema.test',
-                passwordHash: '$2b$10$hashed',
-            });
+            expect(userDao.create).toHaveBeenCalledWith(
+                { email: 'alice@cinema.test', passwordHash: '$2b$10$hashed' },
+                {} // EntityManager passed from transaction callback
+            );
             expect(result.accessToken).toBe('signed.jwt.token');
             expect(result.user.email).toBe('alice@cinema.test');
             expect(result.user).toBeInstanceOf(UserModel);

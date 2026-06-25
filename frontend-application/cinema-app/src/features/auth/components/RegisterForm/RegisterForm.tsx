@@ -1,5 +1,5 @@
 // React
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 
 // MUI
@@ -26,13 +26,22 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [mismatch, setMismatch] = useState(false);
 
+    // Reactively validate after 300 ms of idle typing so the user sees feedback
+    // without triggering on every keystroke.
+    useEffect(() => {
+        if (!confirmPassword) return;
+        const timer = setTimeout(() => {
+            setMismatch(password !== confirmPassword);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [password, confirmPassword]);
+
     const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
         event.preventDefault();
         if (password !== confirmPassword) {
             setMismatch(true);
             return;
         }
-        setMismatch(false);
         await register({ email, password });
     };
 

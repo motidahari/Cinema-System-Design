@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
+import { DeepPartial, EntityManager, FindOptionsWhere, Repository } from 'typeorm';
 import { BaseDao } from '@cinema/shared';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { UserModel } from '../domain-model/user';
@@ -34,12 +34,13 @@ export class UserDao extends BaseDao<UserEntity, UserModel> {
         };
     }
 
-    async create(attrs: { email: string; passwordHash: string }): Promise<UserModel> {
-        const entity = this.repo.create({
+    async create(attrs: { email: string; passwordHash: string }, manager?: EntityManager): Promise<UserModel> {
+        const repo = manager ? manager.getRepository(UserEntity) : this.repo;
+        const entity = repo.create({
             email: attrs.email.toLowerCase().trim(),
             passwordHash: attrs.passwordHash,
         });
-        const saved = await this.repo.save(entity);
+        const saved = await repo.save(entity);
         return this.toDomain(saved);
     }
 

@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { createHash, randomBytes, randomUUID } from 'crypto';
 import { Request } from 'express';
+import { DataSource, EntityManager } from 'typeorm';
 import { Logger } from '@cinema/shared';
 import { UserDao } from '../dao/user.dao';
 import { RefreshTokenDao } from '../dao/refresh-token.dao';
@@ -28,18 +29,24 @@ export class AuthService {
         private readonly refreshTokenDao: RefreshTokenDao,
         private readonly loginAttemptDao: LoginAttemptDao,
         private readonly jwtService: JwtService,
-        private readonly appConfig: AppConfig
+        private readonly appConfig: AppConfig,
+        private readonly dataSource: DataSource
     ) {}
 
     async register(email: string, password: string, req: Request): Promise<TokenPair> {
         const existing = await this.userDao.findByEmail(email);
-        if (existing) {
-            throw new DuplicateEmailException(email);
-        }
+        if (existing) throw new DuplicateEmailException(email);
+
         const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-        const user = await this.userDao.create({ email, passwordHash });
-        const accessToken = this.signAccessToken(user);
-        const refreshToken = await this.issueRefreshToken(user.id, randomUUID(), req);
+        const familyId = randomUUID();
+
+        const { user, accessToken, refreshToken } = await this.dataSource.transaction(async (manager) => {
+            const user = await this.userDao.create({ email, passwordHash }, manager);
+            const accessToken = this.signAccessToken(user);
+            const refreshToken = await this.issueRefreshToken(user.id, familyId, req, manager);
+            return { user, accessToken, refreshToken };
+        });
+
         Logger.info('User registered', { userId: user.id });
         return { user, accessToken, refreshToken };
     }
@@ -132,15 +139,23 @@ export class AuthService {
         return createHash('sha256').update(raw).digest('hex');
     }
 
-    private async issueRefreshToken(userId: string, familyId: string, req: Request): Promise<string> {
+    private async issueRefreshToken(
+        userId: string,
+        familyId: string,
+        req: Request,
+        manager?: EntityManager
+    ): Promise<string> {
         const raw = randomBytes(32).toString('hex');
-        await this.refreshTokenDao.create({
-            userId,
-            familyId,
-            tokenHash: this.hashToken(raw),
-            userAgent: (req.headers['user-agent'] as string) ?? null,
-            ip: req.ip ?? null,
-        });
+        await this.refreshTokenDao.create(
+            {
+                userId,
+                familyId,
+                tokenHash: this.hashToken(raw),
+                userAgent: (req.headers['user-agent'] as string) ?? null,
+                ip: req.ip ?? null,
+            },
+            manager
+        );
         return raw;
     }
 }
