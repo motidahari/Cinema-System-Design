@@ -12,7 +12,11 @@ COPY backend-services/libs/core/sdk ./backend-services/libs/core/sdk
 COPY backend-services/libs/core/shared ./backend-services/libs/core/shared
 COPY backend-services/cinema-service ./backend-services/cinema-service
 RUN npm run build --workspace @cinema/internal-sdk
-RUN npm run build --workspace @cinema/shared
+RUN npm run build --workspace @cinema/shared \
+    && rm -f node_modules/@cinema/internal-sdk \
+    && cp -r backend-services/libs/core/sdk node_modules/@cinema/internal-sdk \
+    && rm -f node_modules/@cinema/shared \
+    && cp -r backend-services/libs/core/shared node_modules/@cinema/shared
 RUN npm run build --workspace @cinema/cinema-service
 
 FROM node:20-alpine AS runtime
