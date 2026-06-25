@@ -1,9 +1,11 @@
 # ---- builder ----
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json tsconfig.base.json ./
+COPY package.json package-lock.json tsconfig.base.json ./
 COPY frontend-application/cinema-app/package.json ./frontend-application/cinema-app/
-RUN npm install --legacy-peer-deps
+# Deterministic install from the lock file — keeps CI reproducible and pins a
+# single vite version (avoids vitest pulling a rolldown-based vite 7/8).
+RUN npm ci --legacy-peer-deps
 COPY frontend-application/cinema-app ./frontend-application/cinema-app
 # Build-time API base URLs point at the nginx gateway (same origin → relative)
 ENV VITE_IDENTITY_API_URL=/api/v1
