@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY frontend-application/cinema-app/package.json ./frontend-application/cinema-app/
-RUN npm ci --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 COPY frontend-application/cinema-app ./frontend-application/cinema-app
 # Build-time API base URLs point at the nginx gateway (same origin → relative)
 ENV VITE_IDENTITY_API_URL=/api/v1
