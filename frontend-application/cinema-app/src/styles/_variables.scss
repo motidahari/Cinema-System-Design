@@ -1,0 +1,24 @@
+// ── Spacing scale (the ONLY source of margin/padding values) ──────────────────
+$spacing-s: 8px;
+$spacing-m: 16px;
+$spacing-l: 24px;
+$spacing-xl: 32px;
+
+// ── Seat status colors ────────────────────────────────────────────────────────
+$color-seat-available: #4caf50; // MUI success green
+$color-seat-selected: #2196f3; // MUI primary blue
+$color-seat-reserved: #ff9800; // MUI warning orange
+$color-seat-booked: #f44336; // MUI error red
+$color-seat-disabled: #9e9e9e; // MUI grey
+
+// ── Seat dimensions ───────────────────────────────────────────────────────────
+$seat-size: 36px;
+$seat-gap: $spacing-s; // 8px, from the scale
+$seat-border-radius: 4px;
+
+// ── Layout ────────────────────────────────────────────────────────────────────
+$reservation-panel-width: 320px;
+$seating-map-max-width: 800px;
+
+// ── Timer urgency threshold ───────────────────────────────────────────────────
+$timer-urgent-color: $color-seat-reserved;
