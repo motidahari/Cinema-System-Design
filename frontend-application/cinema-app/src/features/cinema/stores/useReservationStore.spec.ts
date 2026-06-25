@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useReservationStore } from './useReservationStore';
-import type { Reservation } from '../types';
+import { Reservation } from '../models/Reservation';
 
 vi.mock('../services/ReservationService', () => ({
     reservationService: {
@@ -20,13 +20,13 @@ const mocked = reservationService as unknown as {
     getMyReservations: ReturnType<typeof vi.fn>;
 };
 
-const reservation: Reservation = {
+const reservation = new Reservation({
     id: 'res-1',
     status: 'PENDING',
     expiresAt: '2026-06-21T10:15:00.000Z',
     expiresInSeconds: 900,
     seatIds: ['A1', 'A2'],
-};
+});
 
 function resetStore() {
     useReservationStore.setState({
@@ -77,7 +77,8 @@ describe('useReservationStore', () => {
 
             expect(mocked.reserve).toHaveBeenCalledWith({ seatIds: ['A1', 'A2'] });
             const state = useReservationStore.getState();
-            expect(state.activeReservation).toEqual(reservation);
+            expect(state.activeReservation).toBe(reservation);
+            expect(state.activeReservation?.isPending).toBe(true);
             expect(state.selectedSeatIds.size).toBe(0);
             expect(state.isLoading).toBe(false);
         });
@@ -97,13 +98,19 @@ describe('useReservationStore', () => {
 
     describe('confirmReservation', () => {
         it('stores the confirmed reservation on success', async () => {
-            const confirmed = { ...reservation, status: 'CONFIRMED' as const, expiresInSeconds: 0 };
+            const confirmed = new Reservation({
+                id: 'res-1',
+                status: 'CONFIRMED',
+                expiresAt: '2026-06-21T10:15:00.000Z',
+                expiresInSeconds: 0,
+                seatIds: ['A1', 'A2'],
+            });
             mocked.confirm.mockResolvedValue(confirmed);
 
             await useReservationStore.getState().confirmReservation('res-1');
 
             expect(mocked.confirm).toHaveBeenCalledWith('res-1');
-            expect(useReservationStore.getState().activeReservation).toEqual(confirmed);
+            expect(useReservationStore.getState().activeReservation).toBe(confirmed);
         });
 
         it('falls back to a default message when the error has no API payload', async () => {
@@ -148,7 +155,7 @@ describe('useReservationStore', () => {
     describe('setActiveReservation', () => {
         it('sets and clears the active reservation', () => {
             useReservationStore.getState().setActiveReservation(reservation);
-            expect(useReservationStore.getState().activeReservation).toEqual(reservation);
+            expect(useReservationStore.getState().activeReservation).toBe(reservation);
 
             useReservationStore.getState().setActiveReservation(null);
             expect(useReservationStore.getState().activeReservation).toBeNull();

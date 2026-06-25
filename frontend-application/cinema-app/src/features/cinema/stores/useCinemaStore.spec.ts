@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCinemaStore } from './useCinemaStore';
-import type { Seat } from '../types';
+import { Seat } from '../models/Seat';
 
 vi.mock('../services/CinemaService', () => ({
     cinemaService: {
@@ -13,10 +13,10 @@ import { cinemaService } from '../services/CinemaService';
 const mocked = cinemaService as unknown as { getSeatingMap: ReturnType<typeof vi.fn> };
 
 const seats: Seat[] = [
-    { id: 'A1', row: 'A', number: 1, status: 'AVAILABLE' },
-    { id: 'A2', row: 'A', number: 2, status: 'RESERVED' },
-    { id: 'A3', row: 'A', number: 3, status: 'BOOKED' },
-    { id: 'B1', row: 'B', number: 1, status: 'AVAILABLE' },
+    new Seat({ id: 'A1', row: 'A', number: 1, status: 'AVAILABLE' }),
+    new Seat({ id: 'A2', row: 'A', number: 2, status: 'RESERVED' }),
+    new Seat({ id: 'A3', row: 'A', number: 3, status: 'BOOKED' }),
+    new Seat({ id: 'B1', row: 'B', number: 1, status: 'AVAILABLE' }),
 ];
 
 function resetStore() {
@@ -30,13 +30,14 @@ describe('useCinemaStore', () => {
     });
 
     describe('fetchSeats', () => {
-        it('loads the seating map into state on success', async () => {
+        it('loads the hydrated seating map into state on success', async () => {
             mocked.getSeatingMap.mockResolvedValue({ seats });
 
             await useCinemaStore.getState().fetchSeats();
 
             const state = useCinemaStore.getState();
             expect(state.seats).toEqual(seats);
+            expect(state.seats[0]).toBeInstanceOf(Seat);
             expect(state.isLoading).toBe(false);
             expect(state.error).toBeNull();
         });
@@ -77,12 +78,14 @@ describe('useCinemaStore', () => {
     });
 
     describe('updateSeatStatus', () => {
-        it('patches a single seat status in place', () => {
+        it('patches a single seat and keeps it a Seat instance', () => {
             useCinemaStore.setState({ seats });
 
             useCinemaStore.getState().updateSeatStatus('A1', 'BOOKED');
 
-            expect(useCinemaStore.getState().seats.find((s) => s.id === 'A1')?.status).toBe('BOOKED');
+            const patched = useCinemaStore.getState().seats.find((s) => s.id === 'A1');
+            expect(patched).toBeInstanceOf(Seat);
+            expect(patched?.isBooked).toBe(true);
         });
     });
 

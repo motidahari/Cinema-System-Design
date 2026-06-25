@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ReservationService } from './ReservationService';
-import type { Reservation } from '../types';
+import { Reservation } from '../models/Reservation';
+import type { ReservationDto } from '../types';
 
-const reservation: Reservation = {
+const reservationDto: ReservationDto = {
     id: 'res-1',
     status: 'PENDING',
     expiresAt: '2026-06-21T10:15:00.000Z',
@@ -30,9 +31,9 @@ describe('ReservationService', () => {
     });
 
     describe('reserve', () => {
-        it('POSTs the seatIds to /reservations and returns the reservation', async () => {
+        it('POSTs seatIds (with an Idempotency-Key) and hydrates a Reservation model', async () => {
             const { service, post } = makeService();
-            post.mockResolvedValue({ data: reservation });
+            post.mockResolvedValue({ data: reservationDto });
 
             const result = await service.reserve({ seatIds: ['seat-A1', 'seat-A2'] });
 
@@ -41,20 +42,22 @@ describe('ReservationService', () => {
                 { seatIds: ['seat-A1', 'seat-A2'] },
                 { headers: { 'Idempotency-Key': 'idem-key-1' } }
             );
-            expect(result).toEqual(reservation);
+            expect(result).toBeInstanceOf(Reservation);
+            expect(result.id).toBe('res-1');
+            expect(result.isPending).toBe(true);
         });
     });
 
     describe('confirm', () => {
-        it('POSTs to /reservations/:id/confirm and returns the updated reservation', async () => {
+        it('POSTs to /reservations/:id/confirm and hydrates the updated model', async () => {
             const { service, post } = makeService();
-            const confirmed = { ...reservation, status: 'CONFIRMED' as const, expiresInSeconds: 0 };
-            post.mockResolvedValue({ data: confirmed });
+            post.mockResolvedValue({ data: { ...reservationDto, status: 'CONFIRMED', expiresInSeconds: 0 } });
 
             const result = await service.confirm('res-1');
 
             expect(post).toHaveBeenCalledWith('/reservations/res-1/confirm');
-            expect(result).toEqual(confirmed);
+            expect(result).toBeInstanceOf(Reservation);
+            expect(result.isConfirmed).toBe(true);
         });
     });
 
@@ -70,14 +73,16 @@ describe('ReservationService', () => {
     });
 
     describe('getMyReservations', () => {
-        it('GETs /reservations/my and returns the reservations payload', async () => {
+        it('GETs /reservations/my and hydrates each payload into a Reservation model', async () => {
             const { service, get } = makeService();
-            get.mockResolvedValue({ data: { reservations: [reservation] } });
+            get.mockResolvedValue({ data: { reservations: [reservationDto] } });
 
-            const result = await service.getMyReservations();
+            const { reservations } = await service.getMyReservations();
 
             expect(get).toHaveBeenCalledWith('/reservations/my');
-            expect(result).toEqual({ reservations: [reservation] });
+            expect(reservations).toHaveLength(1);
+            expect(reservations[0]).toBeInstanceOf(Reservation);
+            expect(reservations[0].seatCount).toBe(2);
         });
     });
 });

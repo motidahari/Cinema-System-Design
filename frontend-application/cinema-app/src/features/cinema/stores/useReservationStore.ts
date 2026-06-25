@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { reservationService } from '../services/ReservationService';
 import { isApiError } from '@/core/types/api-error';
-import type { Reservation } from '../types';
+import type { Reservation } from '../models/Reservation';
 
 // Seat-selection + reservation-lifecycle state. `selectedSeatIds` is the user's
 // pending pick (pre-submit); `activeReservation` is the PENDING hold returned by the

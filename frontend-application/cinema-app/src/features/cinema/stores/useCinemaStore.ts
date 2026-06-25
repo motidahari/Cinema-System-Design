@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { cinemaService } from '../services/CinemaService';
-import type { Seat, SeatStatus } from '../types';
+import { Seat } from '../models/Seat';
+import type { SeatStatus } from '../types';
 
 // Seating-map state. Seats are fetched once on view mount and then patched in place
 // by realtime socket events (updateSeatStatus / updateSeatsStatus), so the grid stays
@@ -49,14 +50,14 @@ export const useCinemaStore = create<CinemaState>((set, get) => ({
 
     updateSeatStatus(seatId, status) {
         set((state) => ({
-            seats: state.seats.map((s) => (s.id === seatId ? { ...s, status } : s)),
+            seats: state.seats.map((s) => (s.id === seatId ? s.withStatus(status) : s)),
         }));
     },
 
     updateSeatsStatus(seatIds, status) {
         const idSet = new Set(seatIds);
         set((state) => ({
-            seats: state.seats.map((s) => (idSet.has(s.id) ? { ...s, status } : s)),
+            seats: state.seats.map((s) => (idSet.has(s.id) ? s.withStatus(status) : s)),
         }));
     },
 }));

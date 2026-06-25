@@ -1,14 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { CinemaService } from './CinemaService';
-import type { Seat } from '../types';
+import { Seat } from '../models/Seat';
+import type { SeatDto } from '../types';
 
-const seats: Seat[] = [
+const seatDtos: SeatDto[] = [
     { id: 'seat-A1', row: 'A', number: 1, status: 'AVAILABLE' },
     { id: 'seat-A2', row: 'A', number: 2, status: 'RESERVED' },
 ];
 
-// Replace the inherited axios client with a stub so we assert endpoint mapping only;
-// CSRF/refresh behaviour is covered by BaseHttpService's own spec.
+// Replace the inherited axios client with a stub so we assert endpoint mapping +
+// domain hydration only; CSRF/refresh behaviour is covered by BaseHttpService's spec.
 function makeService() {
     const get = vi.fn();
     const service = new CinemaService();
@@ -20,14 +21,18 @@ describe('CinemaService', () => {
     beforeEach(() => vi.clearAllMocks());
 
     describe('getSeatingMap', () => {
-        it('GETs /seats and returns the seats payload', async () => {
+        it('GETs /seats and hydrates the payload into Seat domain models', async () => {
             const { service, get } = makeService();
-            get.mockResolvedValue({ data: { seats } });
+            get.mockResolvedValue({ data: { seats: seatDtos } });
 
-            const result = await service.getSeatingMap();
+            const { seats } = await service.getSeatingMap();
 
             expect(get).toHaveBeenCalledWith('/seats');
-            expect(result).toEqual({ seats });
+            expect(seats).toHaveLength(2);
+            expect(seats[0]).toBeInstanceOf(Seat);
+            expect(seats[0].label).toBe('A1');
+            expect(seats[0].isAvailable).toBe(true);
+            expect(seats[1].isReserved).toBe(true);
         });
     });
 });
