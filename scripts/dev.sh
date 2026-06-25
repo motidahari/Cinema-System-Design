@@ -35,17 +35,47 @@ DB_PASS="cinema_pass"
 DB_NAME="cinema_db"
 DB_PORT=5432
 
+# Ports the local stack listens on — freed defensively on --stop.
+SERVICE_PORTS=(3001 3002 5173)
+
+# Recursively kill a PID and all of its descendants. `npm run` spawns child
+# processes (ts-node / vite / node) that would otherwise be orphaned and keep
+# their ports busy, so killing only the parent PID is not enough.
+kill_tree() {
+    local pid="$1"
+    for child in $(pgrep -P "$pid" 2>/dev/null || true); do
+        kill_tree "$child"
+    done
+    kill "$pid" 2>/dev/null && info "Killed PID $pid" || true
+}
+
 # ── --stop ────────────────────────────────────────────────────────────────────
 if [[ "${1:-}" == "--stop" ]]; then
-    info "Stopping background services..."
+    info "Stopping the local stack..."
+
+    # 1. Kill every tracked service and its child processes.
     if [[ -f "$PIDS_FILE" ]]; then
         while IFS= read -r pid; do
-            kill "$pid" 2>/dev/null && info "Killed PID $pid" || true
+            [[ -n "$pid" ]] && kill_tree "$pid"
         done < "$PIDS_FILE"
         rm -f "$PIDS_FILE"
     fi
+
+    # 2. Safety net — free any process still holding a service port (orphans,
+    #    or a server started outside this script).
+    if command -v lsof &>/dev/null; then
+        for port in "${SERVICE_PORTS[@]}"; do
+            port_pids=$(lsof -ti "tcp:${port}" 2>/dev/null || true)
+            if [[ -n "$port_pids" ]]; then
+                kill $port_pids 2>/dev/null && info "Freed port $port" || true
+            fi
+        done
+    fi
+
+    # 3. Stop the Postgres container.
     docker stop "$DB_CONTAINER" 2>/dev/null && info "Stopped DB container" || true
-    success "Done."
+
+    success "Done — full stack stopped."
     exit 0
 fi
 
