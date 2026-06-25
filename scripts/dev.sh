@@ -2,15 +2,18 @@
 # =============================================================================
 # Cinema Reservation System — local dev runner
 #
-# Usage:
-#   ./scripts/dev.sh                  start all running services
-#   ./scripts/dev.sh --stop           stop and remove the DB container
-#   ./scripts/dev.sh --logs           tail logs of all background services
+# Brings up the whole local stack with one command:
+#   - Postgres (Docker)            cinema-db
+#   - identity-service             http://localhost:3001
+#   - cinema-service               http://localhost:3002
+#   - cinema-app (frontend/Vite)   http://localhost:5173
 #
-# How to extend this script as the project grows:
-#   - B14 (cinema-service):  uncomment the "cinema-service" section
-#   - B25 (frontend):        uncomment the "cinema-app" section
-#   - B37 (docker-compose):  replace this script with `docker compose up`
+# Usage:
+#   npm run dev        (or ./scripts/dev.sh)   start the full stack
+#   npm run dev:stop   (or ./scripts/dev.sh --stop)   stop services + DB container
+#   npm run dev:logs   (or ./scripts/dev.sh --logs)   tail all service logs
+#
+# B37 (docker-compose) will eventually replace this script with `docker compose up`.
 # =============================================================================
 
 set -euo pipefail
@@ -32,17 +35,47 @@ DB_PASS="cinema_pass"
 DB_NAME="cinema_db"
 DB_PORT=5432
 
+# Ports the local stack listens on — freed defensively on --stop.
+SERVICE_PORTS=(3001 3002 5173)
+
+# Recursively kill a PID and all of its descendants. `npm run` spawns child
+# processes (ts-node / vite / node) that would otherwise be orphaned and keep
+# their ports busy, so killing only the parent PID is not enough.
+kill_tree() {
+    local pid="$1"
+    for child in $(pgrep -P "$pid" 2>/dev/null || true); do
+        kill_tree "$child"
+    done
+    kill "$pid" 2>/dev/null && info "Killed PID $pid" || true
+}
+
 # ── --stop ────────────────────────────────────────────────────────────────────
 if [[ "${1:-}" == "--stop" ]]; then
-    info "Stopping background services..."
+    info "Stopping the local stack..."
+
+    # 1. Kill every tracked service and its child processes.
     if [[ -f "$PIDS_FILE" ]]; then
         while IFS= read -r pid; do
-            kill "$pid" 2>/dev/null && info "Killed PID $pid" || true
+            [[ -n "$pid" ]] && kill_tree "$pid"
         done < "$PIDS_FILE"
         rm -f "$PIDS_FILE"
     fi
+
+    # 2. Safety net — free any process still holding a service port (orphans,
+    #    or a server started outside this script).
+    if command -v lsof &>/dev/null; then
+        for port in "${SERVICE_PORTS[@]}"; do
+            port_pids=$(lsof -ti "tcp:${port}" 2>/dev/null || true)
+            if [[ -n "$port_pids" ]]; then
+                kill $port_pids 2>/dev/null && info "Freed port $port" || true
+            fi
+        done
+    fi
+
+    # 3. Stop the Postgres container.
     docker stop "$DB_CONTAINER" 2>/dev/null && info "Stopped DB container" || true
-    success "Done."
+
+    success "Done — full stack stopped."
     exit 0
 fi
 
@@ -153,49 +186,62 @@ IDENTITY_PID=$!
 echo "$IDENTITY_PID" > "$PIDS_FILE"
 success "identity-service started (PID $IDENTITY_PID) → logs/identity-service.log"
 
-# ── ADD NEW SERVICES HERE ──────────────────────────────────────────────────────
-# B14 cinema-service:
-# info "Starting cinema-service (port 3002)..."
-# CINEMA_DIR="$ROOT/backend-services/cinema-service"
-# npm run start:dev --prefix "$CINEMA_DIR" \
-#     >> "$ROOT/logs/cinema-service.log" 2>&1 &
-# CINEMA_PID=$!
-# echo "$CINEMA_PID" >> "$PIDS_FILE"
-# success "cinema-service started (PID $CINEMA_PID) → logs/cinema-service.log"
+# ── 5b. Start cinema-service ──────────────────────────────────────────────────
+CINEMA_DIR="$ROOT/backend-services/cinema-service"
+CINEMA_ENV="$CINEMA_DIR/.env"
 
-# B25 frontend:
-# info "Starting cinema-app (port 5173)..."
-# FRONTEND_DIR="$ROOT/frontend-application/cinema-app"
-# npm run dev --prefix "$FRONTEND_DIR" \
-#     >> "$ROOT/logs/cinema-app.log" 2>&1 &
-# FRONTEND_PID=$!
-# echo "$FRONTEND_PID" >> "$PIDS_FILE"
-# success "cinema-app started (PID $FRONTEND_PID) → logs/cinema-app.log"
-# ─────────────────────────────────────────────────────────────────────────────
+if [[ ! -f "$CINEMA_ENV" ]]; then
+    warn ".env not found for cinema-service — copying from .env.example"
+    cp "$ROOT/.env.example" "$CINEMA_ENV"
+fi
 
-# ── 6. Health check ───────────────────────────────────────────────────────────
-info "Waiting for identity-service to be healthy..."
-for i in $(seq 1 20); do
-    if curl -sf http://localhost:3001/api/v1/health > /dev/null 2>&1; then
-        success "identity-service is up → http://localhost:3001"
-        break
-    fi
-    if ! kill -0 "$IDENTITY_PID" 2>/dev/null; then
-        error "identity-service crashed. Check logs/identity-service.log"
-        exit 1
-    fi
-    sleep 1
-done
+info "Starting cinema-service (port 3002)..."
+PORT=3002 npm run start:dev --prefix "$CINEMA_DIR" \
+    >> "$ROOT/logs/cinema-service.log" 2>&1 &
+CINEMA_PID=$!
+echo "$CINEMA_PID" >> "$PIDS_FILE"
+success "cinema-service started (PID $CINEMA_PID) → logs/cinema-service.log"
+
+# ── 5c. Start frontend (cinema-app) ───────────────────────────────────────────
+FRONTEND_DIR="$ROOT/frontend-application/cinema-app"
+
+info "Starting cinema-app (port 5173)..."
+npm run dev --prefix "$FRONTEND_DIR" \
+    >> "$ROOT/logs/cinema-app.log" 2>&1 &
+FRONTEND_PID=$!
+echo "$FRONTEND_PID" >> "$PIDS_FILE"
+success "cinema-app started (PID $FRONTEND_PID) → logs/cinema-app.log"
+
+# ── 6. Health checks ──────────────────────────────────────────────────────────
+wait_for_health() {
+    local name="$1" url="$2" pid="$3" log="$4"
+    info "Waiting for $name to be healthy..."
+    for _ in $(seq 1 30); do
+        if curl -sf "$url" > /dev/null 2>&1; then
+            success "$name is up → ${url%/api/v1/health}"
+            return 0
+        fi
+        if ! kill -0 "$pid" 2>/dev/null; then
+            error "$name crashed. Check $log"
+            return 1
+        fi
+        sleep 1
+    done
+    warn "$name did not pass its health check in time — check $log"
+}
+
+wait_for_health "identity-service" "http://localhost:3001/api/v1/health" "$IDENTITY_PID" "logs/identity-service.log" || true
+wait_for_health "cinema-service"   "http://localhost:3002/api/v1/health" "$CINEMA_PID"   "logs/cinema-service.log"   || true
 
 echo ""
 success "=============================="
 success "  Dev environment is running  "
 success "=============================="
 echo ""
+echo -e "  ${BLUE}cinema-app${NC}        →  http://localhost:5173"
 echo -e "  ${BLUE}identity-service${NC}  →  http://localhost:3001"
-echo -e "  ${BLUE}health check${NC}      →  http://localhost:3001/api/v1/health"
-echo -e "  ${BLUE}metrics${NC}           →  http://localhost:3001/metrics"
+echo -e "  ${BLUE}cinema-service${NC}    →  http://localhost:3002"
 echo ""
-echo -e "  ${YELLOW}Logs${NC}  →  tail -f logs/identity-service.log"
-echo -e "  ${YELLOW}Stop${NC}  →  ./scripts/dev.sh --stop"
+echo -e "  ${YELLOW}Logs${NC}  →  tail -f logs/*.log   (or: npm run dev:logs)"
+echo -e "  ${YELLOW}Stop${NC}  →  npm run dev:stop"
 echo ""
