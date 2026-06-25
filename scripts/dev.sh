@@ -29,11 +29,45 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PIDS_FILE="$ROOT/.dev-pids"
 
 # ── Config ────────────────────────────────────────────────────────────────────
-DB_CONTAINER="cinema-db"
-DB_USER="cinema_user"
-DB_PASS="cinema_pass"
-DB_NAME="cinema_db"
-DB_PORT=5432
+load_env_file() {
+    local file="$1"
+    local line key value
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%$'\r'}"
+        [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+        [[ "$line" == export\ * ]] && line="${line#export }"
+        [[ "$line" == *"="* ]] || continue
+
+        key="${line%%=*}"
+        value="${line#*=}"
+        key="${key##[[:space:]]}"
+        key="${key%%[[:space:]]}"
+
+        [[ "$key" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+
+        if [[ "$value" == \"*\" && "$value" == *\" ]]; then
+            value="${value:1:-1}"
+        elif [[ "$value" == \'*\' && "$value" == *\' ]]; then
+            value="${value:1:-1}"
+        fi
+
+        printf -v "$key" '%s' "$value"
+        export "$key"
+    done < "$file"
+}
+
+if [[ -f "$ROOT/.env" ]]; then
+    # Keep local dev aligned with the same `.env` file that Docker reads, while
+    # preserving passwords or secrets that contain shell-special characters.
+    load_env_file "$ROOT/.env"
+fi
+
+DB_CONTAINER="${DB_CONTAINER:-cinema-db}"
+DB_USER="${DB_USERNAME:-cinema_user}"
+DB_PASS="${DB_PASSWORD:-cinema_pass}"
+DB_NAME="${DB_NAME:-cinema_db}"
+DB_PORT="${DB_PORT:-5432}"
 
 # Ports the local stack listens on — freed defensively on --stop.
 SERVICE_PORTS=(3001 3002 5173)
@@ -179,7 +213,13 @@ if [[ ! -f "$IDENTITY_ENV" ]]; then
 fi
 
 info "Starting identity-service (port 3001)..."
-npm run start:dev --prefix "$IDENTITY_DIR" \
+"$ROOT/node_modules/.bin/nodemon" \
+    --watch "$IDENTITY_DIR/src" \
+    --watch "$ROOT/backend-services/libs/core/sdk/src" \
+    --watch "$ROOT/backend-services/libs/core/shared/src" \
+    --ext ts,json \
+    --signal SIGTERM \
+    --exec "$ROOT/scripts/dev-backend.sh backend-services/identity-service 3001" \
     >> "$ROOT/logs/identity-service.log" 2>&1 &
 
 IDENTITY_PID=$!
@@ -196,7 +236,13 @@ if [[ ! -f "$CINEMA_ENV" ]]; then
 fi
 
 info "Starting cinema-service (port 3002)..."
-PORT=3002 npm run start:dev --prefix "$CINEMA_DIR" \
+"$ROOT/node_modules/.bin/nodemon" \
+    --watch "$CINEMA_DIR/src" \
+    --watch "$ROOT/backend-services/libs/core/sdk/src" \
+    --watch "$ROOT/backend-services/libs/core/shared/src" \
+    --ext ts,json \
+    --signal SIGTERM \
+    --exec "$ROOT/scripts/dev-backend.sh backend-services/cinema-service 3002" \
     >> "$ROOT/logs/cinema-service.log" 2>&1 &
 CINEMA_PID=$!
 echo "$CINEMA_PID" >> "$PIDS_FILE"

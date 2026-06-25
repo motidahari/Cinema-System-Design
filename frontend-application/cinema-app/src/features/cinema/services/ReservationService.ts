@@ -33,7 +33,7 @@ export class ReservationService extends BaseHttpService {
     }
 
     async getMyReservations(): Promise<{ reservations: Reservation[] }> {
-        const res = await this.http.get<MyReservationsResponse>('/reservations/my');
+        const res = await this.http.get<MyReservationsResponse>('/reservations');
         return { reservations: res.data.reservations.map((reservation) => new Reservation(reservation)) };
     }
 }

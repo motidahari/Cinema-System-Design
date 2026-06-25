@@ -1,3 +1,6 @@
+// React
+import { useEffect } from 'react';
+
 // MUI
 import { Alert, Box, Chip, Snackbar } from '@mui/material';
 
@@ -7,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 // Hooks
 import { useSeats } from '../../hooks/useSeats';
 import { useToast } from '@/shared/hooks/useToast';
+import { useReservationStore } from '../../stores/useReservationStore';
 
 // Components
 import SeatingMap from '../../components/SeatingMap';
@@ -22,7 +26,22 @@ import ReservationPanel from '../../components/ReservationPanel';
 export default function CinemaView() {
     const { t } = useTranslation();
     const { availableCount, reservedCount, bookedCount } = useSeats();
-    const { toast, closeToast } = useToast();
+    const { toast, showToast, closeToast } = useToast();
+    const getMyReservations = useReservationStore((s) => s.getMyReservations);
+
+    useEffect(() => {
+        void getMyReservations()
+            .then(() => {
+                const activeReservation = useReservationStore.getState().activeReservation;
+                if (activeReservation?.isPending) {
+                    showToast('Active reservation restored. You can confirm or cancel it.', 'info');
+                }
+            })
+            .catch(() => {
+                const error = useReservationStore.getState().error;
+                showToast(error ?? 'Failed to load reservations', 'error');
+            });
+    }, [getMyReservations, showToast]);
 
     return (
         <Box sx={{ display: 'flex', flex: 1, overflow: 'auto' }} data-testid="cinema-view">

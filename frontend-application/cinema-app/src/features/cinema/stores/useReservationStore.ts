@@ -86,8 +86,18 @@ export const useReservationStore = create<ReservationState>((set) => ({
     },
 
     async getMyReservations() {
-        const { reservations } = await reservationService.getMyReservations();
-        set({ myReservations: reservations });
+        set({ isLoading: true, error: null });
+        try {
+            const { reservations } = await reservationService.getMyReservations();
+            set({
+                myReservations: reservations,
+                activeReservation: reservations.find((reservation) => reservation.isPending) ?? null,
+                isLoading: false,
+            });
+        } catch (err) {
+            set({ error: errorMessage(err, 'Failed to load reservations'), isLoading: false });
+            throw err;
+        }
     },
 
     setActiveReservation(reservation) {

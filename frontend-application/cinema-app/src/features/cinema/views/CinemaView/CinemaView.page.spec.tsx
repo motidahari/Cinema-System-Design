@@ -40,6 +40,15 @@ async function stubReserve(page: Page): Promise<void> {
     });
 }
 
+async function stubMyReservations(page: Page, reservations = []): Promise<void> {
+    await page.route('**/reservations', (route) => {
+        if (route.request().method() === 'GET') {
+            return route.fulfill({ status: 200, json: { reservations } });
+        }
+        return route.fallback();
+    });
+}
+
 async function stubConfirm(page: Page, reservationId = RESERVATION.id): Promise<void> {
     await page.route(`**/reservations/${reservationId}/confirm`, (route) =>
         route.fulfill({
@@ -64,6 +73,7 @@ async function stubSocket(page: Page): Promise<void> {
 }
 
 async function gotoCinema(page: Page): Promise<void> {
+    await stubMyReservations(page);
     await page.goto('/cinema');
     await expect(page).toHaveURL(/\/cinema$/);
 }
@@ -163,5 +173,19 @@ test.describe('CinemaView (page)', () => {
         await expect(page.getByLabel('3 available seats')).toBeVisible();
         await expect(page.getByLabel('1 reserved seats')).toBeVisible();
         await expect(page.getByLabel('1 booked seats')).toBeVisible();
+    });
+
+    test('restores a pending reservation after refresh and shows the lifecycle actions', async ({ page }) => {
+        await stubAuth(page);
+        await stubSeats(page);
+        await stubSocket(page);
+        await stubMyReservations(page, [RESERVATION]);
+
+        await page.goto('/cinema');
+
+        await expect(page.getByText('Active reservation restored. You can confirm or cancel it.')).toBeVisible();
+        await expect(page.getByText('Expires in:')).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Confirm Booking' })).toBeVisible();
+        await expect(page.getByRole('button', { name: 'Cancel Reservation' })).toBeVisible();
     });
 });

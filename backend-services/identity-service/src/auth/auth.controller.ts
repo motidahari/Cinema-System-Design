@@ -34,10 +34,16 @@ export class AuthController {
         private readonly cookieService: CookieService
     ) {}
 
+    @Get('csrf')
+    csrf(@Res({ passthrough: true }) res: Response) {
+        this.cookieService.setCsrfCookie(res);
+        return { ok: true };
+    }
+
     @Post('register')
     @HttpCode(HttpStatus.CREATED)
     async register(@Body() dto: RegisterDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        const { user, accessToken, refreshToken } = await this.authService.register(dto.email, dto.password, req);
+        const { user, accessToken, refreshToken } = await this.authService.register(dto, req);
         this.cookieService.setAuthCookies(res, accessToken, refreshToken);
         return { user: toProfileDto(user) };
     }
@@ -46,7 +52,7 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     @Throttle({ default: { limit: 5, ttl: 60_000 } })
     async login(@Body() dto: LoginDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
-        const { user, accessToken, refreshToken } = await this.authService.login(dto.email, dto.password, req);
+        const { user, accessToken, refreshToken } = await this.authService.login(dto, req);
         this.cookieService.setAuthCookies(res, accessToken, refreshToken);
         return { user: toProfileDto(user) };
     }

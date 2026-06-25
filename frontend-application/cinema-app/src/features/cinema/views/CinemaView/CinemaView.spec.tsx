@@ -1,6 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import en from '@/locales/en';
+
+const reservationStoreMock = vi.hoisted(() => {
+    const getMyReservations = vi.fn().mockResolvedValue(undefined);
+    let state = { activeReservation: null as { isPending: boolean } | null, error: null as string | null };
+    const useReservationStore = vi.fn((selector: (s: { getMyReservations: typeof getMyReservations }) => unknown) =>
+        selector({ getMyReservations })
+    ) as unknown as ReturnType<typeof vi.fn> & {
+        getState: ReturnType<typeof vi.fn>;
+        setState: (next: typeof state) => void;
+        reset: () => void;
+        getMyReservations: typeof getMyReservations;
+    };
+    useReservationStore.getState = vi.fn(() => state);
+    useReservationStore.setState = (next) => {
+        state = next;
+    };
+    useReservationStore.reset = () => {
+        state = { activeReservation: null, error: null };
+        getMyReservations.mockResolvedValue(undefined);
+    };
+    useReservationStore.getMyReservations = getMyReservations;
+    return { useReservationStore };
+});
 
 // Provide English translations without a live i18next instance.
 vi.mock('react-i18next', () => ({
@@ -21,6 +44,7 @@ vi.mock('react-i18next', () => ({
 // Mock all sub-components and hooks so this spec is isolated to CinemaView's own logic.
 vi.mock('../../hooks/useSeats', () => ({ useSeats: vi.fn() }));
 vi.mock('@/shared/hooks/useToast', () => ({ useToast: vi.fn() }));
+vi.mock('../../stores/useReservationStore', () => ({ useReservationStore: reservationStoreMock.useReservationStore }));
 vi.mock('../../components/SeatingMap', () => ({ default: () => <div data-testid="seating-map" /> }));
 vi.mock('../../components/ReservationPanel', () => ({ default: () => <div data-testid="reservation-panel" /> }));
 
@@ -30,6 +54,7 @@ import { useToast } from '@/shared/hooks/useToast';
 
 const useSeatsMock = useSeats as unknown as ReturnType<typeof vi.fn>;
 const useToastMock = useToast as unknown as ReturnType<typeof vi.fn>;
+const showToast = vi.fn();
 
 function stubHooks(counts: { availableCount?: number; reservedCount?: number; bookedCount?: number } = {}): void {
     useSeatsMock.mockReturnValue({
@@ -44,7 +69,7 @@ function stubHooks(counts: { availableCount?: number; reservedCount?: number; bo
     });
     useToastMock.mockReturnValue({
         toast: { open: false, message: '', severity: 'info' as const },
-        showToast: vi.fn(),
+        showToast,
         closeToast: vi.fn(),
     });
 }
@@ -52,6 +77,7 @@ function stubHooks(counts: { availableCount?: number; reservedCount?: number; bo
 describe('CinemaView', () => {
     beforeEach(() => {
         vi.clearAllMocks();
+        reservationStoreMock.useReservationStore.reset();
         stubHooks();
     });
 
@@ -81,12 +107,38 @@ describe('CinemaView', () => {
     it('renders the toast Snackbar when toast.open is true', () => {
         useToastMock.mockReturnValue({
             toast: { open: true, message: 'Booking confirmed!', severity: 'success' as const },
-            showToast: vi.fn(),
+            showToast,
             closeToast: vi.fn(),
         });
         render(<CinemaView />);
 
         expect(screen.getByRole('alert')).toBeInTheDocument();
         expect(screen.getByText('Booking confirmed!')).toBeInTheDocument();
+    });
+
+    it('loads reservations on mount and shows a toast when an active reservation is restored', async () => {
+        reservationStoreMock.useReservationStore.setState({
+            activeReservation: { isPending: true },
+            error: null,
+        });
+
+        render(<CinemaView />);
+
+        await waitFor(() => expect(reservationStoreMock.useReservationStore.getMyReservations).toHaveBeenCalled());
+        await waitFor(() =>
+            expect(showToast).toHaveBeenCalledWith('Active reservation restored. You can confirm or cancel it.', 'info')
+        );
+    });
+
+    it('shows a toast with the backend error when loading reservations fails', async () => {
+        reservationStoreMock.useReservationStore.getMyReservations.mockRejectedValueOnce(new Error('x'));
+        reservationStoreMock.useReservationStore.setState({
+            activeReservation: null,
+            error: 'Cannot load reservations',
+        });
+
+        render(<CinemaView />);
+
+        await waitFor(() => expect(showToast).toHaveBeenCalledWith('Cannot load reservations', 'error'));
     });
 });

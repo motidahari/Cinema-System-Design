@@ -7,6 +7,17 @@ import { AppConfig } from '../config/app.config';
 export class CookieService {
     constructor(private readonly cfg: AppConfig) {}
 
+    setCsrfCookie(res: Response): void {
+        res.cookie('csrf_token', randomBytes(16).toString('hex'), {
+            httpOnly: false,
+            secure: this.cfg.cookieSecure,
+            sameSite: this.cfg.cookieSameSite,
+            domain: this.cfg.cookieDomain,
+            path: '/',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+    }
+
     setAuthCookies(res: Response, accessToken: string, refreshToken?: string): void {
         const base = {
             httpOnly: true,
@@ -30,14 +41,7 @@ export class CookieService {
             });
         }
 
-        res.cookie('csrf_token', randomBytes(16).toString('hex'), {
-            httpOnly: false,
-            secure: this.cfg.cookieSecure,
-            sameSite: this.cfg.cookieSameSite,
-            domain: this.cfg.cookieDomain,
-            path: '/',
-            maxAge: 7 * 24 * 60 * 60 * 1000,
-        });
+        this.setCsrfCookie(res);
     }
 
     clearAuthCookies(res: Response): void {

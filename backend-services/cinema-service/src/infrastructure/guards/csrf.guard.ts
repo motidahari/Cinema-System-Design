@@ -1,3 +1,4 @@
+import { Logger } from '@cinema/shared';
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Request } from 'express';
 
@@ -11,7 +12,7 @@ export class CsrfGuard implements CanActivate {
 
         const cookieToken = (req.cookies as Record<string, string> | undefined)?.['csrf_token'];
         const headerToken = req.headers['x-csrf-token'];
-
+        Logger.info('check:', { cookieToken, headerToken });
         if (!cookieToken || cookieToken !== headerToken) {
             throw new ForbiddenException('CSRF token mismatch');
         }

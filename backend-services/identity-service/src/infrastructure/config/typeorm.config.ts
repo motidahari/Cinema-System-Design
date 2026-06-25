@@ -1,5 +1,7 @@
 import { DataSourceOptions } from 'typeorm';
 import { DatabaseLogger } from '@cinema/shared';
+import { LoginAttemptEntity } from '../../domain/entities/login-attempt.entity';
+import { RefreshTokenEntity } from '../../domain/entities/refresh-token.entity';
 import { UserEntity } from '../../domain/entities/user.entity';
 import { AppConfig } from './app.config';
 
@@ -11,7 +13,7 @@ export const createDataSourceOptions = (appConfig: AppConfig): DataSourceOptions
     password: appConfig.dbPassword,
     database: appConfig.dbName,
     schema: 'identity',
-    entities: [UserEntity],
+    entities: [UserEntity, RefreshTokenEntity, LoginAttemptEntity],
     synchronize: appConfig.isLocal,
     migrations: ['dist/migrations/*.js'],
     logger: new DatabaseLogger(),
