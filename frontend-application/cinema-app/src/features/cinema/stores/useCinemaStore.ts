@@ -16,8 +16,8 @@ interface CinemaState {
     reservedCount: () => number;
     bookedCount: () => number;
     getSeatsByRow: () => Record<string, Seat[]>;
-    // Actions
-    fetchSeats: () => Promise<void>;
+    // Actions — `getSeatingMap` matches CinemaService.getSeatingMap.
+    getSeatingMap: () => Promise<void>;
     updateSeatStatus: (seatId: string, status: SeatStatus) => void;
     updateSeatsStatus: (seatIds: string[], status: SeatStatus) => void;
 }
@@ -38,7 +38,7 @@ export const useCinemaStore = create<CinemaState>((set, get) => ({
         }, {});
     },
 
-    async fetchSeats() {
+    async getSeatingMap() {
         set({ isLoading: true, error: null });
         try {
             const { seats } = await cinemaService.getSeatingMap();

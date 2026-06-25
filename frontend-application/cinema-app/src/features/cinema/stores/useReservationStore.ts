@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { reservationService } from '../services/ReservationService';
 import { isApiError } from '@/core/types/api-error';
 import type { Reservation } from '../models/Reservation';
+import type { CancelDto, ConfirmDto, ReserveDto } from '../types';
 
 // Seat-selection + reservation-lifecycle state. `selectedSeatIds` is the user's
 // pending pick (pre-submit); `activeReservation` is the PENDING hold returned by the
@@ -16,11 +17,11 @@ interface ReservationState {
     selectSeat: (seatId: string) => void;
     deselectSeat: (seatId: string) => void;
     clearSelection: () => void;
-    // Lifecycle
-    submitReservation: () => Promise<void>;
-    confirmReservation: (reservationId: string) => Promise<void>;
-    cancelReservation: (reservationId: string) => Promise<void>;
-    fetchMyReservations: () => Promise<void>;
+    // Lifecycle — names + DTO args mirror ReservationService 1:1.
+    reserve: (dto: ReserveDto) => Promise<void>;
+    confirm: (dto: ConfirmDto) => Promise<void>;
+    cancel: (dto: CancelDto) => Promise<void>;
+    getMyReservations: () => Promise<void>;
     setActiveReservation: (reservation: Reservation | null) => void;
 }
 
@@ -28,7 +29,7 @@ function errorMessage(err: unknown, fallback: string): string {
     return isApiError(err) ? (err.response?.data?.errorMessage ?? fallback) : fallback;
 }
 
-export const useReservationStore = create<ReservationState>((set, get) => ({
+export const useReservationStore = create<ReservationState>((set) => ({
     selectedSeatIds: new Set<string>(),
     activeReservation: null,
     myReservations: [],
@@ -51,11 +52,10 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
         set({ selectedSeatIds: new Set<string>() });
     },
 
-    async submitReservation() {
+    async reserve(dto) {
         set({ isLoading: true, error: null });
         try {
-            const seatIds = [...get().selectedSeatIds];
-            const reservation = await reservationService.reserve({ seatIds });
+            const reservation = await reservationService.reserve(dto);
             set({ activeReservation: reservation, selectedSeatIds: new Set<string>(), isLoading: false });
         } catch (err) {
             set({ error: errorMessage(err, 'Reservation failed'), isLoading: false });
@@ -63,10 +63,10 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
         }
     },
 
-    async confirmReservation(reservationId) {
+    async confirm(dto) {
         set({ isLoading: true, error: null });
         try {
-            const updated = await reservationService.confirm(reservationId);
+            const updated = await reservationService.confirm(dto);
             set({ activeReservation: updated, isLoading: false });
         } catch (err) {
             set({ error: errorMessage(err, 'Confirmation failed'), isLoading: false });
@@ -74,10 +74,10 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
         }
     },
 
-    async cancelReservation(reservationId) {
+    async cancel(dto) {
         set({ isLoading: true, error: null });
         try {
-            await reservationService.cancel(reservationId);
+            await reservationService.cancel(dto);
             set({ activeReservation: null, isLoading: false });
         } catch (err) {
             set({ error: errorMessage(err, 'Cancellation failed'), isLoading: false });
@@ -85,7 +85,7 @@ export const useReservationStore = create<ReservationState>((set, get) => ({
         }
     },
 
-    async fetchMyReservations() {
+    async getMyReservations() {
         const { reservations } = await reservationService.getMyReservations();
         set({ myReservations: reservations });
     },

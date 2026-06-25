@@ -53,7 +53,7 @@ describe('ReservationService', () => {
             const { service, post } = makeService();
             post.mockResolvedValue({ data: { ...reservationDto, status: 'CONFIRMED', expiresInSeconds: 0 } });
 
-            const result = await service.confirm('res-1');
+            const result = await service.confirm({ reservationId: 'res-1' });
 
             expect(post).toHaveBeenCalledWith('/reservations/res-1/confirm');
             expect(result).toBeInstanceOf(Reservation);
@@ -66,7 +66,7 @@ describe('ReservationService', () => {
             const { service, del } = makeService();
             del.mockResolvedValue({ data: undefined });
 
-            await service.cancel('res-1');
+            await service.cancel({ reservationId: 'res-1' });
 
             expect(del).toHaveBeenCalledWith('/reservations/res-1');
         });

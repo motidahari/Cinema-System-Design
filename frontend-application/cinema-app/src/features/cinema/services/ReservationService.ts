@@ -1,7 +1,7 @@
 import { BaseHttpService } from '@/core/services/BaseHttpService';
 import { appConfig } from '@/core/config/app.config';
 import { Reservation } from '../models/Reservation';
-import type { MyReservationsResponse, ReservationDto, ReserveDto } from '../types';
+import type { CancelDto, ConfirmDto, MyReservationsResponse, ReservationDto, ReserveDto } from '../types';
 
 // Reservation lifecycle calls against cinema-service. All mutating calls carry the
 // X-CSRF-Token header automatically (added by BaseHttpService); `reserve` additionally
@@ -23,13 +23,13 @@ export class ReservationService extends BaseHttpService {
         return new Reservation(res.data);
     }
 
-    async confirm(reservationId: string): Promise<Reservation> {
-        const res = await this.http.post<ReservationDto>(`/reservations/${reservationId}/confirm`);
+    async confirm(dto: ConfirmDto): Promise<Reservation> {
+        const res = await this.http.post<ReservationDto>(`/reservations/${dto.reservationId}/confirm`);
         return new Reservation(res.data);
     }
 
-    async cancel(reservationId: string): Promise<void> {
-        await this.http.delete(`/reservations/${reservationId}`);
+    async cancel(dto: CancelDto): Promise<void> {
+        await this.http.delete(`/reservations/${dto.reservationId}`);
     }
 
     async getMyReservations(): Promise<{ reservations: Reservation[] }> {

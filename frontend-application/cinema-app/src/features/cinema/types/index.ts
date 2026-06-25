@@ -26,6 +26,17 @@ export interface ReserveDto {
     seatIds: string[];
 }
 
+// POST /reservations/:id/confirm — id carried in a DTO so the store and service
+// share one signature.
+export interface ConfirmDto {
+    reservationId: string;
+}
+
+// DELETE /reservations/:id
+export interface CancelDto {
+    reservationId: string;
+}
+
 // Response envelopes (raw wire shapes).
 export interface SeatingMapResponse {
     seats: SeatDto[];

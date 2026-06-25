@@ -29,11 +29,11 @@ describe('useCinemaStore', () => {
         resetStore();
     });
 
-    describe('fetchSeats', () => {
+    describe('getSeatingMap', () => {
         it('loads the hydrated seating map into state on success', async () => {
             mocked.getSeatingMap.mockResolvedValue({ seats });
 
-            await useCinemaStore.getState().fetchSeats();
+            await useCinemaStore.getState().getSeatingMap();
 
             const state = useCinemaStore.getState();
             expect(state.seats).toEqual(seats);
@@ -45,7 +45,7 @@ describe('useCinemaStore', () => {
         it('sets an error message and stops loading on failure', async () => {
             mocked.getSeatingMap.mockRejectedValue(new Error('network'));
 
-            await useCinemaStore.getState().fetchSeats();
+            await useCinemaStore.getState().getSeatingMap();
 
             const state = useCinemaStore.getState();
             expect(state.seats).toEqual([]);
