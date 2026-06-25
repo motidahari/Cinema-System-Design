@@ -65,7 +65,7 @@ fi
 
 DB_CONTAINER="${DB_CONTAINER:-cinema-db}"
 DB_USER="${DB_USERNAME:-cinema_user}"
-DB_PASS="${DB_PASSWORD:-cinema_pass}"
+DB_PASS="${DB_PASSWORD:?DB_PASSWORD must be set in .env}"
 DB_NAME="${DB_NAME:-cinema_db}"
 DB_PORT="${DB_PORT:-5432}"
 
