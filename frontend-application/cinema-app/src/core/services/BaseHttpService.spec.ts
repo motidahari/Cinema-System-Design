@@ -152,7 +152,10 @@ describe('BaseHttpService', () => {
 
         it('redirects to /login when the refresh fails', async () => {
             const originalLocation = window.location;
-            Object.defineProperty(window, 'location', { configurable: true, value: { href: '' } });
+            Object.defineProperty(window, 'location', {
+                configurable: true,
+                value: { href: '', pathname: '/cinema' },
+            });
             vi.spyOn(axios, 'post').mockRejectedValue(new Error('refresh dead'));
             const adapter = vi.fn(async (cfg: InternalAxiosRequestConfig) => {
                 throw unauthorized(cfg);
@@ -161,6 +164,24 @@ describe('BaseHttpService', () => {
 
             await expect(service.request('get', '/protected')).rejects.toBeTruthy();
             expect(window.location.href).toBe('/login');
+
+            Object.defineProperty(window, 'location', { configurable: true, value: originalLocation });
+        });
+
+        it('does not redirect when the failed refresh happens on /login (guest session probe)', async () => {
+            const originalLocation = window.location;
+            Object.defineProperty(window, 'location', {
+                configurable: true,
+                value: { href: '', pathname: '/login' },
+            });
+            vi.spyOn(axios, 'post').mockRejectedValue(new Error('refresh dead'));
+            const adapter = vi.fn(async (cfg: InternalAxiosRequestConfig) => {
+                throw unauthorized(cfg);
+            });
+            const service = new TestService(adapter);
+
+            await expect(service.request('get', '/auth/me')).rejects.toBeTruthy();
+            expect(window.location.href).toBe('');
 
             Object.defineProperty(window, 'location', { configurable: true, value: originalLocation });
         });
