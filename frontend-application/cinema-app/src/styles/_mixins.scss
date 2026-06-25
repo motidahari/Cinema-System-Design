@@ -1,0 +1,10 @@
+// flx(): always emits display:flex; 3 args with sensible defaults.
+//   $justify    -> justify-content
+//   $align      -> align-items
+//   $text-align -> text-align
+@mixin flx($justify: flex-start, $align: stretch, $text-align: start) {
+    display: flex;
+    justify-content: $justify;
+    align-items: $align;
+    text-align: $text-align;
+}

@@ -1,0 +1,152 @@
+// NOTE: `variables` and `mixins` are auto-injected into every SCSS module via Vite's
+// `css.preprocessorOptions.scss.additionalData` (see vite.config.ts), so `flx()` and
+// the `$spacing-*` / color vars are already in scope here — do not `@use` them again.
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+}
+
+.seating-map {
+    @include flx(flex-start, center, center);
+    flex-direction: column;
+    gap: $spacing-s;
+    padding-block: $spacing-l; // logical: top + bottom
+    padding-inline: $spacing-l; // logical: start + end
+    max-width: $seating-map-max-width;
+    margin-inline: auto; // logical centering (was `margin: 0 auto`)
+
+    &__screen {
+        @include flx(center, center, center);
+        background: #aaa;
+        color: #fff;
+        width: 60%;
+        padding-block: $spacing-s;
+        padding-inline: $spacing-m;
+        border-radius: 4px;
+        margin-block-end: $spacing-m; // logical bottom margin
+        font-weight: bold;
+        letter-spacing: 4px;
+    }
+
+    &__row {
+        @include flx(flex-start, center, start);
+        gap: $seat-gap;
+
+        &-label {
+            width: 20px;
+            font-weight: bold;
+            color: #555;
+            text-align: end; // logical (was `right`)
+            margin-inline-end: $spacing-s;
+            flex-shrink: 0;
+        }
+    }
+
+    &__seat {
+        width: $seat-size;
+        height: $seat-size;
+        border: none;
+        border-radius: $seat-border-radius;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        transition:
+            transform 0.1s,
+            opacity 0.1s;
+
+        &:hover:not(:disabled) {
+            transform: scale(1.15);
+        }
+
+        &--available {
+            background-color: $color-seat-available;
+        }
+
+        &--selected {
+            background-color: $color-seat-selected;
+            box-shadow: 0 0 0 2px darken($color-seat-selected, 15%);
+        }
+
+        &--reserved {
+            background-color: $color-seat-reserved;
+            cursor: not-allowed;
+            opacity: 0.85;
+        }
+
+        &--booked {
+            background-color: $color-seat-booked;
+            cursor: not-allowed;
+            opacity: 0.85;
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+        }
+    }
+
+    &__legend {
+        @include flx(center, center, center);
+        gap: $spacing-m;
+        margin-block-start: $spacing-m; // logical top margin
+        flex-wrap: wrap;
+
+        &-chip--available {
+            background-color: $color-seat-available !important;
+            color: #fff !important;
+        }
+        &-chip--selected {
+            background-color: $color-seat-selected !important;
+            color: #fff !important;
+        }
+        &-chip--reserved {
+            background-color: $color-seat-reserved !important;
+            color: #fff !important;
+        }
+        &-chip--booked {
+            background-color: $color-seat-booked !important;
+            color: #fff !important;
+        }
+    }
+}
+
+.reservation-panel {
+    @include flx(flex-start, stretch, start);
+    flex-direction: column;
+    gap: $spacing-m;
+    min-width: $reservation-panel-width;
+    padding: $spacing-l;
+    background: #fafafa;
+    border-inline-start: 1px solid #e0e0e0; // logical (was `border-left`)
+
+    &__timer {
+        @include flx(space-between, center, center);
+        font-size: 1.5rem;
+
+        &--urgent {
+            color: $timer-urgent-color;
+            animation: pulse 1s infinite;
+        }
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}

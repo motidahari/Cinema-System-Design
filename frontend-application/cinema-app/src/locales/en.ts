@@ -1,0 +1,46 @@
+export default {
+    auth: {
+        login: 'Login',
+        register: 'Register',
+        email: 'Email',
+        password: 'Password',
+        loginButton: 'Sign In',
+        registerButton: 'Create Account',
+        noAccount: "Don't have an account?",
+        haveAccount: 'Already have an account?',
+        loginSuccess: 'Welcome back!',
+        logoutButton: 'Logout',
+    },
+    cinema: {
+        title: 'Cinema Reservation',
+        screen: 'SCREEN',
+        legend: {
+            available: 'Available',
+            selected: 'Selected',
+            reserved: 'Reserved',
+            booked: 'Booked',
+        },
+        stats: {
+            available: '{{count}} available',
+            reserved: '{{count}} reserved',
+            booked: '{{count}} booked',
+        },
+    },
+    reservation: {
+        selectSeats: 'Click seats to select them',
+        selectedCount: '{{count}} seat(s) selected',
+        reserve: 'Reserve Seats',
+        confirm: 'Confirm Booking',
+        cancel: 'Cancel Reservation',
+        clearSelection: 'Clear Selection',
+        expiresIn: 'Expires in:',
+        expired: 'Your reservation has expired',
+        confirmed: 'Booking confirmed!',
+        cancelled: 'Reservation cancelled',
+        errors: {
+            notConsecutive: 'Please select consecutive seats in the same row',
+            isolatedSeat: 'Your selection would leave an isolated empty seat',
+            unavailable: 'One or more selected seats are no longer available',
+        },
+    },
+} as const;
