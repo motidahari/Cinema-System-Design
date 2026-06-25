@@ -6,11 +6,14 @@ import { RequireAuth, RequireGuest } from './guards/RequireAuth';
 import AuthLayout from '@/shared/layouts/AuthLayout';
 import AppLayout from '@/shared/layouts/AppLayout';
 
-// Placeholder view slots. The real views land in later branches — LoginView /
-// RegisterView in B32, CinemaView in B36 — and simply replace these elements without
-// touching the guard/layout wiring established here.
-const LoginViewSlot = <p>Login view (B32)</p>;
-const RegisterViewSlot = <p>Register view (B32)</p>;
+// Views
+import LoginView from '@/features/auth/views/LoginView';
+import RegisterView from '@/features/auth/views/RegisterView';
+
+// LoginView / RegisterView land here in B32. CinemaView is still a placeholder slot
+// until B36 replaces it — without touching the guard/layout wiring established here.
+const LoginViewSlot = <LoginView />;
+const RegisterViewSlot = <RegisterView />;
 const CinemaViewSlot = <p>Cinema view (B36)</p>;
 
 // Route map (FRONTEND-DESIGN §8): guest-only auth routes behind <RequireGuest>, the

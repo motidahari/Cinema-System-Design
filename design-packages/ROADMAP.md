@@ -561,7 +561,7 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B29 `feat/web-shared-ui` | 9 | B26 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B30 `feat/web-routing-layouts` | 10 | B28, B29 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B31 `feat/web-auth-forms` | 6 | B29 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
-| B32 `feat/web-auth-views` | 8 | B30, B31 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B32 `feat/web-auth-views` | 8 | B30, B31 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B33 `feat/web-cinema-services-stores` | 9 | B27 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B34 `feat/web-cinema-hooks` | 6 | B33 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B35 `feat/web-cinema-seat-components` | 9 | B34 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |

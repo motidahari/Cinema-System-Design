@@ -74,8 +74,12 @@ export abstract class BaseHttpService {
                     return this.http(original); // retry with the new access cookie
                 } catch (refreshErr) {
                     // Refresh failed → session is gone. A full navigation clears all
-                    // in-memory state and sends the user back to the login screen.
-                    window.location.href = '/login';
+                    // in-memory state and sends the user back to the login screen. Skip it
+                    // when we're already on /login, otherwise the initial guest session
+                    // probe (GET /auth/me → 401 → failed refresh) would reload in a loop.
+                    if (window.location.pathname !== '/login') {
+                        window.location.href = '/login';
+                    }
                     return Promise.reject(refreshErr);
                 }
             }
