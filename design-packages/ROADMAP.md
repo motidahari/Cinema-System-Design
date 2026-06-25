@@ -558,7 +558,7 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B26 `feat/web-foundation` | 9 | B25 | `frontend-developer`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B27 `feat/web-http-core` | 6 | B26 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B28 `feat/web-auth-state` | 7 | B27 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
-| B29 `feat/web-shared-ui` | 9 | B26 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
+| B29 `feat/web-shared-ui` | 9 | B26 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B30 `feat/web-routing-layouts` | 10 | B28, B29 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
 | B31 `feat/web-auth-forms` | 6 | B29 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
 | B32 `feat/web-auth-views` | 8 | B30, B31 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ⏳ PENDING |
