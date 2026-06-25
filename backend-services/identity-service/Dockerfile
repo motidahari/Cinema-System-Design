@@ -16,7 +16,9 @@ RUN npm run build --workspace @cinema/shared \
     && rm -f node_modules/@cinema/internal-sdk \
     && cp -r backend-services/libs/core/sdk node_modules/@cinema/internal-sdk \
     && rm -f node_modules/@cinema/shared \
-    && cp -r backend-services/libs/core/shared node_modules/@cinema/shared
+    && cp -r backend-services/libs/core/shared node_modules/@cinema/shared \
+    && echo "=SHARED_DIST=$(ls node_modules/@cinema/shared/dist/ 2>&1)=" \
+    && echo "=SHARED_TYPE=$(ls node_modules/@cinema/shared/dist/index.d.ts 2>&1)="
 RUN npm run build --workspace @cinema/identity-service
 
 FROM node:20-alpine AS runtime
