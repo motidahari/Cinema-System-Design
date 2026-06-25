@@ -1,7 +1,7 @@
 # ---- builder ----
 FROM node:20-alpine AS builder
 WORKDIR /app
-COPY package.json package-lock.json tsconfig.base.json ./
+COPY package.json tsconfig.base.json ./
 COPY frontend-application/cinema-app/package.json ./frontend-application/cinema-app/
 RUN npm install --legacy-peer-deps
 COPY frontend-application/cinema-app ./frontend-application/cinema-app
