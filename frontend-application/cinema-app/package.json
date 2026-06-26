@@ -14,6 +14,7 @@
         "test:unit:watch": "vitest",
         "test:page": "playwright test --project=page",
         "test:e2e": "playwright test",
+        "test:e2e:live": "playwright test --config=playwright.e2e.config.ts",
         "test:cov": "vitest run --coverage"
     },
     "dependencies": {
