@@ -21,6 +21,7 @@ export class AppConfig {
     readonly cookieSecure: boolean;
     readonly cookieSameSite: 'lax' | 'strict' | 'none';
     readonly idempotencyTtlHours: number;
+    readonly redisUrl?: string;
 
     constructor(configService: ConfigService) {
         this.port = configService.get<number>('PORT')!;
@@ -41,5 +42,6 @@ export class AppConfig {
         this.cookieSecure = configService.get<boolean>('COOKIE_SECURE') ?? false;
         this.cookieSameSite = configService.get<'lax' | 'strict' | 'none'>('COOKIE_SAMESITE') ?? 'lax';
         this.idempotencyTtlHours = configService.get<number>('IDEMPOTENCY_TTL_HOURS') ?? 24;
+        this.redisUrl = configService.get<string>('REDIS_URL') || undefined;
     }
 }

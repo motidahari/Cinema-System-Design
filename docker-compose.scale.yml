@@ -1,0 +1,34 @@
+# Horizontal-scaling overlay (ADR-10). NOT used by the default one-command run.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.scale.yml up --build
+#
+# Adds Redis and scales cinema-service to multiple replicas. The expiry cron stays
+# single-runner via pg_try_advisory_lock, and the Socket.io Redis adapter fans
+# seat broadcasts across every replica so realtime updates reach all clients.
+#
+# The base docker-compose.yml deliberately declares neither redis nor REDIS_URL, so the
+# assignment's default local run stays single-instance and dependency-free.
+services:
+    redis:
+        image: redis:7-alpine
+        container_name: cinema-redis
+        restart: unless-stopped
+        expose:
+            - '6379'
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 5s
+            timeout: 3s
+            retries: 10
+
+    cinema-service:
+        # A fixed container_name can't coexist with replicas — reset it so Compose
+        # generates a unique name per replica (requires Compose v2.24+ for !reset).
+        container_name: !reset null
+        environment:
+            REDIS_URL: redis://redis:6379
+        deploy:
+            replicas: 3 # the multi-instance case the advisory lock + Redis adapter handle
+        depends_on:
+            redis:
+                condition: service_healthy
