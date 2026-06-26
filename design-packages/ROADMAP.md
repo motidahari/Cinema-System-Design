@@ -548,7 +548,7 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B17 `feat/cinema-reservations-domain` | 5 | B16 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B18 `feat/cinema-seat-rules` | 8 | B17 | `backend-developer`, `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B19 `feat/cinema-reservations-core` | 6 | B18 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
-| B20 `feat/cinema-realtime` | 3 | B19 | `backend-developer`, `backend-code-standards-reviewer` | 🔄 IN PROGRESS |
+| B20 `feat/cinema-realtime` | 3 | B19 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B21 `feat/cinema-expiry-cron` | 2 | B19 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B22 `feat/cinema-idempotency` | 3 | B19 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B23 `test/cinema-unit` | 4 | B19 | `backend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
@@ -568,6 +568,6 @@ Frontend (B25→B36) runs in parallel on its own track once the API contract is 
 | B36 `feat/web-cinema-view` | 7 | B35 | `frontend-developer`, `frontend-qa-tester`, `frontend-code-standards-reviewer` | ✅ MERGED |
 | B37 `feat/infra-docker` | 7 | B13c, B24b, B36 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
 | B38 `feat/infra-scaling` | 3 | B37 | `backend-developer`, `backend-code-standards-reviewer` | ✅ MERGED |
-| B39 `docs/finalize` + live smoke | 3 | B38 | `backend-developer`, `backend-qa-tester`, `frontend-qa-tester`, `backend-code-standards-reviewer` | ⏳ PENDING |
+| B39 `docs/finalize` + live smoke | 3 | B38 | `backend-developer`, `backend-qa-tester`, `frontend-qa-tester`, `backend-code-standards-reviewer` | ✅ MERGED |
 
 **Total: 42 branches**, every one ≤ 10 files.
