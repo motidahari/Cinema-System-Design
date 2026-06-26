@@ -62,22 +62,22 @@ describe('ReservationService', () => {
     });
 
     describe('cancel', () => {
-        it('DELETEs /reservations/:id', async () => {
+        it('DELETEs /reservations (caller resolved from auth context)', async () => {
             const { service, del } = makeService();
             del.mockResolvedValue({ data: undefined });
 
-            await service.cancel({ reservationId: 'res-1' });
+            await service.cancel({});
 
-            expect(del).toHaveBeenCalledWith('/reservations/res-1');
+            expect(del).toHaveBeenCalledWith('/reservations');
         });
     });
 
-    describe('getMyReservations', () => {
+    describe('getReservations', () => {
         it('GETs /reservations and hydrates each payload into a Reservation model', async () => {
             const { service, get } = makeService();
             get.mockResolvedValue({ data: { reservations: [reservationDto] } });
 
-            const { reservations } = await service.getMyReservations();
+            const { reservations } = await service.getReservations();
 
             expect(get).toHaveBeenCalledWith('/reservations');
             expect(reservations).toHaveLength(1);

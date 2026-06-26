@@ -126,9 +126,27 @@ export class ReservationsService {
         return reservation;
     }
 
-    /** Cancels a PENDING reservation, releasing its seats back to AVAILABLE. */
-    async cancel(reservationId: string, userId: string): Promise<void> {
-        const reservation = await this.validateCancel(reservationId, userId);
+    /**
+     * Cancels every active (PENDING or CONFIRMED) reservation the authenticated user
+     * holds, releasing all of their seats back to AVAILABLE (held RESERVED seats or
+     * already-BOOKED seats alike). The user is identified solely from the auth context —
+     * no reservation id is required from the client.
+     */
+    async cancel(userId: string): Promise<void> {
+        const reservations = await this.reservationDao.findActiveByUser(userId);
+        if (reservations.length === 0) throw new ReservationNotFoundException(userId);
+
+        for (const reservation of reservations) {
+            await this.releaseReservation(reservation, userId);
+        }
+    }
+
+    /**
+     * Transitions a reservation to CANCELLED, frees its seats, and releases the DB-level
+     * holder slot (ADR-9), then broadcasts the release off the critical path.
+     */
+    private async releaseReservation(reservation: ReservationModel, userId: string): Promise<void> {
+        const reservationId = reservation.id;
 
         await this.transactionManager.runInTransaction(async (queryRunner) => {
             await this.reservationDao.updateStatus(queryRunner, reservationId, ReservationStatus.CANCELLED);
@@ -145,17 +163,8 @@ export class ReservationsService {
             .catch((err) => Logger.error('Failed to emit seat:released', { reservationId, err }));
     }
 
-    private async validateCancel(reservationId: string, userId: string): Promise<ReservationModel> {
-        const reservation = await this.reservationDao.findById(reservationId);
-        if (!reservation) throw new ReservationNotFoundException(reservationId);
-        if (!reservation.isOwnedBy(userId)) throw new ReservationNotOwnedException(reservationId);
-        if (!reservation.isPending())
-            throw new SeatsUnavailableException(`Cannot cancel a ${reservation.status} reservation`);
-        return reservation;
-    }
-
-    /** The authenticated user's active (PENDING) reservations, newest first. */
-    async getMyReservations(userId: string): Promise<ReservationModel[]> {
-        return this.reservationDao.findPendingByUser(userId);
+    /** The authenticated user's active (PENDING or CONFIRMED) reservations, newest first. */
+    async getReservations(userId: string): Promise<ReservationModel[]> {
+        return this.reservationDao.findActiveByUser(userId);
     }
 }

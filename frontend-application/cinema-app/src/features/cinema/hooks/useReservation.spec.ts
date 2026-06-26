@@ -15,6 +15,7 @@ const showToast = vi.fn();
 interface FakeReservation {
     id: string;
     expiresInSeconds: number;
+    isPending: boolean;
 }
 
 interface FakeStore {
@@ -47,6 +48,9 @@ function setStore(overrides: Partial<FakeStore> = {}): FakeStore {
         ...overrides,
     };
     useReservationStoreMock.mockReturnValue(store);
+    // The hook reads the error fresh via getState() in its catch blocks, so the mock must
+    // expose it too — pointing at the same fake store.
+    (useReservationStoreMock as unknown as { getState: () => FakeStore }).getState = () => store;
     return store;
 }
 
@@ -116,10 +120,10 @@ describe('useReservation', () => {
             const { result } = renderHook(() => useReservation());
 
             await act(async () => {
-                await result.current.cancel({ reservationId: 'res-1' });
+                await result.current.cancel({});
             });
 
-            expect(store.cancel).toHaveBeenCalledWith({ reservationId: 'res-1' });
+            expect(store.cancel).toHaveBeenCalledWith({});
             expect(showToast).toHaveBeenCalledWith('Reservation cancelled', 'info');
         });
     });
@@ -147,7 +151,7 @@ describe('useReservation', () => {
         });
 
         it('starts from the active reservation expiry and ticks down each second', () => {
-            setStore({ activeReservation: { id: 'res-1', expiresInSeconds: 3 } });
+            setStore({ activeReservation: { id: 'res-1', expiresInSeconds: 3, isPending: true } });
             const { result } = renderHook(() => useReservation());
 
             expect(result.current.countdown).toBe(3);
@@ -159,7 +163,7 @@ describe('useReservation', () => {
         });
 
         it('clears the hold and warns the user when it reaches zero', () => {
-            const store = setStore({ activeReservation: { id: 'res-1', expiresInSeconds: 2 } });
+            const store = setStore({ activeReservation: { id: 'res-1', expiresInSeconds: 2, isPending: true } });
             const { result } = renderHook(() => useReservation());
 
             act(() => {

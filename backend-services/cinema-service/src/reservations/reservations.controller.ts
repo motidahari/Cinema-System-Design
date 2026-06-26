@@ -36,15 +36,15 @@ export class ReservationsController {
         return this.reservationsService.confirm(id, req.user.userId);
     }
 
-    @Delete(':id')
+    @Delete()
     @HttpCode(HttpStatus.NO_CONTENT)
-    async cancel(@Param('id', ParseUUIDPipe) id: string, @Req() req: AuthenticatedRequest): Promise<void> {
-        await this.reservationsService.cancel(id, req.user.userId);
+    async cancel(@Req() req: AuthenticatedRequest): Promise<void> {
+        await this.reservationsService.cancel(req.user.userId);
     }
 
     @Get()
-    async getMyReservations(@Req() req: AuthenticatedRequest) {
-        const reservations = await this.reservationsService.getMyReservations(req.user.userId);
+    async getReservations(@Req() req: AuthenticatedRequest) {
+        const reservations = await this.reservationsService.getReservations(req.user.userId);
         return { reservations };
     }
 }

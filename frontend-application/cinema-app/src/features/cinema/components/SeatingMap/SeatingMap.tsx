@@ -10,7 +10,11 @@ export default function SeatingMap() {
     const { t } = useTranslation();
     const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
     const { seatsByRow, isLoading } = useSeats();
-    const { selectedSeatIds, selectSeat, deselectSeat } = useReservation();
+    const { selectedSeatIds, selectSeat, deselectSeat, activeReservation } = useReservation();
+
+    // Once the user holds an active reservation — a 15-minute pending hold or a confirmed
+    // booking — seat selection is locked until they confirm or cancel it.
+    const locked = activeReservation !== null;
 
     useSocket(isAuthenticated);
 
@@ -30,6 +34,7 @@ export default function SeatingMap() {
                     row={row}
                     seats={seatsByRow[row]}
                     selectedSeatIds={selectedSeatIds}
+                    locked={locked}
                     onSeatSelect={selectSeat}
                     onSeatDeselect={deselectSeat}
                 />

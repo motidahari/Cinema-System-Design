@@ -31,6 +31,7 @@ export default {
             booked: '{{count}} booked',
         },
         reservationRestored: 'Active reservation restored. You can confirm or cancel it.',
+        bookingRestored: 'You have a confirmed booking. You can cancel it to release the seats.',
         loadFailed: 'Failed to load reservations',
     },
     reservation: {
@@ -39,6 +40,7 @@ export default {
         reserve: 'Reserve Seats',
         confirm: 'Confirm Booking',
         cancel: 'Cancel Reservation',
+        cancelBooking: 'Cancel Booking',
         clearSelection: 'Clear Selection',
         expiresIn: 'Expires in:',
         expired: 'Your reservation has expired',

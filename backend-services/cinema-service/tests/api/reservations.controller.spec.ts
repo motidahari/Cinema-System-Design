@@ -5,7 +5,7 @@
  *   POST   /api/v1/reservations         201 + 400 (bad body) + 400 (not consecutive)
  *                                       + 404 (unknown seat) + 409 (unavailable) + 409 (active exists) + 401
  *   POST   /api/v1/reservations/:id/confirm  200 + 404 + 403 + 401
- *   DELETE /api/v1/reservations/:id          204 + 404 + 401
+ *   DELETE /api/v1/reservations              204 (cancels all active) + 404 + 401
  *   GET    /api/v1/reservations               200 (active reservations)
  */
 
@@ -142,19 +142,30 @@ describe('ReservationsController (api)', () => {
     });
 
     // ── cancel ──────────────────────────────────────────────────────────────
-    describe('DELETE /api/v1/reservations/:id', () => {
+    describe('DELETE /api/v1/reservations', () => {
         it('Given:An owned PENDING reservation, should return 204 and release the seats', async () => {
             const seatIds = [await getSeatId(app, 'A1'), await getSeatId(app, 'A2')];
-            const { body } = await reserve(seatIds).expect(201);
+            await reserve(seatIds).expect(201);
 
-            await request(app.getHttpServer()).delete(`/api/v1/reservations/${body.id}`).expect(204);
+            await request(app.getHttpServer()).delete('/api/v1/reservations').expect(204);
 
             // Seats are AVAILABLE again, so the same user can reserve them anew.
             await reserve(seatIds).expect(201);
         });
 
-        it('Given:An unknown reservation, should return 404', async () => {
-            await request(app.getHttpServer()).delete(`/api/v1/reservations/${randomUUID()}`).expect(404);
+        it('Given:An owned CONFIRMED booking, should return 204 and free the booked seats', async () => {
+            const seatIds = [await getSeatId(app, 'A1'), await getSeatId(app, 'A2')];
+            const { body } = await reserve(seatIds).expect(201);
+            await request(app.getHttpServer()).post(`/api/v1/reservations/${body.id}/confirm`).expect(200);
+
+            await request(app.getHttpServer()).delete('/api/v1/reservations').expect(204);
+
+            // The booked seats are released, so they can be reserved again.
+            await reserve(seatIds).expect(201);
+        });
+
+        it('Given:No active reservation, should return 404', async () => {
+            await request(app.getHttpServer()).delete('/api/v1/reservations').expect(404);
         });
     });
 

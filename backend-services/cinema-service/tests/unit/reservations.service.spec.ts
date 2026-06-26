@@ -49,7 +49,7 @@ describe('ReservationsService', () => {
         findActivePendingByUser: jest.Mock;
         createWithSeats: jest.Mock;
         findById: jest.Mock;
-        findPendingByUser: jest.Mock;
+        findActiveByUser: jest.Mock;
         updateStatus: jest.Mock;
     };
     let reservationSeatDao: { deactivateByReservation: jest.Mock };
@@ -69,7 +69,7 @@ describe('ReservationsService', () => {
             findActivePendingByUser: jest.fn().mockResolvedValue(null),
             createWithSeats: jest.fn(),
             findById: jest.fn(),
-            findPendingByUser: jest.fn(),
+            findActiveByUser: jest.fn(),
             updateStatus: jest.fn().mockResolvedValue(undefined),
         };
         reservationSeatDao = { deactivateByReservation: jest.fn().mockResolvedValue(undefined) };
@@ -241,57 +241,55 @@ describe('ReservationsService', () => {
 
     // ── cancel ──────────────────────────────────────────────────────────────
     describe('cancel', () => {
-        it('Given:Unknown reservation, should throw ReservationNotFoundException', async () => {
-            reservationDao.findById.mockResolvedValue(null);
-            await expect(service.cancel(randomUUID(), USER)).rejects.toThrow(ReservationNotFoundException);
+        it('Given:No active reservations for the user, should throw ReservationNotFoundException', async () => {
+            reservationDao.findActiveByUser.mockResolvedValue([]);
+            await expect(service.cancel(USER)).rejects.toThrow(ReservationNotFoundException);
         });
 
-        it('Given:A reservation owned by someone else, should throw ReservationNotOwnedException', async () => {
-            reservationDao.findById.mockResolvedValue(makeReservation({ userId: randomUUID() }));
-            await expect(service.cancel(randomUUID(), USER)).rejects.toThrow(ReservationNotOwnedException);
-        });
+        it('Given:Active PENDING and CONFIRMED reservations, should release every one — free seats, broadcast off-path, and deactivate the holder rows', async () => {
+            const pendingId = randomUUID();
+            const confirmedId = randomUUID();
+            const heldSeat = randomUUID();
+            const bookedSeat = randomUUID();
+            const pending = makeReservation({ id: pendingId, userId: USER, seatIds: [heldSeat] });
+            const confirmed = makeReservation({
+                id: confirmedId,
+                userId: USER,
+                seatIds: [bookedSeat],
+                status: ReservationStatus.CONFIRMED,
+            });
+            reservationDao.findActiveByUser.mockResolvedValue([confirmed, pending]);
+            seatDao.findByIds.mockResolvedValue([]);
 
-        it('Given:A non-PENDING reservation, should throw SeatsUnavailableException', async () => {
-            reservationDao.findById.mockResolvedValue(
-                makeReservation({ userId: USER, status: ReservationStatus.CONFIRMED })
-            );
-            await expect(service.cancel(randomUUID(), USER)).rejects.toThrow('Cannot cancel a CONFIRMED reservation');
-        });
+            await service.cancel(USER);
+            await Promise.resolve(); // flush the background findByIds → emit microtasks
 
-        it('Given:A valid PENDING reservation, should release seats, broadcast off-path, and deactivate the holder rows', async () => {
-            const id = randomUUID();
-            const seatId = randomUUID();
-            const pending = makeReservation({ id, userId: USER, seatIds: [seatId] });
-            const releasedSeats = [makeSeat(seatId, 'A', 1, SeatStatus.AVAILABLE)];
-            reservationDao.findById.mockResolvedValue(pending);
-            seatDao.findByIds.mockResolvedValue(releasedSeats);
-
-            await service.cancel(id, USER);
-            await Promise.resolve(); // flush the background findByIds → emit microtask
-
-            expect(reservationDao.updateStatus).toHaveBeenCalledWith(
-                expect.anything(),
-                id,
-                ReservationStatus.CANCELLED
-            );
+            for (const id of [confirmedId, pendingId]) {
+                expect(reservationDao.updateStatus).toHaveBeenCalledWith(
+                    expect.anything(),
+                    id,
+                    ReservationStatus.CANCELLED
+                );
+                expect(reservationSeatDao.deactivateByReservation).toHaveBeenCalledWith(expect.anything(), id);
+            }
             expect(seatDao.updateStatusBatch).toHaveBeenCalledWith(
                 expect.anything(),
-                pending.seatIds,
+                [bookedSeat],
                 SeatStatus.AVAILABLE
             );
-            expect(reservationSeatDao.deactivateByReservation).toHaveBeenCalledWith(expect.anything(), id);
-            expect(seatGateway.emitSeatReleased).toHaveBeenCalledWith(releasedSeats);
+            expect(seatDao.updateStatusBatch).toHaveBeenCalledWith(expect.anything(), [heldSeat], SeatStatus.AVAILABLE);
+            expect(seatGateway.emitSeatReleased).toHaveBeenCalledTimes(2);
         });
     });
 
-    // ── getMyReservations ─────────────────────────────────────────────────────
-    describe('getMyReservations', () => {
+    // ── getReservations ─────────────────────────────────────────────────────
+    describe('getReservations', () => {
         it('should return the active reservations from the DAO', async () => {
             const list = [makeReservation({ userId: USER })];
-            reservationDao.findPendingByUser.mockResolvedValue(list);
+            reservationDao.findActiveByUser.mockResolvedValue(list);
 
-            expect(await service.getMyReservations(USER)).toBe(list);
-            expect(reservationDao.findPendingByUser).toHaveBeenCalledWith(USER);
+            expect(await service.getReservations(USER)).toBe(list);
+            expect(reservationDao.findActiveByUser).toHaveBeenCalledWith(USER);
         });
     });
 });

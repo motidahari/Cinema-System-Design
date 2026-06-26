@@ -23,11 +23,13 @@ export class ReservationService extends BaseHttpService {
         return new Reservation(res.data);
     }
 
-    async cancel(dto: CancelDto): Promise<void> {
-        await this.http.delete(`/reservations/${dto.reservationId}`);
+    // Cancels every active reservation the caller owns; the server resolves the user from
+    // the auth context, so no id is sent. `_dto` keeps the store/service signature aligned.
+    async cancel(_dto: CancelDto): Promise<void> {
+        await this.http.delete('/reservations');
     }
 
-    async getMyReservations(): Promise<{ reservations: Reservation[] }> {
+    async getReservations(): Promise<{ reservations: Reservation[] }> {
         const res = await this.http.get<MyReservationsResponse>('/reservations');
         return { reservations: res.data.reservations.map((reservation) => new Reservation(reservation)) };
     }

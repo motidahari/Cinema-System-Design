@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, LessThan, MoreThan, QueryRunner, Repository } from 'typeorm';
+import { DeepPartial, In, LessThan, MoreThan, QueryRunner, Repository } from 'typeorm';
 import { BaseDao, SortOrder } from '@cinema/shared';
 import { ReservationEntity } from '../../domain/entities/reservation.entity';
 import { ReservationModel } from '../domain-model/reservation';
@@ -82,6 +82,18 @@ export class ReservationDao extends BaseDao<ReservationEntity, ReservationModel>
     async findPendingByUser(userId: string): Promise<ReservationModel[]> {
         return this.findAll({
             where: { userId, status: ReservationStatus.PENDING },
+            relations: ['reservationSeats'],
+            order: { createdAt: SortOrder.DESC },
+        });
+    }
+
+    /**
+     * All active (PENDING or CONFIRMED) reservations for a user, newest first. These are
+     * the ones the user can still cancel to release their held/booked seats.
+     */
+    async findActiveByUser(userId: string): Promise<ReservationModel[]> {
+        return this.findAll({
+            where: { userId, status: In([ReservationStatus.PENDING, ReservationStatus.CONFIRMED]) },
             relations: ['reservationSeats'],
             order: { createdAt: SortOrder.DESC },
         });

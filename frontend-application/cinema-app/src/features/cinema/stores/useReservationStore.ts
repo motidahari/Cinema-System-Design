@@ -21,7 +21,7 @@ interface ReservationState {
     reserve: (dto: ReserveDto) => Promise<void>;
     confirm: (dto: ConfirmDto) => Promise<void>;
     cancel: (dto: CancelDto) => Promise<void>;
-    getMyReservations: () => Promise<void>;
+    getReservations: () => Promise<void>;
     setActiveReservation: (reservation: Reservation | null) => void;
 }
 
@@ -85,13 +85,19 @@ export const useReservationStore = create<ReservationState>((set) => ({
         }
     },
 
-    async getMyReservations() {
+    async getReservations() {
         set({ isLoading: true, error: null });
         try {
-            const { reservations } = await reservationService.getMyReservations();
+            const { reservations } = await reservationService.getReservations();
+            // Prefer a PENDING hold (it still has a live countdown); otherwise surface a
+            // CONFIRMED booking so the user can return and cancel it.
+            const active =
+                reservations.find((reservation) => reservation.isPending) ??
+                reservations.find((reservation) => reservation.isConfirmed) ??
+                null;
             set({
                 myReservations: reservations,
-                activeReservation: reservations.find((reservation) => reservation.isPending) ?? null,
+                activeReservation: active,
                 isLoading: false,
             });
         } catch (err) {

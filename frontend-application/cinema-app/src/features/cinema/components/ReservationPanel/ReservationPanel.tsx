@@ -30,6 +30,11 @@ export default function ReservationPanel() {
 
     const selectedSeats = useMemo(() => seats.filter((s) => selectedSeatIds.has(s.id)), [seats, selectedSeatIds]);
 
+    // Map seat id → human-readable label (e.g. "A7") so reservation chips show the
+    // row + seat number instead of the raw seat id.
+    const seatLabelById = useMemo(() => new Map(seats.map((s) => [s.id, s.label])), [seats]);
+    const labelForSeat = (id: string): string => seatLabelById.get(id) ?? id;
+
     const minutes = Math.floor(countdown / 60)
         .toString()
         .padStart(2, '0');
@@ -46,8 +51,9 @@ export default function ReservationPanel() {
     };
 
     const handleCancel = (): void => {
-        if (!activeReservation) return;
-        void cancel({ reservationId: activeReservation.id });
+        // The server cancels every active reservation the caller owns from the auth
+        // context, so no id is sent.
+        void cancel({});
     };
 
     return (
@@ -84,10 +90,21 @@ export default function ReservationPanel() {
                                     fontWeight: 600,
                                 }}
                             >
-                                {id}
+                                {labelForSeat(id)}
                             </Box>
                         ))}
                     </Box>
+
+                    <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={handleCancel}
+                        loading={isLoading}
+                        fullWidth
+                        aria-label={t('reservation.cancelBooking')}
+                    >
+                        {t('reservation.cancelBooking')}
+                    </Button>
                 </Box>
             ) : activeReservation?.isPending ? (
                 /* ── Pending (hold) state ─────────────────────────── */
@@ -123,7 +140,7 @@ export default function ReservationPanel() {
                                         fontWeight: 600,
                                     }}
                                 >
-                                    {id}
+                                    {labelForSeat(id)}
                                 </Box>
                             ))}
                         </Box>
