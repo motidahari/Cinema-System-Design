@@ -187,9 +187,9 @@ describe('AuthService', () => {
         it('should throw AccountLockedException without checking the password', async () => {
             loginAttemptDao.isLocked.mockResolvedValue(true);
 
-            await expect(service.login({ email: 'alice@cinema.test', password: 'anypass' }, mockReq)).rejects.toThrow(
-                AccountLockedException
-            );
+            await expect(
+                service.login({ email: 'alice@cinema.test', password: 'irrelevant-not-checked' }, mockReq)
+            ).rejects.toThrow(AccountLockedException);
             expect(userDao.findByEmail).not.toHaveBeenCalled();
             expect(bcrypt.compare).not.toHaveBeenCalled();
         });
@@ -198,7 +198,7 @@ describe('AuthService', () => {
             loginAttemptDao.isLocked.mockResolvedValue(true);
 
             const err = await service
-                .login({ email: 'alice@cinema.test', password: 'anypass' }, mockReq)
+                .login({ email: 'alice@cinema.test', password: 'irrelevant-not-checked' }, mockReq)
                 .catch((e) => e);
             expect(err.getStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
         });

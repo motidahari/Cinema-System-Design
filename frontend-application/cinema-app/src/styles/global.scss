@@ -89,7 +89,9 @@ body {
 
         &--selected {
             background-color: $color-seat-selected;
-            box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.4), 0 4px 12px rgba(26, 35, 126, 0.3);
+            box-shadow:
+                0 0 0 3px rgba(26, 35, 126, 0.4),
+                0 4px 12px rgba(26, 35, 126, 0.3);
             animation: seatPop 0.2s ease-out;
         }
 
