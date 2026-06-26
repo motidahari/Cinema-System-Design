@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 /**
  * OPTIONAL live smoke (TEST-STRATEGY §7.2). Drives a real register → reserve → confirm
  * flow against a running stack (`docker compose up`). It is NOT part of CI: the default
- * playwright.config.ts (testDir ./src) never discovers this file, and each test self-skips
+ * playwright.config.ts (testDir ./src) never discovers this *.e2e.spec.ts file, and each test self-skips
  * when the stack isn't reachable — so it can never turn CI red.
  *
  *   docker compose up --build
