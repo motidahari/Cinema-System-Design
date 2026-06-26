@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Box, Link, Typography } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import Input from '@/shared/components/Input';
 import Button from '@/shared/components/Button';
 import { useAuth } from '../../hooks/useAuth';
+import { isValidEmail } from '../../validation';
 
 export interface LoginFormProps {
     onSwitchToRegister?: () => void;
@@ -15,9 +16,25 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
     const { login, isLoading } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [emailError, setEmailError] = useState(false);
+
+    // Validate the email only after the user pauses typing for 300ms, so we don't flag
+    // a half-typed address on every keystroke.
+    useEffect(() => {
+        if (!email) {
+            setEmailError(false);
+            return;
+        }
+        const timer = setTimeout(() => setEmailError(!isValidEmail(email)), 300);
+        return () => clearTimeout(timer);
+    }, [email]);
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
         event.preventDefault();
+        if (!isValidEmail(email)) {
+            setEmailError(true);
+            return;
+        }
         await login({ email, password });
     };
 
@@ -40,6 +57,8 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
                 onChange={(event) => setEmail(event.target.value)}
                 required
                 autoComplete="email"
+                error={emailError}
+                helperText={emailError ? t('auth.invalidEmail') : undefined}
             />
 
             <Input

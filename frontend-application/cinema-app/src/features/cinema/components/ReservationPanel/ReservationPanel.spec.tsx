@@ -6,6 +6,7 @@ import { Reservation } from '../../models/Reservation';
 import { makeSeat, makeReservation } from '@/test/factories';
 import en from '@/locales/en';
 
+import { ReservationStatus } from '@/features/cinema/enums';
 // Provide the English strings directly so the component renders real user-visible text
 // without needing a live i18next instance.
 vi.mock('react-i18next', () => ({
@@ -103,7 +104,7 @@ describe('ReservationPanel', () => {
 
     describe('pending reservation state', () => {
         const pendingReservation = new Reservation(
-            makeReservation({ id: 'res-1', status: 'PENDING', seatIds: ['seat-A1', 'seat-A2'] })
+            makeReservation({ id: 'res-1', status: ReservationStatus.PENDING, seatIds: ['seat-A1', 'seat-A2'] })
         );
 
         it('shows the countdown timer with confirm and cancel buttons', () => {
@@ -162,7 +163,12 @@ describe('ReservationPanel', () => {
 
     describe('confirmed reservation state', () => {
         const confirmedReservation = new Reservation(
-            makeReservation({ id: 'res-2', status: 'CONFIRMED', seatIds: ['seat-A1'], expiresInSeconds: 0 })
+            makeReservation({
+                id: 'res-2',
+                status: ReservationStatus.CONFIRMED,
+                seatIds: ['seat-A1'],
+                expiresInSeconds: 0,
+            })
         );
 
         it('shows a confirmed success message with the seat label and a cancel button', () => {

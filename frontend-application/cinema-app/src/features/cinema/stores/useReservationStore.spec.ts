@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useReservationStore } from './useReservationStore';
 import { Reservation } from '../models/Reservation';
 
+import { ReservationStatus } from '@/features/cinema/enums';
 vi.mock('../services/ReservationService', () => ({
     reservationService: {
         reserve: vi.fn(),
@@ -22,7 +23,7 @@ const mocked = reservationService as unknown as {
 
 const reservation = new Reservation({
     id: 'res-1',
-    status: 'PENDING',
+    status: ReservationStatus.PENDING,
     expiresAt: '2026-06-21T10:15:00.000Z',
     expiresInSeconds: 900,
     seatIds: ['A1', 'A2'],
@@ -99,7 +100,7 @@ describe('useReservationStore', () => {
         it('stores the confirmed reservation on success', async () => {
             const confirmed = new Reservation({
                 id: 'res-1',
-                status: 'CONFIRMED',
+                status: ReservationStatus.CONFIRMED,
                 expiresAt: '2026-06-21T10:15:00.000Z',
                 expiresInSeconds: 0,
                 seatIds: ['A1', 'A2'],
@@ -155,7 +156,7 @@ describe('useReservationStore', () => {
         it('restores a CONFIRMED booking as active when there is no pending hold (so it can be cancelled)', async () => {
             const confirmed = new Reservation({
                 id: 'res-2',
-                status: 'CONFIRMED',
+                status: ReservationStatus.CONFIRMED,
                 expiresAt: '2026-06-21T10:15:00.000Z',
                 expiresInSeconds: 0,
                 seatIds: ['A3', 'A4'],

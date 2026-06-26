@@ -1,4 +1,5 @@
-import type { ReservationDto, ReservationStatus } from '../types';
+import { ReservationStatus } from '../enums';
+import type { ReservationDto } from '../types';
 
 // Reservation domain model. Services hydrate the raw ReservationDto into this class so
 // consumers get lifecycle predicates instead of inspecting the status string directly.
@@ -18,19 +19,19 @@ export class Reservation {
     }
 
     get isPending(): boolean {
-        return this.status === 'PENDING';
+        return this.status === ReservationStatus.PENDING;
     }
 
     get isConfirmed(): boolean {
-        return this.status === 'CONFIRMED';
+        return this.status === ReservationStatus.CONFIRMED;
     }
 
     get isExpired(): boolean {
-        return this.status === 'EXPIRED';
+        return this.status === ReservationStatus.EXPIRED;
     }
 
     get isCancelled(): boolean {
-        return this.status === 'CANCELLED';
+        return this.status === ReservationStatus.CANCELLED;
     }
 
     get seatCount(): number {

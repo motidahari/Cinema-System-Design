@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import SeatButton from './SeatButton';
 import { Seat } from '../../models/Seat';
-import { makeSeat, type SeatStatus } from '@/test/factories';
+import { makeSeat, SeatStatus } from '@/test/factories';
 
 const onSelect = vi.fn();
 const onDeselect = vi.fn();
@@ -22,19 +22,19 @@ describe('SeatButton', () => {
     });
 
     it('renders the seat number as its label', () => {
-        renderSeat('AVAILABLE');
+        renderSeat(SeatStatus.AVAILABLE);
 
         expect(screen.getByRole('button', { name: /Row A Seat 3/ })).toHaveTextContent('3');
     });
 
     it('applies the status modifier class for an available seat', () => {
-        renderSeat('AVAILABLE');
+        renderSeat(SeatStatus.AVAILABLE);
 
         expect(screen.getByRole('button')).toHaveClass('seating-map__seat--available');
     });
 
     it('selects an available seat on click', async () => {
-        renderSeat('AVAILABLE');
+        renderSeat(SeatStatus.AVAILABLE);
 
         await userEvent.click(screen.getByRole('button'));
 
@@ -43,7 +43,7 @@ describe('SeatButton', () => {
     });
 
     it('deselects an already-selected seat on click and marks it pressed', async () => {
-        renderSeat('AVAILABLE', true);
+        renderSeat(SeatStatus.AVAILABLE, true);
         const button = screen.getByRole('button');
 
         expect(button).toHaveClass('seating-map__seat--selected');
@@ -56,7 +56,7 @@ describe('SeatButton', () => {
     });
 
     it('disables a reserved seat and ignores clicks', async () => {
-        renderSeat('RESERVED');
+        renderSeat(SeatStatus.RESERVED);
         const button = screen.getByRole('button');
 
         expect(button).toBeDisabled();
@@ -69,13 +69,13 @@ describe('SeatButton', () => {
     });
 
     it('disables a booked seat', () => {
-        renderSeat('BOOKED');
+        renderSeat(SeatStatus.BOOKED);
 
         expect(screen.getByRole('button')).toBeDisabled();
     });
 
     it('disables an available seat and ignores clicks while locked', async () => {
-        renderSeat('AVAILABLE', false, true);
+        renderSeat(SeatStatus.AVAILABLE, false, true);
         const button = screen.getByRole('button');
 
         expect(button).toBeDisabled();

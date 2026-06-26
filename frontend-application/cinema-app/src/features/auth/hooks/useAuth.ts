@@ -1,5 +1,6 @@
 import { useAuthStore } from '../stores/useAuthStore';
 import { useToast } from '@/shared/hooks/useToast';
+import { ToastSeverity } from '@/shared/enums';
 import type { LoginDto, RegisterDto } from '../types';
 
 // Orchestration layer over the auth store — owns the user-facing toasts so the
@@ -12,16 +13,16 @@ export function useAuth() {
         try {
             await store.login(dto.email, dto.password);
         } catch {
-            showToast(store.error ?? 'Login failed', 'error');
+            showToast(store.error ?? 'Login failed', ToastSeverity.Error);
         }
     };
 
     const register = async (dto: RegisterDto): Promise<void> => {
         try {
             await store.register(dto.email, dto.password);
-            showToast('Account created successfully', 'success');
+            showToast('Account created successfully', ToastSeverity.Success);
         } catch {
-            showToast(store.error ?? 'Registration failed', 'error');
+            showToast(store.error ?? 'Registration failed', ToastSeverity.Error);
         }
     };
 

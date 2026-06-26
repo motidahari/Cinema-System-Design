@@ -12,6 +12,7 @@ const he: DeepWiden<typeof en> = {
         password: 'סיסמה',
         confirmPassword: 'אימות סיסמה',
         passwordMismatch: 'הסיסמאות אינן תואמות',
+        invalidEmail: 'יש להזין כתובת דוא"ל תקינה',
         loginButton: 'כניסה',
         registerButton: 'יצירת חשבון',
         noAccount: 'אין לך חשבון?',

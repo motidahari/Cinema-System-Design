@@ -6,6 +6,7 @@ export default {
         password: 'Password',
         confirmPassword: 'Confirm Password',
         passwordMismatch: 'Passwords do not match',
+        invalidEmail: 'Please enter a valid email address',
         loginButton: 'Sign In',
         registerButton: 'Create Account',
         noAccount: "Don't have an account?",

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { appConfig } from '@/core/config/app.config';
 import { useCinemaStore } from '../stores/useCinemaStore';
+import { SeatStatus } from '../enums';
 import type { SeatDto } from '../types';
 
 interface SeatEventPayload {
@@ -43,19 +44,19 @@ export function useSocket(isAuthenticated: boolean) {
         socket.on('seat:reserved', ({ seats }: SeatEventPayload) => {
             updateSeatsStatus(
                 seats.map((s) => s.id),
-                'RESERVED'
+                SeatStatus.RESERVED
             );
         });
         socket.on('seat:booked', ({ seats }: SeatEventPayload) => {
             updateSeatsStatus(
                 seats.map((s) => s.id),
-                'BOOKED'
+                SeatStatus.BOOKED
             );
         });
         socket.on('seat:released', ({ seats }: SeatEventPayload) => {
             updateSeatsStatus(
                 seats.map((s) => s.id),
-                'AVAILABLE'
+                SeatStatus.AVAILABLE
             );
         });
 

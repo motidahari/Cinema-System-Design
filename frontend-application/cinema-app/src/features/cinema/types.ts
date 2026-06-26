@@ -1,8 +1,6 @@
 // Raw JSON shapes returned by cinema-service. Services hydrate these DTOs into
 // domain models so stores and components always work with domain objects.
-
-export type SeatStatus = 'AVAILABLE' | 'RESERVED' | 'BOOKED';
-export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'EXPIRED' | 'CANCELLED';
+import type { SeatStatus, ReservationStatus } from './enums';
 
 export interface SeatDto {
     id: string;

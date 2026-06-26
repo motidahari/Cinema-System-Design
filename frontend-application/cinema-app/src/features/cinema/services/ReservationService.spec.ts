@@ -3,9 +3,10 @@ import { ReservationService } from './ReservationService';
 import { Reservation } from '../models/Reservation';
 import type { ReservationDto } from '../types';
 
+import { ReservationStatus } from '@/features/cinema/enums';
 const reservationDto: ReservationDto = {
     id: 'res-1',
-    status: 'PENDING',
+    status: ReservationStatus.PENDING,
     expiresAt: '2026-06-21T10:15:00.000Z',
     expiresInSeconds: 900,
     seatIds: ['seat-A1', 'seat-A2'],
@@ -51,7 +52,9 @@ describe('ReservationService', () => {
     describe('confirm', () => {
         it('POSTs to /reservations/:id/confirm and hydrates the updated model', async () => {
             const { service, post } = makeService();
-            post.mockResolvedValue({ data: { ...reservationDto, status: 'CONFIRMED', expiresInSeconds: 0 } });
+            post.mockResolvedValue({
+                data: { ...reservationDto, status: ReservationStatus.CONFIRMED, expiresInSeconds: 0 },
+            });
 
             const result = await service.confirm({ reservationId: 'res-1' });
 

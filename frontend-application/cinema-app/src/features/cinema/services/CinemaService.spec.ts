@@ -3,9 +3,10 @@ import { CinemaService } from './CinemaService';
 import { Seat } from '../models/Seat';
 import type { SeatDto } from '../types';
 
+import { SeatStatus } from '@/features/cinema/enums';
 const seatDtos: SeatDto[] = [
-    { id: 'seat-A1', row: 'A', number: 1, status: 'AVAILABLE' },
-    { id: 'seat-A2', row: 'A', number: 2, status: 'RESERVED' },
+    { id: 'seat-A1', row: 'A', number: 1, status: SeatStatus.AVAILABLE },
+    { id: 'seat-A2', row: 'A', number: 2, status: SeatStatus.RESERVED },
 ];
 
 // Replace the inherited axios client with a stub so we assert endpoint mapping +

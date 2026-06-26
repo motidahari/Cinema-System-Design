@@ -1,7 +1,8 @@
 import { Slide } from '@mui/material';
 import type { TransitionProps } from '@mui/material/transitions';
 import { Alert, Snackbar } from '@mui/material';
-import type { ToastSeverity } from '@/shared/hooks/useToast';
+import type { AlertColor } from '@mui/material';
+import { ToastSeverity } from '@/shared/enums';
 
 export interface ToastProps {
     open: boolean;
@@ -24,7 +25,7 @@ function SlideTransition(props: TransitionProps & { children: React.ReactElement
 export default function Toast({
     open,
     message,
-    severity = 'info',
+    severity = ToastSeverity.Info,
     autoHideDuration = DEFAULT_AUTO_HIDE_MS,
     onClose,
 }: ToastProps) {
@@ -38,7 +39,7 @@ export default function Toast({
             sx={{ mb: 2, mr: 2 }}
         >
             <Alert
-                severity={severity}
+                severity={severity as AlertColor}
                 variant="filled"
                 onClose={onClose}
                 sx={{

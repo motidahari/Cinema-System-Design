@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Input from '@/shared/components/Input';
 import Button from '@/shared/components/Button';
 import { useAuth } from '../../hooks/useAuth';
+import { isValidEmail } from '../../validation';
 
 export interface RegisterFormProps {
     onSwitchToLogin?: () => void;
@@ -17,6 +18,18 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [mismatch, setMismatch] = useState(false);
+    const [emailError, setEmailError] = useState(false);
+
+    // Validate the email only after the user pauses typing for 300ms, so we don't flag
+    // a half-typed address on every keystroke.
+    useEffect(() => {
+        if (!email) {
+            setEmailError(false);
+            return;
+        }
+        const timer = setTimeout(() => setEmailError(!isValidEmail(email)), 300);
+        return () => clearTimeout(timer);
+    }, [email]);
 
     // Debounce mismatch detection so feedback only shows after the user pauses typing.
     useEffect(() => {
@@ -29,6 +42,10 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
     const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
         event.preventDefault();
+        if (!isValidEmail(email)) {
+            setEmailError(true);
+            return;
+        }
         if (password !== confirmPassword) {
             setMismatch(true);
             return;
@@ -55,6 +72,8 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
                 onChange={(event) => setEmail(event.target.value)}
                 required
                 autoComplete="email"
+                error={emailError}
+                helperText={emailError ? t('auth.invalidEmail') : undefined}
             />
 
             <Input

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { cinemaService } from '../services/CinemaService';
 import { Seat } from '../models/Seat';
-import type { SeatStatus } from '../types';
+import { SeatStatus } from '../enums';
 
 // Seating-map state. Seats are fetched once on view mount and then patched in place
 // by realtime socket events (updateSeatStatus / updateSeatsStatus), so the grid stays
@@ -27,9 +27,9 @@ export const useCinemaStore = create<CinemaState>((set, get) => ({
     isLoading: false,
     error: null,
 
-    availableCount: () => get().seats.filter((s) => s.status === 'AVAILABLE').length,
-    reservedCount: () => get().seats.filter((s) => s.status === 'RESERVED').length,
-    bookedCount: () => get().seats.filter((s) => s.status === 'BOOKED').length,
+    availableCount: () => get().seats.filter((s) => s.status === SeatStatus.AVAILABLE).length,
+    reservedCount: () => get().seats.filter((s) => s.status === SeatStatus.RESERVED).length,
+    bookedCount: () => get().seats.filter((s) => s.status === SeatStatus.BOOKED).length,
 
     getSeatsByRow() {
         return get().seats.reduce<Record<string, Seat[]>>((acc, seat) => {
