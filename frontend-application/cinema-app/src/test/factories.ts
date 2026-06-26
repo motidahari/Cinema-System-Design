@@ -1,7 +1,7 @@
 // Test data factories — small builders with sensible defaults, overridable per test.
+import { SeatStatus, ReservationStatus } from '@/features/cinema/enums';
 
-export type SeatStatus = 'AVAILABLE' | 'RESERVED' | 'BOOKED';
-export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'EXPIRED' | 'CANCELLED';
+export { SeatStatus, ReservationStatus };
 
 export interface UserDto {
     id: string;
@@ -38,7 +38,7 @@ export function makeSeat(overrides: Partial<Seat> = {}): Seat {
         id: 'seat-A1',
         row: 'A',
         number: 1,
-        status: 'AVAILABLE',
+        status: SeatStatus.AVAILABLE,
         ...overrides,
     };
 }
@@ -46,7 +46,7 @@ export function makeSeat(overrides: Partial<Seat> = {}): Seat {
 export function makeReservation(overrides: Partial<Reservation> = {}): Reservation {
     return {
         id: 'res-1',
-        status: 'PENDING',
+        status: ReservationStatus.PENDING,
         expiresAt: '2026-06-21T10:15:00.000Z',
         expiresInSeconds: 900,
         seatIds: ['seat-A1', 'seat-A2'],

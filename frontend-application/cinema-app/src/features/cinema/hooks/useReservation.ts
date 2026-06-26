@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useReservationStore } from '../stores/useReservationStore';
 import { useToast } from '@/shared/hooks/useToast';
+import { ToastSeverity } from '@/shared/enums';
 import type { CancelDto, ConfirmDto, ReserveDto } from '../types';
 
 // Orchestration layer over useReservationStore: it owns the user-facing toasts and the
@@ -28,7 +29,7 @@ export function useReservation() {
                 if (prev <= 1) {
                     clearInterval(interval);
                     store.setActiveReservation(null);
-                    showToast('Your reservation has expired', 'warning');
+                    showToast('Your reservation has expired', ToastSeverity.Warning);
                     return 0;
                 }
                 return prev - 1;
@@ -45,27 +46,27 @@ export function useReservation() {
     const reserve = async (dto: ReserveDto): Promise<void> => {
         try {
             await store.reserve(dto);
-            showToast('Seats reserved! You have 15 minutes to confirm.', 'success');
+            showToast('Seats reserved! You have 15 minutes to confirm.', ToastSeverity.Success);
         } catch {
-            showToast(useReservationStore.getState().error ?? 'Reservation failed', 'error');
+            showToast(useReservationStore.getState().error ?? 'Reservation failed', ToastSeverity.Error);
         }
     };
 
     const confirm = async (dto: ConfirmDto): Promise<void> => {
         try {
             await store.confirm(dto);
-            showToast('Booking confirmed!', 'success');
+            showToast('Booking confirmed!', ToastSeverity.Success);
         } catch {
-            showToast(useReservationStore.getState().error ?? 'Confirmation failed', 'error');
+            showToast(useReservationStore.getState().error ?? 'Confirmation failed', ToastSeverity.Error);
         }
     };
 
     const cancel = async (dto: CancelDto): Promise<void> => {
         try {
             await store.cancel(dto);
-            showToast('Reservation cancelled', 'info');
+            showToast('Reservation cancelled', ToastSeverity.Info);
         } catch {
-            showToast(useReservationStore.getState().error ?? 'Cancellation failed', 'error');
+            showToast(useReservationStore.getState().error ?? 'Cancellation failed', ToastSeverity.Error);
         }
     };
 

@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-
-export type ToastSeverity = 'success' | 'error' | 'warning' | 'info';
+import { ToastSeverity } from '@/shared/enums';
 
 interface ToastState {
     open: boolean;
@@ -13,7 +12,7 @@ interface ToastState {
 export const useToastStore = create<ToastState>((set) => ({
     open: false,
     message: '',
-    severity: 'info',
-    showToast: (message, severity = 'info') => set({ open: true, message, severity }),
+    severity: ToastSeverity.Info,
+    showToast: (message, severity = ToastSeverity.Info) => set({ open: true, message, severity }),
     closeToast: () => set((s) => ({ ...s, open: false })),
 }));

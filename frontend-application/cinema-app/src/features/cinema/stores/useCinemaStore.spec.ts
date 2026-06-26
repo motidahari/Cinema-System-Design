@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useCinemaStore } from './useCinemaStore';
 import { Seat } from '../models/Seat';
 
+import { SeatStatus } from '@/features/cinema/enums';
 vi.mock('../services/CinemaService', () => ({
     cinemaService: {
         getSeatingMap: vi.fn(),
@@ -13,10 +14,10 @@ import { cinemaService } from '../services/CinemaService';
 const mocked = cinemaService as unknown as { getSeatingMap: ReturnType<typeof vi.fn> };
 
 const seats: Seat[] = [
-    new Seat({ id: 'A1', row: 'A', number: 1, status: 'AVAILABLE' }),
-    new Seat({ id: 'A2', row: 'A', number: 2, status: 'RESERVED' }),
-    new Seat({ id: 'A3', row: 'A', number: 3, status: 'BOOKED' }),
-    new Seat({ id: 'B1', row: 'B', number: 1, status: 'AVAILABLE' }),
+    new Seat({ id: 'A1', row: 'A', number: 1, status: SeatStatus.AVAILABLE }),
+    new Seat({ id: 'A2', row: 'A', number: 2, status: SeatStatus.RESERVED }),
+    new Seat({ id: 'A3', row: 'A', number: 3, status: SeatStatus.BOOKED }),
+    new Seat({ id: 'B1', row: 'B', number: 1, status: SeatStatus.AVAILABLE }),
 ];
 
 function resetStore() {
@@ -81,7 +82,7 @@ describe('useCinemaStore', () => {
         it('patches a single seat and keeps it a Seat instance', () => {
             useCinemaStore.setState({ seats });
 
-            useCinemaStore.getState().updateSeatStatus('A1', 'BOOKED');
+            useCinemaStore.getState().updateSeatStatus('A1', SeatStatus.BOOKED);
 
             const patched = useCinemaStore.getState().seats.find((s) => s.id === 'A1');
             expect(patched).toBeInstanceOf(Seat);
@@ -93,12 +94,12 @@ describe('useCinemaStore', () => {
         it('patches multiple seats at once and leaves others untouched', () => {
             useCinemaStore.setState({ seats });
 
-            useCinemaStore.getState().updateSeatsStatus(['A1', 'B1'], 'RESERVED');
+            useCinemaStore.getState().updateSeatsStatus(['A1', 'B1'], SeatStatus.RESERVED);
 
             const state = useCinemaStore.getState();
-            expect(state.seats.find((s) => s.id === 'A1')?.status).toBe('RESERVED');
-            expect(state.seats.find((s) => s.id === 'B1')?.status).toBe('RESERVED');
-            expect(state.seats.find((s) => s.id === 'A3')?.status).toBe('BOOKED');
+            expect(state.seats.find((s) => s.id === 'A1')?.status).toBe(SeatStatus.RESERVED);
+            expect(state.seats.find((s) => s.id === 'B1')?.status).toBe(SeatStatus.RESERVED);
+            expect(state.seats.find((s) => s.id === 'A3')?.status).toBe(SeatStatus.BOOKED);
         });
     });
 });

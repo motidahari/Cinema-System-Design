@@ -3,6 +3,7 @@ import { Box, Chip } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { useSeats } from '../../hooks/useSeats';
 import { useToast } from '@/shared/hooks/useToast';
+import { ToastSeverity } from '@/shared/enums';
 import { useReservationStore } from '../../stores/useReservationStore';
 import SeatingMap from '../../components/SeatingMap';
 import ReservationPanel from '../../components/ReservationPanel';
@@ -18,14 +19,14 @@ export default function CinemaView() {
             .then(() => {
                 const activeReservation = useReservationStore.getState().activeReservation;
                 if (activeReservation?.isPending) {
-                    showToast(t('cinema.reservationRestored'), 'info');
+                    showToast(t('cinema.reservationRestored'), ToastSeverity.Info);
                 } else if (activeReservation?.isConfirmed) {
-                    showToast(t('cinema.bookingRestored'), 'info');
+                    showToast(t('cinema.bookingRestored'), ToastSeverity.Info);
                 }
             })
             .catch(() => {
                 const error = useReservationStore.getState().error;
-                showToast(error ?? t('cinema.loadFailed'), 'error');
+                showToast(error ?? t('cinema.loadFailed'), ToastSeverity.Error);
             });
     }, [getReservations, showToast, t]);
 

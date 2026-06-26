@@ -5,14 +5,15 @@ import SeatGrid from './SeatGrid';
 import { Seat } from '../../models/Seat';
 import { makeSeat } from '@/test/factories';
 
+import { SeatStatus } from '@/features/cinema/enums';
 const onSeatSelect = vi.fn();
 const onSeatDeselect = vi.fn();
 
 // Seats provided out of order to assert the grid sorts by seat number.
 const seats = [
-    new Seat(makeSeat({ id: 'seat-B2', row: 'B', number: 2, status: 'AVAILABLE' })),
-    new Seat(makeSeat({ id: 'seat-B1', row: 'B', number: 1, status: 'AVAILABLE' })),
-    new Seat(makeSeat({ id: 'seat-B3', row: 'B', number: 3, status: 'BOOKED' })),
+    new Seat(makeSeat({ id: 'seat-B2', row: 'B', number: 2, status: SeatStatus.AVAILABLE })),
+    new Seat(makeSeat({ id: 'seat-B1', row: 'B', number: 1, status: SeatStatus.AVAILABLE })),
+    new Seat(makeSeat({ id: 'seat-B3', row: 'B', number: 3, status: SeatStatus.BOOKED })),
 ];
 
 function renderGrid(selected: string[] = []) {

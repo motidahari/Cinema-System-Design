@@ -1,4 +1,5 @@
-import type { SeatDto, SeatStatus } from '../types';
+import { SeatStatus } from '../enums';
+import type { SeatDto } from '../types';
 
 // Seat domain model. Services hydrate the raw SeatDto into this class so consumers
 // get behaviour (status predicates, display label) instead of a bare payload.
@@ -16,15 +17,15 @@ export class Seat {
     }
 
     get isAvailable(): boolean {
-        return this.status === 'AVAILABLE';
+        return this.status === SeatStatus.AVAILABLE;
     }
 
     get isReserved(): boolean {
-        return this.status === 'RESERVED';
+        return this.status === SeatStatus.RESERVED;
     }
 
     get isBooked(): boolean {
-        return this.status === 'BOOKED';
+        return this.status === SeatStatus.BOOKED;
     }
 
     // Human-readable seat label, e.g. "A1".
