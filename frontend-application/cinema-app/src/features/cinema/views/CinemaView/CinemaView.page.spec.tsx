@@ -40,7 +40,7 @@ async function stubReserve(page: Page): Promise<void> {
     });
 }
 
-async function stubMyReservations(page: Page, reservations = []): Promise<void> {
+async function stubMyReservations(page: Page, reservations: object[] = []): Promise<void> {
     await page.route('**/reservations', (route) => {
         if (route.request().method() === 'GET') {
             return route.fulfill({ status: 200, json: { reservations } });

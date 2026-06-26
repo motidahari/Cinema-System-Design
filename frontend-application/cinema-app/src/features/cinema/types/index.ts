@@ -1,7 +1,5 @@
-// Cinema wire types — the raw JSON shapes returned by cinema-service
-// (API-CONTRACT.md §2/§5). Services hydrate these DTOs into domain models
-// (`../models`) so stores and components always work with a domain object, never
-// a bare payload.
+// Raw JSON shapes returned by cinema-service. Services hydrate these DTOs into
+// domain models so stores and components always work with domain objects.
 
 export type SeatStatus = 'AVAILABLE' | 'RESERVED' | 'BOOKED';
 export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'EXPIRED' | 'CANCELLED';

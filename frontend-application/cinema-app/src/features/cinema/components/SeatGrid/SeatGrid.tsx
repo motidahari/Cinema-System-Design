@@ -12,9 +12,6 @@ export interface SeatGridProps {
     onSeatDeselect: (seatId: string) => void;
 }
 
-// One row of the seating map (FRONTEND-DESIGN §6): a row label followed by its seats in
-// ascending seat-number order. Selection is owned upstream (useReservation store); the
-// grid just passes each seat's selected flag down to its SeatButton.
 export default function SeatGrid({ row, seats, selectedSeatIds, onSeatSelect, onSeatDeselect }: SeatGridProps) {
     const orderedSeats = [...seats].sort((a, b) => a.number - b.number);
 

@@ -97,23 +97,11 @@ describe('CinemaView', () => {
         expect(screen.getByLabelText('3 booked seats')).toBeInTheDocument();
     });
 
-    it('does not render the toast Snackbar when toast.open is false', () => {
+    it('does not render an alert in the accessible tree', () => {
         render(<CinemaView />);
 
-        // Snackbar with open=false should not surface an alert in the accessible tree.
+        // CinemaView delegates toast display to the global Toast in App.tsx.
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    });
-
-    it('renders the toast Snackbar when toast.open is true', () => {
-        useToastMock.mockReturnValue({
-            toast: { open: true, message: 'Booking confirmed!', severity: 'success' as const },
-            showToast,
-            closeToast: vi.fn(),
-        });
-        render(<CinemaView />);
-
-        expect(screen.getByRole('alert')).toBeInTheDocument();
-        expect(screen.getByText('Booking confirmed!')).toBeInTheDocument();
     });
 
     it('loads reservations on mount and shows a toast when an active reservation is restored', async () => {

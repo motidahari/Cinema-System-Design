@@ -11,8 +11,8 @@ interface SeatEventPayload {
 // Realtime seating updates. No token argument — the browser sends the access_token
 // cookie on the WS upgrade because we pass withCredentials, and the connection is
 // gated by `isAuthenticated`. Incoming seat events patch the cinema store in place;
-// on every reconnect we resync the full map (API-CONTRACT §3.4) since broadcasts may
-// have been missed while disconnected.
+// on every reconnect we resync the full map since broadcasts may have been missed
+// while disconnected.
 export function useSocket(isAuthenticated: boolean) {
     const socketRef = useRef<Socket | null>(null);
     const updateSeatsStatus = useCinemaStore((s) => s.updateSeatsStatus);

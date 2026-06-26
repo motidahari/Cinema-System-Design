@@ -1,24 +1,26 @@
 import type en from './en';
 
-// Widen the `as const` literal types of `en` to plain strings while preserving its
-// nested key structure, so `he` is forced to provide every key but with its own values.
 type DeepWiden<T> = {
     [K in keyof T]: T[K] extends string ? string : DeepWiden<T[K]>;
 };
 
-// Hebrew translations — must keep the same key structure as `en` (enforced by the type).
 const he: DeepWiden<typeof en> = {
     auth: {
         login: 'התחברות',
         register: 'הרשמה',
         email: 'דוא"ל',
         password: 'סיסמה',
+        confirmPassword: 'אימות סיסמה',
+        passwordMismatch: 'הסיסמאות אינן תואמות',
         loginButton: 'כניסה',
         registerButton: 'יצירת חשבון',
         noAccount: 'אין לך חשבון?',
         haveAccount: 'כבר יש לך חשבון?',
         loginSuccess: 'ברוך שובך!',
         logoutButton: 'התנתקות',
+        registerSuccess: 'החשבון נוצר בהצלחה',
+        loginFailed: 'הכניסה נכשלה',
+        registerFailed: 'ההרשמה נכשלה',
     },
     cinema: {
         title: 'הזמנת מקומות בקולנוע',
@@ -34,6 +36,8 @@ const he: DeepWiden<typeof en> = {
             reserved: '{{count}} משוריינים',
             booked: '{{count}} תפוסים',
         },
+        reservationRestored: 'הזמנה פעילה שוחזרה. תוכל לאשר או לבטל אותה.',
+        loadFailed: 'טעינת ההזמנות נכשלה',
     },
     reservation: {
         selectSeats: 'לחצו על מקומות כדי לבחור אותם',

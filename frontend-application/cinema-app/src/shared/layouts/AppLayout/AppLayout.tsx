@@ -1,37 +1,66 @@
-// React Router
 import { Outlet } from 'react-router-dom';
-
-// MUI
 import { AppBar, Box, Toolbar, Typography } from '@mui/material';
-
-// Components
+import { useTranslation } from 'react-i18next';
 import Button from '@/shared/components/Button';
-
-// Hooks
+import LanguageSwitcher from '@/shared/components/LanguageSwitcher';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 
-// Authenticated app shell: a top AppBar (title · current user · logout) over the routed
-// content (the cinema view). Reads the user and logout from useAuth.
 export default function AppLayout() {
+    const { t } = useTranslation();
     const { user, logout } = useAuth();
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-            <AppBar position="static">
-                <Toolbar>
-                    <Typography variant="h6" component="h1" sx={{ flexGrow: 1 }}>
-                        Cinema Reservation
+            <AppBar
+                position="static"
+                elevation={0}
+                sx={{
+                    background: 'linear-gradient(135deg, #0d0d2b 0%, #1a237e 60%, #283593 100%)',
+                    borderBottom: '1px solid rgba(255,255,255,0.08)',
+                }}
+            >
+                <Toolbar sx={{ gap: 1 }}>
+                    <Typography
+                        variant="h6"
+                        component="h1"
+                        sx={{
+                            flexGrow: 1,
+                            fontWeight: 800,
+                            letterSpacing: 1.5,
+                            background: 'linear-gradient(90deg, #ffffff, #90caf9)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                        }}
+                    >
+                        🎬 {t('cinema.title')}
                     </Typography>
+
                     {user && (
-                        <Typography variant="body2" sx={{ marginInlineEnd: 2 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                color: 'rgba(255,255,255,0.7)',
+                                fontSize: '0.8rem',
+                                display: { xs: 'none', sm: 'block' },
+                            }}
+                        >
                             {user.email}
                         </Typography>
                     )}
-                    <Button variant="text" color="inherit" onClick={logout}>
-                        Logout
+
+                    <LanguageSwitcher color="inherit" />
+
+                    <Button
+                        variant="text"
+                        color="inherit"
+                        onClick={logout}
+                        sx={{ ml: 0.5, opacity: 0.85, '&:hover': { opacity: 1 } }}
+                    >
+                        {t('auth.logoutButton')}
                     </Button>
                 </Toolbar>
             </AppBar>
+
             <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 <Outlet />
             </Box>

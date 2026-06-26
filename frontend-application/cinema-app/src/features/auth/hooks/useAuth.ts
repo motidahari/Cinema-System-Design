@@ -2,8 +2,8 @@ import { useAuthStore } from '../stores/useAuthStore';
 import { useToast } from '@/shared/hooks/useToast';
 import type { LoginDto, RegisterDto } from '../types';
 
-// Thin orchestration layer over the auth store: it owns the user-facing toasts so the
-// store stays free of UI concerns, and exposes a stable surface for the auth forms.
+// Orchestration layer over the auth store — owns the user-facing toasts so the
+// store stays free of UI concerns.
 export function useAuth() {
     const store = useAuthStore();
     const { showToast } = useToast();

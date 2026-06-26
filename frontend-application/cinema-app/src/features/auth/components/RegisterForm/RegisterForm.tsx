@@ -1,33 +1,24 @@
-// React
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
-
-// MUI
 import { Box, Link, Typography } from '@mui/material';
-
-// Components
+import { useTranslation } from 'react-i18next';
 import Input from '@/shared/components/Input';
 import Button from '@/shared/components/Button';
-
-// Hooks
 import { useAuth } from '../../hooks/useAuth';
 
 export interface RegisterFormProps {
-    // Optional hook for the parent view to switch back to the login screen.
     onSwitchToLogin?: () => void;
 }
 
-// Sign-up form. Confirms the password client-side before delegating to useAuth; all
-// server-side validation errors surface through the auth store's error toast.
 export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
+    const { t } = useTranslation();
     const { register, isLoading } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [mismatch, setMismatch] = useState(false);
 
-    // Reactively validate after 300 ms of idle typing so the user sees feedback
-    // without triggering on every keystroke.
+    // Debounce mismatch detection so feedback only shows after the user pauses typing.
     useEffect(() => {
         if (!confirmPassword) return;
         const timer = setTimeout(() => {
@@ -52,13 +43,13 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
             noValidate
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
         >
-            <Typography variant="h5" component="h1">
-                Register
+            <Typography variant="h5" component="h1" sx={{ mb: 1 }}>
+                {t('auth.register')}
             </Typography>
 
             <Input
                 id="register-email"
-                label="Email"
+                label={t('auth.email')}
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -68,7 +59,7 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
             <Input
                 id="register-password"
-                label="Password"
+                label={t('auth.password')}
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -78,25 +69,25 @@ export default function RegisterForm({ onSwitchToLogin }: RegisterFormProps) {
 
             <Input
                 id="register-confirm-password"
-                label="Confirm Password"
+                label={t('auth.confirmPassword')}
                 type="password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 required
                 autoComplete="new-password"
                 error={mismatch}
-                helperText={mismatch ? 'Passwords do not match' : undefined}
+                helperText={mismatch ? t('auth.passwordMismatch') : undefined}
             />
 
-            <Button type="submit" loading={isLoading} fullWidth>
-                Create Account
+            <Button type="submit" loading={isLoading} fullWidth sx={{ mt: 1 }}>
+                {t('auth.registerButton')}
             </Button>
 
             {onSwitchToLogin && (
-                <Typography variant="body2">
-                    Already have an account?{' '}
-                    <Link component="button" type="button" onClick={onSwitchToLogin}>
-                        Login
+                <Typography variant="body2" sx={{ textAlign: 'center' }}>
+                    {t('auth.haveAccount')}{' '}
+                    <Link component="button" type="button" onClick={onSwitchToLogin} fontWeight={600}>
+                        {t('auth.login')}
                     </Link>
                 </Typography>
             )}

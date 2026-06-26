@@ -16,12 +16,10 @@ import { useReservation } from '../../hooks/useReservation';
 // Components
 import Button from '@/shared/components/Button';
 
-// The side-panel that drives the reservation lifecycle (FRONTEND-DESIGN §7.3):
-//   • No active reservation → shows the selected seats + "Reserve" button
-//   • Active PENDING reservation → shows the countdown + "Confirm" / "Cancel"
-//   • Active CONFIRMED reservation → shows a success message
-// All state comes from useReservation (orchestration hook over useReservationStore).
-// The cinema store is read with a selector to avoid unnecessary re-renders.
+// Side panel that drives the reservation lifecycle:
+//   • No active reservation → selected seats + "Reserve" button
+//   • PENDING reservation   → countdown + "Confirm" / "Cancel"
+//   • CONFIRMED reservation → success message
 export default function ReservationPanel() {
     const { t } = useTranslation();
 
