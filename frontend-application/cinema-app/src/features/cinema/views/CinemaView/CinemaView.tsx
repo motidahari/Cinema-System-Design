@@ -11,21 +11,23 @@ export default function CinemaView() {
     const { t } = useTranslation();
     const { availableCount, reservedCount, bookedCount } = useSeats();
     const { showToast } = useToast();
-    const getMyReservations = useReservationStore((s) => s.getMyReservations);
+    const getReservations = useReservationStore((s) => s.getReservations);
 
     useEffect(() => {
-        void getMyReservations()
+        void getReservations()
             .then(() => {
                 const activeReservation = useReservationStore.getState().activeReservation;
                 if (activeReservation?.isPending) {
                     showToast(t('cinema.reservationRestored'), 'info');
+                } else if (activeReservation?.isConfirmed) {
+                    showToast(t('cinema.bookingRestored'), 'info');
                 }
             })
             .catch(() => {
                 const error = useReservationStore.getState().error;
                 showToast(error ?? t('cinema.loadFailed'), 'error');
             });
-    }, [getMyReservations, showToast, t]);
+    }, [getReservations, showToast, t]);
 
     return (
         <Box sx={{ display: 'flex', flex: 1, overflow: 'auto' }} data-testid="cinema-view">

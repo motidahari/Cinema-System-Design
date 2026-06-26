@@ -24,13 +24,16 @@ const seatsByRow = {
     A: [new Seat(makeSeat({ id: 'seat-A1', row: 'A', number: 1 }))],
 };
 
-function setHooks(overrides: { isLoading?: boolean; isAuthenticated?: boolean } = {}): void {
+function setHooks(
+    overrides: { isLoading?: boolean; isAuthenticated?: boolean; activeReservation?: unknown } = {}
+): void {
     useAuthStoreMock.mockImplementation((selector: (s: { isAuthenticated: boolean }) => unknown) =>
         selector({ isAuthenticated: overrides.isAuthenticated ?? true })
     );
     useSeatsMock.mockReturnValue({ seatsByRow, isLoading: overrides.isLoading ?? false });
     useReservationMock.mockReturnValue({
         selectedSeatIds: new Set<string>(),
+        activeReservation: overrides.activeReservation ?? null,
         selectSeat: vi.fn(),
         deselectSeat: vi.fn(),
     });
@@ -72,5 +75,18 @@ describe('SeatingMap', () => {
         render(<SeatingMap />);
 
         expect(useSocketMock).toHaveBeenCalledWith(true);
+    });
+
+    it('keeps available seats interactive when there is no active reservation', () => {
+        render(<SeatingMap />);
+
+        expect(screen.getByRole('button', { name: /Row A Seat 1/ })).toBeEnabled();
+    });
+
+    it('locks every seat while the user holds an active reservation', () => {
+        setHooks({ activeReservation: { id: 'res-1', isPending: true } });
+        render(<SeatingMap />);
+
+        screen.getAllByRole('button').forEach((seat) => expect(seat).toBeDisabled());
     });
 });

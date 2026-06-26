@@ -140,14 +140,23 @@ describe('ReservationPanel', () => {
             expect(confirm).toHaveBeenCalledWith({ reservationId: 'res-1' });
         });
 
-        it('calls cancel with the reservation id when cancel is clicked', async () => {
+        it('renders seat chips by row + number label, not raw seat ids', () => {
+            stubReservation({ activeReservation: pendingReservation, countdown: 300 });
+            render(<ReservationPanel />);
+
+            expect(screen.getByText('A1')).toBeInTheDocument();
+            expect(screen.getByText('A2')).toBeInTheDocument();
+            expect(screen.queryByText('seat-A1')).not.toBeInTheDocument();
+        });
+
+        it('calls cancel without a reservation id when cancel is clicked', async () => {
             const cancel = vi.fn().mockResolvedValue(undefined);
             stubReservation({ activeReservation: pendingReservation, countdown: 300, cancel });
             render(<ReservationPanel />);
 
             await userEvent.click(screen.getByRole('button', { name: en.reservation.cancel }));
 
-            expect(cancel).toHaveBeenCalledWith({ reservationId: 'res-1' });
+            expect(cancel).toHaveBeenCalledWith({});
         });
     });
 
@@ -156,12 +165,24 @@ describe('ReservationPanel', () => {
             makeReservation({ id: 'res-2', status: 'CONFIRMED', seatIds: ['seat-A1'], expiresInSeconds: 0 })
         );
 
-        it('shows a confirmed success message', () => {
+        it('shows a confirmed success message with the seat label and a cancel button', () => {
             stubReservation({ activeReservation: confirmedReservation });
             render(<ReservationPanel />);
 
             expect(screen.getByText(en.reservation.confirmed)).toBeInTheDocument();
+            expect(screen.getByText('A1')).toBeInTheDocument();
             expect(screen.queryByRole('button', { name: en.reservation.confirm })).not.toBeInTheDocument();
+            expect(screen.getByRole('button', { name: en.reservation.cancelBooking })).toBeInTheDocument();
+        });
+
+        it('calls cancel without a reservation id when the cancel booking button is clicked', async () => {
+            const cancel = vi.fn().mockResolvedValue(undefined);
+            stubReservation({ activeReservation: confirmedReservation, cancel });
+            render(<ReservationPanel />);
+
+            await userEvent.click(screen.getByRole('button', { name: en.reservation.cancelBooking }));
+
+            expect(cancel).toHaveBeenCalledWith({});
         });
     });
 });

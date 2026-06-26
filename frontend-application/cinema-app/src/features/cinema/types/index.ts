@@ -30,10 +30,9 @@ export interface ConfirmDto {
     reservationId: string;
 }
 
-// DELETE /reservations/:id
-export interface CancelDto {
-    reservationId: string;
-}
+// DELETE /reservations — cancels all of the caller's active reservations. The user is
+// identified from the auth context, so the request carries no body.
+export type CancelDto = Record<string, never>;
 
 // Response envelopes (raw wire shapes).
 export interface SeatingMapResponse {

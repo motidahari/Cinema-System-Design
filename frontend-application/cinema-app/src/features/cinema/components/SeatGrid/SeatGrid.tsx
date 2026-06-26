@@ -8,11 +8,19 @@ export interface SeatGridProps {
     row: string;
     seats: Seat[];
     selectedSeatIds: Set<string>;
+    locked?: boolean;
     onSeatSelect: (seatId: string) => void;
     onSeatDeselect: (seatId: string) => void;
 }
 
-export default function SeatGrid({ row, seats, selectedSeatIds, onSeatSelect, onSeatDeselect }: SeatGridProps) {
+export default function SeatGrid({
+    row,
+    seats,
+    selectedSeatIds,
+    locked = false,
+    onSeatSelect,
+    onSeatDeselect,
+}: SeatGridProps) {
     const orderedSeats = [...seats].sort((a, b) => a.number - b.number);
 
     return (
@@ -23,6 +31,7 @@ export default function SeatGrid({ row, seats, selectedSeatIds, onSeatSelect, on
                     key={seat.id}
                     seat={seat}
                     isSelected={selectedSeatIds.has(seat.id)}
+                    locked={locked}
                     onSelect={onSeatSelect}
                     onDeselect={onSeatDeselect}
                 />

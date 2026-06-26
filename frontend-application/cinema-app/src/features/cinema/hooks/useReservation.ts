@@ -14,9 +14,10 @@ export function useReservation() {
 
     // Tick down the hold's remaining time; when it hits zero the hold is gone, so we
     // clear it locally and warn the user. Keyed on the reservation id so a new hold
-    // restarts the timer and confirm/cancel stops it.
+    // restarts the timer and confirm/cancel stops it. Only PENDING holds expire — a
+    // CONFIRMED booking has no countdown, so we leave it untouched.
     useEffect(() => {
-        if (!store.activeReservation) {
+        if (!store.activeReservation?.isPending) {
             setCountdown(0);
             return;
         }
@@ -39,12 +40,14 @@ export function useReservation() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [store.activeReservation?.id]);
 
+    // Read the error fresh from the store (not the render-time `store` snapshot, which is
+    // a tick stale) so the toast always reflects the message the action just set.
     const reserve = async (dto: ReserveDto): Promise<void> => {
         try {
             await store.reserve(dto);
             showToast('Seats reserved! You have 15 minutes to confirm.', 'success');
         } catch {
-            showToast(store.error ?? 'Reservation failed', 'error');
+            showToast(useReservationStore.getState().error ?? 'Reservation failed', 'error');
         }
     };
 
@@ -53,7 +56,7 @@ export function useReservation() {
             await store.confirm(dto);
             showToast('Booking confirmed!', 'success');
         } catch {
-            showToast(store.error ?? 'Confirmation failed', 'error');
+            showToast(useReservationStore.getState().error ?? 'Confirmation failed', 'error');
         }
     };
 
@@ -62,7 +65,7 @@ export function useReservation() {
             await store.cancel(dto);
             showToast('Reservation cancelled', 'info');
         } catch {
-            showToast(store.error ?? 'Cancellation failed', 'error');
+            showToast(useReservationStore.getState().error ?? 'Cancellation failed', 'error');
         }
     };
 

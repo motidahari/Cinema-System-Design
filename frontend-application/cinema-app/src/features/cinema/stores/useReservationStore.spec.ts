@@ -7,7 +7,7 @@ vi.mock('../services/ReservationService', () => ({
         reserve: vi.fn(),
         confirm: vi.fn(),
         cancel: vi.fn(),
-        getMyReservations: vi.fn(),
+        getReservations: vi.fn(),
     },
 }));
 
@@ -17,7 +17,7 @@ const mocked = reservationService as unknown as {
     reserve: ReturnType<typeof vi.fn>;
     confirm: ReturnType<typeof vi.fn>;
     cancel: ReturnType<typeof vi.fn>;
-    getMyReservations: ReturnType<typeof vi.fn>;
+    getReservations: ReturnType<typeof vi.fn>;
 };
 
 const reservation = new Reservation({
@@ -125,34 +125,34 @@ describe('useReservationStore', () => {
             useReservationStore.setState({ activeReservation: reservation });
             mocked.cancel.mockResolvedValue(undefined);
 
-            await useReservationStore.getState().cancel({ reservationId: 'res-1' });
+            await useReservationStore.getState().cancel({});
 
-            expect(mocked.cancel).toHaveBeenCalledWith({ reservationId: 'res-1' });
+            expect(mocked.cancel).toHaveBeenCalledWith({});
             expect(useReservationStore.getState().activeReservation).toBeNull();
         });
 
         it('captures the error message and rethrows on failure', async () => {
             mocked.cancel.mockRejectedValue({
-                response: { data: { errorMessage: 'Cannot cancel a CONFIRMED reservation' } },
+                response: { data: { errorMessage: 'No active reservation' } },
             });
 
-            await expect(useReservationStore.getState().cancel({ reservationId: 'res-1' })).rejects.toBeTruthy();
-            expect(useReservationStore.getState().error).toBe('Cannot cancel a CONFIRMED reservation');
+            await expect(useReservationStore.getState().cancel({})).rejects.toBeTruthy();
+            expect(useReservationStore.getState().error).toBe('No active reservation');
         });
     });
 
-    describe('getMyReservations', () => {
+    describe('getReservations', () => {
         it('loads the user reservations and restores the pending one as active', async () => {
-            mocked.getMyReservations.mockResolvedValue({ reservations: [reservation] });
+            mocked.getReservations.mockResolvedValue({ reservations: [reservation] });
 
-            await useReservationStore.getState().getMyReservations();
+            await useReservationStore.getState().getReservations();
 
             expect(useReservationStore.getState().myReservations).toEqual([reservation]);
             expect(useReservationStore.getState().activeReservation).toBe(reservation);
             expect(useReservationStore.getState().isLoading).toBe(false);
         });
 
-        it('clears the active reservation when there is no pending reservation', async () => {
+        it('restores a CONFIRMED booking as active when there is no pending hold (so it can be cancelled)', async () => {
             const confirmed = new Reservation({
                 id: 'res-2',
                 status: 'CONFIRMED',
@@ -161,20 +161,29 @@ describe('useReservationStore', () => {
                 seatIds: ['A3', 'A4'],
             });
             useReservationStore.setState({ activeReservation: reservation });
-            mocked.getMyReservations.mockResolvedValue({ reservations: [confirmed] });
+            mocked.getReservations.mockResolvedValue({ reservations: [confirmed] });
 
-            await useReservationStore.getState().getMyReservations();
+            await useReservationStore.getState().getReservations();
 
             expect(useReservationStore.getState().myReservations).toEqual([confirmed]);
+            expect(useReservationStore.getState().activeReservation).toBe(confirmed);
+        });
+
+        it('clears the active reservation when there are no active reservations', async () => {
+            useReservationStore.setState({ activeReservation: reservation });
+            mocked.getReservations.mockResolvedValue({ reservations: [] });
+
+            await useReservationStore.getState().getReservations();
+
             expect(useReservationStore.getState().activeReservation).toBeNull();
         });
 
         it('captures the API error message and rethrows on failure', async () => {
-            mocked.getMyReservations.mockRejectedValue({
+            mocked.getReservations.mockRejectedValue({
                 response: { data: { errorMessage: 'Cannot load reservations' } },
             });
 
-            await expect(useReservationStore.getState().getMyReservations()).rejects.toBeTruthy();
+            await expect(useReservationStore.getState().getReservations()).rejects.toBeTruthy();
 
             expect(useReservationStore.getState().error).toBe('Cannot load reservations');
             expect(useReservationStore.getState().isLoading).toBe(false);

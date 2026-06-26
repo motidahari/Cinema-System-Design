@@ -37,6 +37,7 @@ const he: DeepWiden<typeof en> = {
             booked: '{{count}} תפוסים',
         },
         reservationRestored: 'הזמנה פעילה שוחזרה. תוכל לאשר או לבטל אותה.',
+        bookingRestored: 'יש לך הזמנה מאושרת. תוכל לבטל אותה כדי לשחרר את המקומות.',
         loadFailed: 'טעינת ההזמנות נכשלה',
     },
     reservation: {
@@ -45,6 +46,7 @@ const he: DeepWiden<typeof en> = {
         reserve: 'שריון מקומות',
         confirm: 'אישור הזמנה',
         cancel: 'ביטול הזמנה',
+        cancelBooking: 'ביטול הזמנה',
         clearSelection: 'ניקוי בחירה',
         expiresIn: 'פג תוקף בעוד:',
         expired: 'תוקף ההזמנה שלך פג',

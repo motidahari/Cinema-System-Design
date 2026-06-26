@@ -8,9 +8,11 @@ import { makeSeat, type SeatStatus } from '@/test/factories';
 const onSelect = vi.fn();
 const onDeselect = vi.fn();
 
-function renderSeat(status: SeatStatus, isSelected = false) {
+function renderSeat(status: SeatStatus, isSelected = false, locked = false) {
     const seat = new Seat(makeSeat({ id: 'seat-A3', row: 'A', number: 3, status }));
-    render(<SeatButton seat={seat} isSelected={isSelected} onSelect={onSelect} onDeselect={onDeselect} />);
+    render(
+        <SeatButton seat={seat} isSelected={isSelected} locked={locked} onSelect={onSelect} onDeselect={onDeselect} />
+    );
     return seat;
 }
 
@@ -70,5 +72,17 @@ describe('SeatButton', () => {
         renderSeat('BOOKED');
 
         expect(screen.getByRole('button')).toBeDisabled();
+    });
+
+    it('disables an available seat and ignores clicks while locked', async () => {
+        renderSeat('AVAILABLE', false, true);
+        const button = screen.getByRole('button');
+
+        expect(button).toBeDisabled();
+
+        await userEvent.click(button, { pointerEventsCheck: 0 });
+
+        expect(onSelect).not.toHaveBeenCalled();
+        expect(onDeselect).not.toHaveBeenCalled();
     });
 });

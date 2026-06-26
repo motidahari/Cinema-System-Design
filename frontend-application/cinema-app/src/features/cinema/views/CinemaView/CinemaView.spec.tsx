@@ -3,15 +3,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import en from '@/locales/en';
 
 const reservationStoreMock = vi.hoisted(() => {
-    const getMyReservations = vi.fn().mockResolvedValue(undefined);
+    const getReservations = vi.fn().mockResolvedValue(undefined);
     let state = { activeReservation: null as { isPending: boolean } | null, error: null as string | null };
-    const useReservationStore = vi.fn((selector: (s: { getMyReservations: typeof getMyReservations }) => unknown) =>
-        selector({ getMyReservations })
+    const useReservationStore = vi.fn((selector: (s: { getReservations: typeof getReservations }) => unknown) =>
+        selector({ getReservations })
     ) as unknown as ReturnType<typeof vi.fn> & {
         getState: ReturnType<typeof vi.fn>;
         setState: (next: typeof state) => void;
         reset: () => void;
-        getMyReservations: typeof getMyReservations;
+        getReservations: typeof getReservations;
     };
     useReservationStore.getState = vi.fn(() => state);
     useReservationStore.setState = (next) => {
@@ -19,9 +19,9 @@ const reservationStoreMock = vi.hoisted(() => {
     };
     useReservationStore.reset = () => {
         state = { activeReservation: null, error: null };
-        getMyReservations.mockResolvedValue(undefined);
+        getReservations.mockResolvedValue(undefined);
     };
-    useReservationStore.getMyReservations = getMyReservations;
+    useReservationStore.getReservations = getReservations;
     return { useReservationStore };
 });
 
@@ -112,14 +112,14 @@ describe('CinemaView', () => {
 
         render(<CinemaView />);
 
-        await waitFor(() => expect(reservationStoreMock.useReservationStore.getMyReservations).toHaveBeenCalled());
+        await waitFor(() => expect(reservationStoreMock.useReservationStore.getReservations).toHaveBeenCalled());
         await waitFor(() =>
             expect(showToast).toHaveBeenCalledWith('Active reservation restored. You can confirm or cancel it.', 'info')
         );
     });
 
     it('shows a toast with the backend error when loading reservations fails', async () => {
-        reservationStoreMock.useReservationStore.getMyReservations.mockRejectedValueOnce(new Error('x'));
+        reservationStoreMock.useReservationStore.getReservations.mockRejectedValueOnce(new Error('x'));
         reservationStoreMock.useReservationStore.setState({
             activeReservation: null,
             error: 'Cannot load reservations',
