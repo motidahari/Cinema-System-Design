@@ -13,6 +13,8 @@ import { AppConfig } from '../../infrastructure/config/app.config';
 import { DuplicateEmailException } from '../exception/duplicate-email.exception';
 import { InvalidCredentialsException } from '../exception/invalid-credentials.exception';
 import { AccountLockedException } from '../exception/account-locked.exception';
+import { RegisterDto } from '../dto/register.dto';
+import { LoginDto } from '../dto/login.dto';
 
 const BCRYPT_ROUNDS = 12;
 
@@ -33,15 +35,17 @@ export class AuthService {
         private readonly dataSource: DataSource
     ) {}
 
-    async register(email: string, password: string, req: Request): Promise<TokenPair> {
-        const existing = await this.userDao.findByEmail(email);
-        if (existing) throw new DuplicateEmailException(email);
-
-        const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+    async register(dto: RegisterDto, req: Request): Promise<TokenPair> {
+        const normalizedEmail = dto.email.toLowerCase().trim();
+        const existing = await this.userDao.findByEmail(normalizedEmail);
+        if (existing) {
+            throw new DuplicateEmailException(normalizedEmail);
+        }
+        const passwordHash = await bcrypt.hash(dto.password, BCRYPT_ROUNDS);
         const familyId = randomUUID();
 
         const { user, accessToken, refreshToken } = await this.dataSource.transaction(async (manager) => {
-            const user = await this.userDao.create({ email, passwordHash }, manager);
+            const user = await this.userDao.create({ email: normalizedEmail, passwordHash }, manager);
             const accessToken = this.signAccessToken(user);
             const refreshToken = await this.issueRefreshToken(user.id, familyId, req, manager);
             return { user, accessToken, refreshToken };
@@ -51,9 +55,9 @@ export class AuthService {
         return { user, accessToken, refreshToken };
     }
 
-    async login(email: string, password: string, req: Request): Promise<TokenPair> {
-        const normalizedEmail = email.toLowerCase().trim();
-        const ip = req.ip ?? '';
+    async login(dto: LoginDto, req: Request): Promise<TokenPair> {
+        const normalizedEmail = dto.email.toLowerCase().trim();
+        const ip = this.getClientIp(req) ?? '';
 
         if (await this.loginAttemptDao.isLocked(normalizedEmail, ip)) {
             throw new AccountLockedException();
@@ -70,7 +74,7 @@ export class AuthService {
             throw new InvalidCredentialsException();
         }
 
-        const valid = await bcrypt.compare(password, user.passwordHash);
+        const valid = await bcrypt.compare(dto.password, user.passwordHash);
         if (!valid) {
             await this.loginAttemptDao.recordFailure(
                 normalizedEmail,
@@ -151,11 +155,23 @@ export class AuthService {
                 userId,
                 familyId,
                 tokenHash: this.hashToken(raw),
-                userAgent: (req.headers['user-agent'] as string) ?? null,
-                ip: req.ip ?? null,
+                userAgent: this.getUserAgent(req),
+                ip: this.getClientIp(req),
             },
             manager
         );
         return raw;
+    }
+
+    private getClientIp(req: Request): string | null {
+        const ip = req.ip?.trim();
+        return ip ? ip.slice(0, 64) : null;
+    }
+
+    private getUserAgent(req: Request): string | null {
+        const header = req.headers['user-agent'];
+        const value = Array.isArray(header) ? header[0] : header;
+        const userAgent = typeof value === 'string' ? value.trim() : '';
+        return userAgent ? userAgent.slice(0, 512) : null;
     }
 }

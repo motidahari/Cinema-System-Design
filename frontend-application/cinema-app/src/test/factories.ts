@@ -1,5 +1,4 @@
-// Test data factories — small builders that produce valid domain objects with
-// sensible defaults, overridable per test. Mirror the API-CONTRACT.md §5 shapes.
+// Test data factories — small builders with sensible defaults, overridable per test.
 
 export type SeatStatus = 'AVAILABLE' | 'RESERVED' | 'BOOKED';
 export type ReservationStatus = 'PENDING' | 'CONFIRMED' | 'EXPIRED' | 'CANCELLED';

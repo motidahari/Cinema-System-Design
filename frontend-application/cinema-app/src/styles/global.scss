@@ -1,6 +1,6 @@
 // NOTE: `variables` and `mixins` are auto-injected into every SCSS module via Vite's
-// `css.preprocessorOptions.scss.additionalData` (see vite.config.ts), so `flx()` and
-// the `$spacing-*` / color vars are already in scope here — do not `@use` them again.
+// `css.preprocessorOptions.scss.additionalData`, so `flx()` and `$spacing-*` / color
+// vars are already in scope here — do not `@use` them again.
 
 * {
     box-sizing: border-box;
@@ -14,29 +14,34 @@ body,
 }
 
 body {
-    font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    font-family: 'Inter', 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
+
+// ── Seating map ───────────────────────────────────────────────────────────────
 
 .seating-map {
     @include flx(flex-start, center, center);
     flex-direction: column;
     gap: $spacing-s;
-    padding-block: $spacing-l; // logical: top + bottom
-    padding-inline: $spacing-l; // logical: start + end
+    padding-block: $spacing-l;
+    padding-inline: $spacing-l;
     max-width: $seating-map-max-width;
-    margin-inline: auto; // logical centering (was `margin: 0 auto`)
+    margin-inline: auto;
+    animation: fadeSlideUp 0.35s ease-out;
 
     &__screen {
         @include flx(center, center, center);
-        background: #aaa;
+        background: linear-gradient(135deg, #424242, #757575);
         color: #fff;
-        width: 60%;
+        width: 65%;
         padding-block: $spacing-s;
         padding-inline: $spacing-m;
-        border-radius: 4px;
-        margin-block-end: $spacing-m; // logical bottom margin
+        border-radius: 4px 4px 12px 12px;
+        margin-block-end: $spacing-m;
         font-weight: bold;
-        letter-spacing: 4px;
+        letter-spacing: 6px;
+        font-size: 13px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     }
 
     &__row {
@@ -45,11 +50,12 @@ body {
 
         &-label {
             width: 20px;
-            font-weight: bold;
+            font-weight: 700;
             color: #555;
-            text-align: end; // logical (was `right`)
+            text-align: end;
             margin-inline-end: $spacing-s;
             flex-shrink: 0;
+            font-size: 13px;
         }
     }
 
@@ -59,36 +65,46 @@ body {
         border: none;
         border-radius: $seat-border-radius;
         cursor: pointer;
-        font-size: 12px;
-        font-weight: 600;
+        font-size: 11px;
+        font-weight: 700;
         color: #fff;
         transition:
-            transform 0.1s,
-            opacity 0.1s;
+            transform $transition-fast,
+            opacity $transition-fast,
+            box-shadow $transition-fast;
 
         &:hover:not(:disabled) {
-            transform: scale(1.15);
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        &:active:not(:disabled) {
+            transform: scale(0.95);
         }
 
         &--available {
             background-color: $color-seat-available;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
         }
 
         &--selected {
             background-color: $color-seat-selected;
-            box-shadow: 0 0 0 2px darken($color-seat-selected, 15%);
+            box-shadow:
+                0 0 0 3px rgba(26, 35, 126, 0.4),
+                0 4px 12px rgba(26, 35, 126, 0.3);
+            animation: seatPop 0.2s ease-out;
         }
 
         &--reserved {
             background-color: $color-seat-reserved;
             cursor: not-allowed;
-            opacity: 0.85;
+            opacity: 0.8;
         }
 
         &--booked {
             background-color: $color-seat-booked;
             cursor: not-allowed;
-            opacity: 0.85;
+            opacity: 0.8;
         }
 
         &:disabled {
@@ -99,7 +115,7 @@ body {
     &__legend {
         @include flx(center, center, center);
         gap: $spacing-m;
-        margin-block-start: $spacing-m; // logical top margin
+        margin-block-start: $spacing-m;
         flex-wrap: wrap;
 
         &-chip--available {
@@ -121,25 +137,41 @@ body {
     }
 }
 
+// ── Reservation panel ─────────────────────────────────────────────────────────
+
 .reservation-panel {
     @include flx(flex-start, stretch, start);
     flex-direction: column;
     gap: $spacing-m;
     min-width: $reservation-panel-width;
     padding: $spacing-l;
-    background: #fafafa;
-    border-inline-start: 1px solid #e0e0e0; // logical (was `border-left`)
+    background: linear-gradient(180deg, #fafafe 0%, #f0f0f8 100%);
+    border-inline-start: 1px solid rgba(26, 35, 126, 0.12);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.04);
+    animation: slideInRight 0.3s ease-out;
 
     &__timer {
         @include flx(space-between, center, center);
         font-size: 1.5rem;
+        padding: $spacing-s $spacing-m;
+        background: rgba(255, 152, 0, 0.08);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 152, 0, 0.2);
 
         &--urgent {
             color: $timer-urgent-color;
+            background: rgba(255, 152, 0, 0.15);
+            border-color: rgba(255, 152, 0, 0.4);
             animation: pulse 1s infinite;
         }
     }
+
+    &__selection {
+        flex: 1;
+    }
 }
+
+// ── Keyframe animations ───────────────────────────────────────────────────────
 
 @keyframes pulse {
     0%,
@@ -147,6 +179,49 @@ body {
         opacity: 1;
     }
     50% {
-        opacity: 0.5;
+        opacity: 0.55;
+    }
+}
+
+@keyframes fadeSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(24px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes seatPop {
+    0% {
+        transform: scale(0.85);
+    }
+    60% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes slowRotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
     }
 }

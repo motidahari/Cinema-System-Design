@@ -1,27 +1,21 @@
-import { useState, useCallback } from 'react';
+import { useToastStore } from '@/shared/stores/useToastStore';
 
-export type ToastSeverity = 'success' | 'error' | 'warning' | 'info';
+export type { ToastSeverity } from '@/shared/stores/useToastStore';
 
 export interface Toast {
     open: boolean;
     message: string;
-    severity: ToastSeverity;
+    severity: 'success' | 'error' | 'warning' | 'info';
 }
 
+// Thin hook wrapper over the global toast Zustand store. Backed by a singleton so any
+// component calling showToast displays in the single <Toast> mounted at the app root.
 export function useToast() {
-    const [toast, setToast] = useState<Toast>({
-        open: false,
-        message: '',
-        severity: 'info',
-    });
+    const open = useToastStore((s) => s.open);
+    const message = useToastStore((s) => s.message);
+    const severity = useToastStore((s) => s.severity);
+    const showToast = useToastStore((s) => s.showToast);
+    const closeToast = useToastStore((s) => s.closeToast);
 
-    const showToast = useCallback((message: string, severity: ToastSeverity = 'info') => {
-        setToast({ open: true, message, severity });
-    }, []);
-
-    const closeToast = useCallback(() => {
-        setToast((prev) => ({ ...prev, open: false }));
-    }, []);
-
-    return { toast, showToast, closeToast };
+    return { toast: { open, message, severity }, showToast, closeToast };
 }

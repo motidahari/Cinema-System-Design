@@ -1,0 +1,8 @@
+version: 2
+# Exclude test fixtures from secret scanning — passwords in test files are
+# always synthetic values, never real credentials.
+ignore-paths:
+    - '**/*.spec.ts'
+    - '**/*.spec.tsx'
+    - '**/tests/**'
+    - '**/*.test.ts'

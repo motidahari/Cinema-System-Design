@@ -15,8 +15,6 @@ const LoginViewSlot = <LoginView />;
 const RegisterViewSlot = <RegisterView />;
 const CinemaViewSlot = <CinemaView />;
 
-// Route map (FRONTEND-DESIGN §8): guest-only auth routes behind <RequireGuest>, the
-// authenticated cinema route behind <RequireAuth>; "/" redirects into the app.
 export const router = createBrowserRouter([
     { path: '/', element: <Navigate to="/cinema" replace /> },
     {

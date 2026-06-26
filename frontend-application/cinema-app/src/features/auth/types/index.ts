@@ -1,6 +1,5 @@
-// Auth domain types — mirror the identity-service contract (API-CONTRACT.md §5).
-// Tokens are delivered as httpOnly cookies, never in the body, so responses only
-// carry the user.
+// Tokens are delivered as httpOnly cookies, never in the response body, so login
+// and register responses only carry the user object.
 
 export interface UserDto {
     id: string;

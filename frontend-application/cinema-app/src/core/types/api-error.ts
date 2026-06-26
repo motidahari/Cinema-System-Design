@@ -1,4 +1,4 @@
-// The error payload every backend service returns on failure (API-CONTRACT.md §5).
+// Error payload returned by every backend service on failure.
 export interface ApiError {
     errorCode: number;
     errorMessage: string;

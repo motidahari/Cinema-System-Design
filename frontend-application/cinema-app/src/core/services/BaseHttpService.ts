@@ -4,6 +4,7 @@ import { appConfig } from '@/core/config/app.config';
 // Module-level shared refresh promise — shared across ALL service instances so that
 // concurrent 401s coalesce into a single POST /auth/refresh (no thundering herd).
 let refreshPromise: Promise<void> | null = null;
+let csrfPromise: Promise<void> | null = null;
 
 const MUTATING = new Set(['post', 'put', 'patch', 'delete']);
 
@@ -36,9 +37,19 @@ export abstract class BaseHttpService {
 
     private setupInterceptors(): void {
         // Request: attach CSRF header on mutating requests (no token handling).
-        this.http.interceptors.request.use((cfg: InternalAxiosRequestConfig) => {
+        this.http.interceptors.request.use(async (cfg: InternalAxiosRequestConfig) => {
             if (cfg.method && MUTATING.has(cfg.method.toLowerCase())) {
-                const csrf = readCookie('csrf_token');
+                let csrf = readCookie('csrf_token');
+                if (!csrf) {
+                    csrfPromise ??= axios
+                        .get(`${appConfig.identityApiUrl}/auth/csrf`, { withCredentials: true })
+                        .then(() => undefined)
+                        .finally(() => {
+                            csrfPromise = null;
+                        });
+                    await csrfPromise;
+                    csrf = readCookie('csrf_token');
+                }
                 if (csrf) cfg.headers.set('X-CSRF-Token', csrf);
             }
             return cfg;

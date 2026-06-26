@@ -11,7 +11,6 @@ export class CsrfGuard implements CanActivate {
 
         const cookieToken = (req.cookies as Record<string, string> | undefined)?.['csrf_token'];
         const headerToken = req.headers['x-csrf-token'];
-
         if (!cookieToken || cookieToken !== headerToken) {
             throw new ForbiddenException('CSRF token mismatch');
         }

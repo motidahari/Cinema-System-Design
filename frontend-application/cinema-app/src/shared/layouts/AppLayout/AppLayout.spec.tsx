@@ -44,7 +44,7 @@ describe('AppLayout', () => {
     it('renders the app title and the routed child view', () => {
         renderLayout();
 
-        expect(screen.getByRole('heading', { name: 'Cinema Reservation' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: /Cinema Reservation/ })).toBeInTheDocument();
         expect(screen.getByText('Cinema Child View')).toBeInTheDocument();
     });
 

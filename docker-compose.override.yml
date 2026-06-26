@@ -1,0 +1,18 @@
+services:
+    cinema-app:
+        build:
+            context: .
+            dockerfile: frontend-application/cinema-app/Dockerfile.dev
+        command: npm run dev --workspace cinema-app -- --host 0.0.0.0 --port 5173
+        environment:
+            VITE_IDENTITY_API_URL: /api/v1
+            VITE_CINEMA_API_URL: /api/v1
+            VITE_SOCKET_URL: /
+        expose:
+            - '5173'
+        volumes:
+            - ./frontend-application/cinema-app/src:/app/frontend-application/cinema-app/src
+
+    nginx:
+        volumes:
+            - ./nginx/nginx.dev.conf:/etc/nginx/conf.d/default.conf:ro

@@ -120,7 +120,7 @@ describe('AuthService', () => {
             (bcrypt.hash as jest.Mock).mockResolvedValue('$2b$10$hashed');
             refreshTokenDao.create.mockResolvedValue(makeRefreshToken());
 
-            const result = await service.register('alice@cinema.test', 'password123', mockReq);
+            const result = await service.register({ email: 'alice@cinema.test', password: 'password123' }, mockReq);
 
             expect(userDao.create).toHaveBeenCalledWith(
                 { email: 'alice@cinema.test', passwordHash: '$2b$10$hashed' },
@@ -138,7 +138,7 @@ describe('AuthService', () => {
         it('should throw DuplicateEmailException without creating a user', async () => {
             userDao.findByEmail.mockResolvedValue(makeUser());
 
-            await expect(service.register('alice@cinema.test', 'pass', mockReq)).rejects.toThrow(
+            await expect(service.register({ email: 'alice@cinema.test', password: 'pass' }, mockReq)).rejects.toThrow(
                 DuplicateEmailException
             );
             expect(userDao.create).not.toHaveBeenCalled();
@@ -152,7 +152,7 @@ describe('AuthService', () => {
             (bcrypt.compare as jest.Mock).mockResolvedValue(true);
             refreshTokenDao.create.mockResolvedValue(makeRefreshToken());
 
-            const result = await service.login('alice@cinema.test', 'password123', mockReq);
+            const result = await service.login({ email: 'alice@cinema.test', password: 'password123' }, mockReq);
 
             expect(result.accessToken).toBe('signed.jwt.token');
             expect(result.user.id).toBe(user.id);
@@ -165,7 +165,7 @@ describe('AuthService', () => {
         it('should throw InvalidCredentialsException', async () => {
             userDao.findByEmail.mockResolvedValue(null);
 
-            await expect(service.login('ghost@cinema.test', 'pass', mockReq)).rejects.toThrow(
+            await expect(service.login({ email: 'ghost@cinema.test', password: 'pass' }, mockReq)).rejects.toThrow(
                 InvalidCredentialsException
             );
         });
@@ -176,7 +176,7 @@ describe('AuthService', () => {
             userDao.findByEmail.mockResolvedValue(makeUser());
             (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
-            await expect(service.login('alice@cinema.test', 'wrongpass', mockReq)).rejects.toThrow(
+            await expect(service.login({ email: 'alice@cinema.test', password: 'wrongpass' }, mockReq)).rejects.toThrow(
                 InvalidCredentialsException
             );
             expect(loginAttemptDao.recordFailure).toHaveBeenCalledWith('alice@cinema.test', '127.0.0.1', 5, 15);
@@ -187,9 +187,9 @@ describe('AuthService', () => {
         it('should throw AccountLockedException without checking the password', async () => {
             loginAttemptDao.isLocked.mockResolvedValue(true);
 
-            await expect(service.login('alice@cinema.test', 'anypass', mockReq)).rejects.toThrow(
-                AccountLockedException
-            );
+            await expect(
+                service.login({ email: 'alice@cinema.test', password: 'irrelevant-not-checked' }, mockReq)
+            ).rejects.toThrow(AccountLockedException);
             expect(userDao.findByEmail).not.toHaveBeenCalled();
             expect(bcrypt.compare).not.toHaveBeenCalled();
         });
@@ -197,7 +197,9 @@ describe('AuthService', () => {
         it('should respond 429', async () => {
             loginAttemptDao.isLocked.mockResolvedValue(true);
 
-            const err = await service.login('alice@cinema.test', 'anypass', mockReq).catch((e) => e);
+            const err = await service
+                .login({ email: 'alice@cinema.test', password: 'irrelevant-not-checked' }, mockReq)
+                .catch((e) => e);
             expect(err.getStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
         });
     });
@@ -206,7 +208,7 @@ describe('AuthService', () => {
         it('should record the failure before throwing InvalidCredentialsException', async () => {
             userDao.findByEmail.mockResolvedValue(null);
 
-            await expect(service.login('ghost@cinema.test', 'pass', mockReq)).rejects.toThrow(
+            await expect(service.login({ email: 'ghost@cinema.test', password: 'pass' }, mockReq)).rejects.toThrow(
                 InvalidCredentialsException
             );
             expect(loginAttemptDao.recordFailure).toHaveBeenCalledWith('ghost@cinema.test', '127.0.0.1', 5, 15);
@@ -220,7 +222,7 @@ describe('AuthService', () => {
             (bcrypt.compare as jest.Mock).mockResolvedValue(true);
             refreshTokenDao.create.mockResolvedValue(makeRefreshToken());
 
-            await service.login('alice@cinema.test', 'correctpass', mockReq);
+            await service.login({ email: 'alice@cinema.test', password: 'correctpass' }, mockReq);
 
             expect(loginAttemptDao.clear).toHaveBeenCalledWith('alice@cinema.test', '127.0.0.1');
             expect(loginAttemptDao.recordFailure).not.toHaveBeenCalled();

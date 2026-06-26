@@ -8,15 +8,12 @@ export interface SeatButtonProps {
     onDeselect: (seatId: string) => void;
 }
 
-// A single seat in the grid (FRONTEND-DESIGN §7.2). Presentational: it derives its
-// visual state from the seat's status + the `isSelected` flag and reports clicks up via
-// onSelect/onDeselect. Only AVAILABLE seats (or an already-selected one, so it can be
-// toggled off) are interactable; RESERVED/BOOKED seats render disabled.
+// Presentational seat button: derives visual state from seat.status + isSelected flag.
+// Only AVAILABLE seats (or an already-selected one) are interactable — RESERVED/BOOKED
+// render disabled so they cannot be toggled.
 export default function SeatButton({ seat, isSelected, onSelect, onDeselect }: SeatButtonProps) {
     const isInteractable = seat.isAvailable || isSelected;
-
-    // Selected wins over the underlying status; otherwise the BEM modifier mirrors the
-    // status ('available' | 'reserved' | 'booked').
+    // 'selected' wins over the underlying status for the BEM modifier.
     const modifier = isSelected ? 'selected' : seat.status.toLowerCase();
 
     const handleClick = (): void => {

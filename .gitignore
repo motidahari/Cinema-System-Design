@@ -43,8 +43,6 @@ coverage/
 ehthumbs.db
 Thumbs.db
 
-# Docker
-.dockerignore
 
 # Test artifacts
 playwright-report/

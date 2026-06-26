@@ -1,26 +1,17 @@
-// React
 import { useState } from 'react';
 import type { FormEvent } from 'react';
-
-// MUI
 import { Box, Link, Typography } from '@mui/material';
-
-// Components
+import { useTranslation } from 'react-i18next';
 import Input from '@/shared/components/Input';
 import Button from '@/shared/components/Button';
-
-// Hooks
 import { useAuth } from '../../hooks/useAuth';
 
 export interface LoginFormProps {
-    // Optional hook for the parent view to switch to the register screen. When omitted
-    // the "no account" prompt is not rendered, keeping the form usable in isolation.
     onSwitchToRegister?: () => void;
 }
 
-// Credentials form for the login view. Owns only the field state; all auth side effects
-// (cookies, error toasts) live in useAuth/useAuthStore so the form stays presentational.
 export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
+    const { t } = useTranslation();
     const { login, isLoading } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -37,13 +28,13 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             noValidate
             sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
         >
-            <Typography variant="h5" component="h1">
-                Login
+            <Typography variant="h5" component="h1" sx={{ mb: 1 }}>
+                {t('auth.login')}
             </Typography>
 
             <Input
                 id="login-email"
-                label="Email"
+                label={t('auth.email')}
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -53,7 +44,7 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
 
             <Input
                 id="login-password"
-                label="Password"
+                label={t('auth.password')}
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
@@ -61,15 +52,15 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
                 autoComplete="current-password"
             />
 
-            <Button type="submit" loading={isLoading} fullWidth>
-                Sign In
+            <Button type="submit" loading={isLoading} fullWidth sx={{ mt: 1 }}>
+                {t('auth.loginButton')}
             </Button>
 
             {onSwitchToRegister && (
-                <Typography variant="body2">
-                    Don&apos;t have an account?{' '}
-                    <Link component="button" type="button" onClick={onSwitchToRegister}>
-                        Create Account
+                <Typography variant="body2" sx={{ textAlign: 'center' }}>
+                    {t('auth.noAccount')}{' '}
+                    <Link component="button" type="button" onClick={onSwitchToRegister} fontWeight={600}>
+                        {t('auth.registerButton')}
                     </Link>
                 </Typography>
             )}

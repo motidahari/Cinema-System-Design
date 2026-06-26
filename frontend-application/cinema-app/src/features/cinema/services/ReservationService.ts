@@ -3,14 +3,9 @@ import { appConfig } from '@/core/config/app.config';
 import { Reservation } from '../models/Reservation';
 import type { CancelDto, ConfirmDto, MyReservationsResponse, ReservationDto, ReserveDto } from '../types';
 
-// Reservation lifecycle calls against cinema-service. All mutating calls carry the
-// X-CSRF-Token header automatically (added by BaseHttpService); `reserve` additionally
-// sends an `Idempotency-Key` so a double-submit or a transparent 401-retry can never
-// create a second reservation (ADR-11). The same axios config object is reused on
-// retry, so the key is stable for the lifetime of one logical request.
-//
-// Every raw payload is hydrated into a Reservation domain model before returning, so
-// the store always receives a domain object it can work with.
+// `reserve` sends an Idempotency-Key so a double-submit or transparent 401-retry
+// can never create a second reservation. The same config object is reused on retry,
+// keeping the key stable for the lifetime of one logical request.
 export class ReservationService extends BaseHttpService {
     constructor() {
         super(appConfig.cinemaApiUrl);
@@ -33,7 +28,7 @@ export class ReservationService extends BaseHttpService {
     }
 
     async getMyReservations(): Promise<{ reservations: Reservation[] }> {
-        const res = await this.http.get<MyReservationsResponse>('/reservations/my');
+        const res = await this.http.get<MyReservationsResponse>('/reservations');
         return { reservations: res.data.reservations.map((reservation) => new Reservation(reservation)) };
     }
 }

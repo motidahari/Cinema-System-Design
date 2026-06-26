@@ -142,12 +142,42 @@ describe('useReservationStore', () => {
     });
 
     describe('getMyReservations', () => {
-        it('loads the user reservations into state', async () => {
+        it('loads the user reservations and restores the pending one as active', async () => {
             mocked.getMyReservations.mockResolvedValue({ reservations: [reservation] });
 
             await useReservationStore.getState().getMyReservations();
 
             expect(useReservationStore.getState().myReservations).toEqual([reservation]);
+            expect(useReservationStore.getState().activeReservation).toBe(reservation);
+            expect(useReservationStore.getState().isLoading).toBe(false);
+        });
+
+        it('clears the active reservation when there is no pending reservation', async () => {
+            const confirmed = new Reservation({
+                id: 'res-2',
+                status: 'CONFIRMED',
+                expiresAt: '2026-06-21T10:15:00.000Z',
+                expiresInSeconds: 0,
+                seatIds: ['A3', 'A4'],
+            });
+            useReservationStore.setState({ activeReservation: reservation });
+            mocked.getMyReservations.mockResolvedValue({ reservations: [confirmed] });
+
+            await useReservationStore.getState().getMyReservations();
+
+            expect(useReservationStore.getState().myReservations).toEqual([confirmed]);
+            expect(useReservationStore.getState().activeReservation).toBeNull();
+        });
+
+        it('captures the API error message and rethrows on failure', async () => {
+            mocked.getMyReservations.mockRejectedValue({
+                response: { data: { errorMessage: 'Cannot load reservations' } },
+            });
+
+            await expect(useReservationStore.getState().getMyReservations()).rejects.toBeTruthy();
+
+            expect(useReservationStore.getState().error).toBe('Cannot load reservations');
+            expect(useReservationStore.getState().isLoading).toBe(false);
         });
     });
 

@@ -73,13 +73,13 @@ describe('ReservationService', () => {
     });
 
     describe('getMyReservations', () => {
-        it('GETs /reservations/my and hydrates each payload into a Reservation model', async () => {
+        it('GETs /reservations and hydrates each payload into a Reservation model', async () => {
             const { service, get } = makeService();
             get.mockResolvedValue({ data: { reservations: [reservationDto] } });
 
             const { reservations } = await service.getMyReservations();
 
-            expect(get).toHaveBeenCalledWith('/reservations/my');
+            expect(get).toHaveBeenCalledWith('/reservations');
             expect(reservations).toHaveLength(1);
             expect(reservations[0]).toBeInstanceOf(Reservation);
             expect(reservations[0].seatCount).toBe(2);
