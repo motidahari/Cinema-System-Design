@@ -1,5 +1,6 @@
 # Design documentation (local only — not tracked in git)
 design-packages/
+ROADMAP.md
 
 # Dependencies
 node_modules/

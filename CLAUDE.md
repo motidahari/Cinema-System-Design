@@ -2,9 +2,6 @@
 
 An npm-workspaces monorepo: NestJS + TypeORM + PostgreSQL backend services behind a React + Vite + TypeScript SPA.
 
-> **Process** (branches, PR rules, Definition of Done, per-branch design docs & agents) → [design-packages/ROADMAP.md](design-packages/ROADMAP.md) §1. Read it when you pick up a branch — not every session.
-> **Design specs** → [design-packages/](design-packages/). Read only the docs ROADMAP lists for the active branch; never the whole directory.
-
 ---
 
 ## Monorepo layout
@@ -16,7 +13,6 @@ An npm-workspaces monorepo: NestJS + TypeORM + PostgreSQL backend services behin
 | [backend-services/libs/core/sdk](backend-services/libs/core/sdk) | `@cinema/internal-sdk` — logger, env, shared types, identity client |
 | [backend-services/libs/core/shared](backend-services/libs/core/shared) | Shared core utilities |
 | `frontend-application/cinema-app` | React SPA (Vite + MUI + Zustand + TanStack Query) — *not yet scaffolded* |
-| [design-packages/](design-packages/) | Architecture, API contract, DB design, security, test strategy, roadmap |
 | [scripts/](scripts/) | `dev.sh` (local stack), schema init |
 
 **Backend domain layering** (DDD): `domain/entities/` → `<feature>/dao/` → `<feature>/service/` → `<feature>/*.controller.ts`, with `dto/`, `enum/`, `exception/` alongside. Cross-cutting code lives under `src/infrastructure/`.
@@ -69,7 +65,7 @@ npm run test:e2e           # Playwright e2e
 
 ## Agents
 
-Load **only** the agents ROADMAP §1.2 lists for the active branch. Each agent carries its own layer's conventions, quality gate, and coverage rules — they load only when that agent runs, so this file stays thin.
+Load **only** the agents relevant to the layer you're working in. Each agent carries its own layer's conventions, quality gate, and coverage rules — they load only when that agent runs, so this file stays thin.
 
 | Agent | Layer |
 |---|---|

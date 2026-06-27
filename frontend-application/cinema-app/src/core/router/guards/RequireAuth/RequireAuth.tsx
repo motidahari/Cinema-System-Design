@@ -1,10 +1,5 @@
-// React Router
 import { Navigate, Outlet } from 'react-router-dom';
-
-// MUI
 import { CircularProgress } from '@mui/material';
-
-// Stores
 import { useAuthStore } from '@/features/auth/stores/useAuthStore';
 
 // Guards wait for `isInitialized` before deciding — auth is derived from GET /auth/me

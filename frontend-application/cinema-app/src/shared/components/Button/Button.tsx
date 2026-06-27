@@ -1,7 +1,4 @@
-// React
 import { forwardRef } from 'react';
-
-// MUI
 import { Button as MuiButton, CircularProgress } from '@mui/material';
 import type { ButtonProps as MuiButtonProps } from '@mui/material';
 

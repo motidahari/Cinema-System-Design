@@ -1,7 +1,4 @@
-// React Router
 import { useNavigate } from 'react-router-dom';
-
-// Components
 import RegisterForm from '../../components/RegisterForm';
 
 // Register route (`/register`, behind <RequireGuest>). The view owns navigation: it wires
