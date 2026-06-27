@@ -1,22 +1,9 @@
-// React
 import { useMemo } from 'react';
-
-// MUI
 import { Box, CircularProgress, Divider, Typography } from '@mui/material';
-
-// i18n
 import { useTranslation } from 'react-i18next';
-
-// Stores
 import { useCinemaStore } from '../../stores/useCinemaStore';
-
-// Hooks
 import { useReservation } from '../../hooks/useReservation';
-
-// Components
 import Button from '@/shared/components/Button';
-
-// Styles
 import './ReservationPanel.scss';
 
 // Side panel that drives the reservation lifecycle:

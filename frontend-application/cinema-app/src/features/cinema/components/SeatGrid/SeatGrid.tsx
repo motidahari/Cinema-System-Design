@@ -1,7 +1,4 @@
-// Models
 import type { Seat } from '../../models/Seat';
-
-// Components
 import SeatButton from '../SeatButton';
 
 export interface SeatGridProps {

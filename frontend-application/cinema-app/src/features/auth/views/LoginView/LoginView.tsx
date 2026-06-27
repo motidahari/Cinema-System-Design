@@ -1,7 +1,4 @@
-// React Router
 import { useNavigate } from 'react-router-dom';
-
-// Components
 import LoginForm from '../../components/LoginForm';
 
 // Login route (`/login`, behind <RequireGuest>). The view owns navigation: it wires the

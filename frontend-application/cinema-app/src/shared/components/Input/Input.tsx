@@ -1,7 +1,4 @@
-// React
 import { forwardRef } from 'react';
-
-// MUI
 import { TextField } from '@mui/material';
 import type { TextFieldProps } from '@mui/material';
 

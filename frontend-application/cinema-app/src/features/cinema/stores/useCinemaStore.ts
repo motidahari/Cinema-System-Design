@@ -11,7 +11,6 @@ interface CinemaState {
     seats: Seat[];
     isLoading: boolean;
     error: string | null;
-    // Computed
     availableCount: () => number;
     reservedCount: () => number;
     bookedCount: () => number;

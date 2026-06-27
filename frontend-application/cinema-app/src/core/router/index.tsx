@@ -1,12 +1,7 @@
-// React Router
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-
-// Guards & layouts
 import { RequireAuth, RequireGuest } from './guards/RequireAuth';
 import AuthLayout from '@/shared/layouts/AuthLayout';
 import AppLayout from '@/shared/layouts/AppLayout';
-
-// Views
 import LoginView from '@/features/auth/views/LoginView';
 import RegisterView from '@/features/auth/views/RegisterView';
 import CinemaView from '@/features/cinema/views/CinemaView';

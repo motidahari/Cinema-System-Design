@@ -13,7 +13,6 @@ interface ReservationState {
     myReservations: Reservation[];
     isLoading: boolean;
     error: string | null;
-    // Selection
     selectSeat: (seatId: string) => void;
     deselectSeat: (seatId: string) => void;
     clearSelection: () => void;
