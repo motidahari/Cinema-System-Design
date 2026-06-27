@@ -1,0 +1,158 @@
+// Styles for the seating map block. Class names are global (BEM) and shared by
+// this component and its children (SeatGrid, SeatButton).
+// `$spacing-*` / color / breakpoint vars and `flx()` are auto-injected by Vite
+// (see vite.config.ts `additionalData`) — no `@use` needed here.
+
+.seating-map {
+    @include flx(flex-start, center, center);
+    flex-direction: column;
+    gap: $spacing-s;
+    padding-block: $spacing-l;
+    padding-inline: $spacing-l;
+    max-width: $seating-map-max-width;
+    margin-inline: auto;
+    animation: fadeSlideUp 0.35s ease-out;
+
+    &__screen {
+        @include flx(center, center, center);
+        background: linear-gradient(135deg, #424242, #757575);
+        color: #fff;
+        width: 65%;
+        padding-block: $spacing-s;
+        padding-inline: $spacing-m;
+        border-radius: 4px 4px 12px 12px;
+        margin-block-end: $spacing-m;
+        font-weight: bold;
+        letter-spacing: 6px;
+        font-size: 13px;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    &__row {
+        @include flx(flex-start, center, start);
+        gap: $seat-gap;
+
+        &-label {
+            width: 20px;
+            font-weight: 700;
+            color: #555;
+            text-align: end;
+            margin-inline-end: $spacing-s;
+            flex-shrink: 0;
+            font-size: 13px;
+        }
+    }
+
+    &__seat {
+        width: $seat-size;
+        height: $seat-size;
+        border: none;
+        border-radius: $seat-border-radius;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 700;
+        color: #fff;
+        transition:
+            transform $transition-fast,
+            opacity $transition-fast,
+            box-shadow $transition-fast;
+
+        // Only enlarge on hover-capable pointers — on touch screens a tap would
+        // otherwise leave the seat stuck in its scaled-up state.
+        @media (hover: hover) {
+            &:hover:not(:disabled) {
+                transform: scale(1.2);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        &:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        &--available {
+            background-color: $color-seat-available;
+            box-shadow: 0 2px 4px rgba(76, 175, 80, 0.3);
+        }
+
+        &--selected {
+            background-color: $color-seat-selected;
+            box-shadow:
+                0 0 0 3px rgba(26, 35, 126, 0.4),
+                0 4px 12px rgba(26, 35, 126, 0.3);
+            animation: seatPop 0.2s ease-out;
+        }
+
+        &--reserved {
+            background-color: $color-seat-reserved;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        &--booked {
+            background-color: $color-seat-booked;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        &:disabled {
+            cursor: not-allowed;
+        }
+    }
+
+    &__legend {
+        @include flx(center, center, center);
+        gap: $spacing-m;
+        margin-block-start: $spacing-m;
+        flex-wrap: wrap;
+
+        &-chip--available {
+            background-color: $color-seat-available !important;
+            color: #fff !important;
+        }
+        &-chip--selected {
+            background-color: $color-seat-selected !important;
+            color: #fff !important;
+        }
+        &-chip--reserved {
+            background-color: $color-seat-reserved !important;
+            color: #fff !important;
+        }
+        &-chip--booked {
+            background-color: $color-seat-booked !important;
+            color: #fff !important;
+        }
+    }
+}
+
+// ── Responsive: shrink seats so a full row fits a phone screen ─────────────────
+@media (max-width: $breakpoint-mobile) {
+    .seating-map {
+        padding-inline: $spacing-s;
+        padding-block: $spacing-m;
+
+        &__screen {
+            width: 90%;
+            letter-spacing: 3px;
+        }
+
+        &__row {
+            gap: $seat-gap-mobile;
+
+            &-label {
+                width: 16px;
+                margin-inline-end: $spacing-s;
+            }
+        }
+
+        &__seat {
+            width: $seat-size-mobile;
+            height: $seat-size-mobile;
+            font-size: 10px;
+        }
+
+        &__legend {
+            gap: $spacing-s;
+        }
+    }
+}

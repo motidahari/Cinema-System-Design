@@ -1,0 +1,49 @@
+// Styles for the reservation panel block. Class names are global (BEM).
+// `$spacing-*` / color / breakpoint vars and `flx()` are auto-injected by Vite
+// (see vite.config.ts `additionalData`) — no `@use` needed here.
+
+.reservation-panel {
+    @include flx(flex-start, stretch, start);
+    flex-direction: column;
+    gap: $spacing-m;
+    min-width: $reservation-panel-width;
+    padding: $spacing-l;
+    background: linear-gradient(180deg, #fafafe 0%, #f0f0f8 100%);
+    border-inline-start: 1px solid rgba(26, 35, 126, 0.12);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.04);
+    animation: slideInRight 0.3s ease-out;
+
+    &__timer {
+        @include flx(space-between, center, center);
+        font-size: 1.5rem;
+        padding: $spacing-s $spacing-m;
+        background: rgba(255, 152, 0, 0.08);
+        border-radius: 8px;
+        border: 1px solid rgba(255, 152, 0, 0.2);
+
+        &--urgent {
+            color: $timer-urgent-color;
+            background: rgba(255, 152, 0, 0.15);
+            border-color: rgba(255, 152, 0, 0.4);
+            animation: pulse 1s infinite;
+        }
+    }
+
+    &__selection {
+        flex: 1;
+    }
+}
+
+// ── Responsive: stack the panel beneath the seating map (tablet & below) ───────
+// CinemaView switches to a vertical layout under MUI's `md`, so the panel becomes
+// a full-width footer — swap its side border/shadow for a top one.
+@media (max-width: $breakpoint-tablet) {
+    .reservation-panel {
+        min-width: 100%;
+        width: 100%;
+        border-inline-start: none;
+        border-block-start: 1px solid rgba(26, 35, 126, 0.12);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.04);
+        animation: fadeSlideUp 0.3s ease-out;
+    }
+}

@@ -5,6 +5,7 @@ import { useSeats } from '../../hooks/useSeats';
 import { useReservation } from '../../hooks/useReservation';
 import { useSocket } from '../../hooks/useSocket';
 import SeatGrid from '../SeatGrid';
+import './SeatingMap.scss';
 
 export default function SeatingMap() {
     const { t } = useTranslation();

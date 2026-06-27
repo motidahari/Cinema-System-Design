@@ -31,8 +31,11 @@ export default function CinemaView() {
     }, [getReservations, showToast, t]);
 
     return (
-        <Box sx={{ display: 'flex', flex: 1, overflow: 'auto' }} data-testid="cinema-view">
-            <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+        <Box
+            sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, flex: 1, overflow: 'auto' }}
+            data-testid="cinema-view"
+        >
+            <Box sx={{ flex: 1, overflowY: { xs: 'visible', md: 'auto' }, p: { xs: 1.5, sm: 2 } }}>
                 <Box sx={{ display: 'flex', gap: 2, marginBlockEnd: 2, flexWrap: 'wrap' }}>
                     <Chip
                         label={t('cinema.stats.available', { count: availableCount })}

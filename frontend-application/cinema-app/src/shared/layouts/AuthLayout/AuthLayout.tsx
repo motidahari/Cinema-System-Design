@@ -49,7 +49,7 @@ export default function AuthLayout() {
                 <Paper
                     elevation={0}
                     sx={{
-                        p: 4,
+                        p: { xs: 2.5, sm: 4 },
                         backdropFilter: 'blur(20px)',
                         background: 'rgba(255,255,255,0.97)',
                         border: '1px solid rgba(255,255,255,0.3)',
