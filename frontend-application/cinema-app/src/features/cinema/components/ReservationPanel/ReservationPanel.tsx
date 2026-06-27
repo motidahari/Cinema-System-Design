@@ -16,6 +16,9 @@ import { useReservation } from '../../hooks/useReservation';
 // Components
 import Button from '@/shared/components/Button';
 
+// Styles
+import './ReservationPanel.scss';
+
 // Side panel that drives the reservation lifecycle:
 //   • No active reservation → selected seats + "Reserve" button
 //   • PENDING reservation   → countdown + "Confirm" / "Cancel"

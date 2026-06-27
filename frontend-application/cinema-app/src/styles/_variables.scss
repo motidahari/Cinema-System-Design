@@ -20,6 +20,14 @@ $seat-border-radius: 6px;
 $reservation-panel-width: 300px;
 $seating-map-max-width: 800px;
 
+// ── Responsive breakpoints (aligned with MUI sm / md) ─────────────────────────
+$breakpoint-mobile: 600px;
+$breakpoint-tablet: 900px;
+
+// ── Seat dimensions on small phones ───────────────────────────────────────────
+$seat-size-mobile: 28px;
+$seat-gap-mobile: 6px;
+
 // ── Timer ─────────────────────────────────────────────────────────────────────
 $timer-urgent-color: $color-seat-reserved;
 

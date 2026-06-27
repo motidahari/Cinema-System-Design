@@ -19,14 +19,16 @@ export default function AppLayout() {
                     borderBottom: '1px solid rgba(255,255,255,0.08)',
                 }}
             >
-                <Toolbar sx={{ gap: 1 }}>
+                <Toolbar sx={{ gap: { xs: 0.5, sm: 1 }, px: { xs: 1.5, sm: 3 } }}>
                     <Typography
                         variant="h6"
                         component="h1"
+                        noWrap
                         sx={{
                             flexGrow: 1,
                             fontWeight: 800,
-                            letterSpacing: 1.5,
+                            letterSpacing: { xs: 0.5, sm: 1.5 },
+                            fontSize: { xs: '1rem', sm: '1.25rem' },
                             background: 'linear-gradient(90deg, #ffffff, #90caf9)',
                             WebkitBackgroundClip: 'text',
                             WebkitTextFillColor: 'transparent',
