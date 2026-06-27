@@ -90,7 +90,7 @@ npm run build       # build per workspace
 
 ---
 
-## Horizontal scaling (optional · ADR-10)
+## Horizontal scaling (optional)
 
 The default run is single-instance and needs no Redis. To run multiple `cinema-service`
 replicas, layer the scaling overlay — it adds Redis (Socket.io pub/sub fan-out across
@@ -131,7 +131,7 @@ E2E_BASE_URL=http://localhost \
 ```
 
 **Load / contention** — k6 fires N parallel reservers at the same seats and asserts exactly
-one winner (ADR-1/ADR-2):
+one winner:
 
 ```bash
 BASE_URL=http://localhost VUS=50 k6 run scripts/load/reserve-contention.js
@@ -159,7 +159,6 @@ frontend-application/
 └── cinema-app/           # React 18 + Vite SPA
 nginx/                    # reverse-proxy config (prod + dev)
 scripts/                  # dev.sh, init-schemas.sql, load/ (k6)
-design-packages/          # architecture, API contract, DB, security, tests, roadmap
 docker-compose*.yml       # base + dev override + scaling overlay
 ```
 
@@ -176,11 +175,3 @@ docker-compose*.yml       # base + dev override + scaling overlay
 - [x] One-command `docker compose up` for the whole stack
 - [x] Optional horizontal-scaling overlay (Redis adapter + replicas) and k6 contention test
 - [x] Tests at every layer (unit · integration · API · page · optional live e2e)
-
----
-
-## Documentation
-
-Full design specs live in [design-packages/](design-packages/): architecture, API contract,
-database design, security, test strategy, the decision log (`DECISIONS.md`), and the
-implementation roadmap (`ROADMAP.md`).
