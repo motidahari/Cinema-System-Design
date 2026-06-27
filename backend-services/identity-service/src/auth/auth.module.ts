@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -25,7 +25,7 @@ import { AppConfig } from '../infrastructure/config/app.config';
             imports: [AppConfigModule],
             useFactory: (cfg: AppConfig) => ({
                 secret: cfg.jwtSecret,
-                signOptions: { expiresIn: cfg.accessTokenTtl },
+                signOptions: { expiresIn: cfg.accessTokenTtl } as JwtSignOptions,
             }),
             inject: [AppConfig],
         }),
