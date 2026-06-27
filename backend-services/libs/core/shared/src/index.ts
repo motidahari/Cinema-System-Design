@@ -16,3 +16,5 @@ export { Logger } from './logger/logger';
 export { requestContext, runWithContext } from './logger/request-context';
 
 export * from './validators/index';
+
+export * from './sanitizers/index';
