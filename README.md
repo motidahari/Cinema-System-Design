@@ -63,12 +63,20 @@ The app is served at **http://localhost**. Postgres schemas are created on first
 
 ## Local development
 
+Runs the services on the host (ts-node watch + Vite) with Postgres in a Docker container.
+Requires Docker running and a populated `.env` — `dev.sh` reads the same file as Docker and
+exits if `DB_PASSWORD` is unset.
+
 ```bash
+cp .env.example .env          # if not already done — set DB_PASSWORD and JWT_SECRET
 npm install                   # install all workspaces
 npm run dev                   # start the full local stack (scripts/dev.sh)
 npm run dev:logs              # tail stack logs
 npm run dev:stop              # stop the stack
 ```
+
+The dev stack listens on **identity-service** http://localhost:3001, **cinema-service**
+http://localhost:3002, and the **Vite dev server** http://localhost:5173.
 
 Root scripts run across every workspace:
 
