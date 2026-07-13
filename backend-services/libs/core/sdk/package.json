@@ -32,15 +32,15 @@
         }
     },
     "dependencies": {
-        "@nestjs/common": "^11.1.27",
+        "@nestjs/common": "^11.1.28",
         "@nestjs/config": "^4.0.4",
-        "@nestjs/core": "^11.1.27",
-        "@nestjs/platform-express": "^11.1.27",
-        "@nestjs/platform-socket.io": "^11.1.27",
+        "@nestjs/core": "^11.1.28",
+        "@nestjs/platform-express": "^11.1.28",
+        "@nestjs/platform-socket.io": "^11.1.28",
         "@nestjs/terminus": "^11.1.1",
-        "@nestjs/testing": "^11.1.27",
+        "@nestjs/testing": "^11.1.28",
         "@nestjs/typeorm": "^11.0.2",
-        "@nestjs/websockets": "^11.1.27",
+        "@nestjs/websockets": "^11.1.28",
         "axios": "^1.7.2"
     },
     "peerDependencies": {
